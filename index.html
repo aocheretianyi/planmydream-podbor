@@ -142,7 +142,7 @@ mark{background:#fff0b3;border-radius:3px}
   <main>
     <aside class="col" id="filters"></aside>
     <section class="col" id="results"></section>
-    <section class="col" id="detail"><div class="welcome">Отметьте слева, что важно туристу: когда, сколько дней, что хочет увидеть, кто едет.<br>В подборке появятся 1–2 лучших тура — их и предлагайте.</div></section>
+    <section class="col" id="detail"><div class="welcome">Отметьте слева, что важно туристу: кто едет, когда, сколько дней, что хочет увидеть.<br>В подборке появятся 1–2 лучших тура — их и предлагайте.</div></section>
   </main>
 </div>
 <div class="zoom" id="zoom"><img alt="Карта маршрута"></div>
@@ -160,7 +160,7 @@ const today = new Date(); today.setHours(0,0,0,0);
 const SOON = 14; // заезды ближе 14 дней по умолчанию не предлагаем — новый клиент не успеет
 
 let TOURS = [], DURS = [], GENERATED = null;
-const SETS = ['months','dur','sights','group','formats','pace'];
+const SETS = ['group','months','dur','sights','pace','formats'];
 const state = {months:new Set(), dur:new Set(), sights:new Set(), group:new Set(), formats:new Set(), pace:new Set(), q:''};
 let current = null, currentRow = null, tab = 'obj', ask = '', showAllSights = false, showAllDates = false;
 
@@ -187,7 +187,9 @@ function short(line, max = 64, withDetail = true, cut = /\s\(|;|\. /){
   return s.replace(/\.$/,'');
 }
 const lc = s => s ? s[0].toLowerCase()+s.slice(1) : s;
-const percents = t => [...new Set((bullets(t.payment).filter(l=>/%/.test(l)).slice(0,2).join(' ').match(/\d+\s*%/g)||[]).map(x=>x.replace(/\s/,'')))];
+const REFUND = /возврат|отмен|удерж|невыезд/i;  // условия возврата — не схема оплаты
+const payLines = t => bullets(t.payment).filter(l=>/%/.test(l) && !REFUND.test(l));
+const percents = t => [...new Set((payLines(t).join(' ').match(/\d+\s*%/g)||[]).map(x=>x.replace(/\s/,'')))];
 const exclShort = t => { const m = (t.intro||'').match(/Вс[её] включено[^\n.]*/); return m ? m[0].trim() : (bullets(t.excluded).length ? 'Не входит: '+bullets(t.excluded).slice(0,3).map(l=>lc(short(l,40,false))).join(', ') : ''); };
 
 function build(data){
@@ -261,13 +263,13 @@ function renderFilters(){
   const n = scored().length;
   $('#filters').innerHTML = `
     <div class="ftop"><span>Найдено туров: <b>${n}</b></span>${activeFilters()||state.q?'<button class="link" id="reset">Сбросить</button>':''}</div>
-    <div class="fgroup"><h3>1 · Когда</h3><div class="chips">${chips('months', months.map(m=>[m,monthName(m)]))}</div></div>
-    <div class="fgroup"><h3>2 · Сколько дней</h3><div class="chips">${chips('dur', DURS.map(d=>[d,d]))}</div></div>
-    <div class="fgroup"><h3>3 · Что хочет увидеть</h3><div class="chips">${chips('sights', shown.map(c=>[c,c]))}</div>
+    <div class="fgroup"><h3>1 · Кто едет</h3><div class="chips">${chips('group', Object.entries(GROUPS))}</div></div>
+    <div class="fgroup"><h3>2 · Когда</h3><div class="chips">${chips('months', months.map(m=>[m,monthName(m)]))}</div></div>
+    <div class="fgroup"><h3>3 · Сколько дней</h3><div class="chips">${chips('dur', DURS.map(d=>[d,d]))}</div></div>
+    <div class="fgroup"><h3>4 · Что хочет увидеть</h3><div class="chips">${chips('sights', shown.map(c=>[c,c]))}</div>
       ${sights.length>14?`<button class="more" id="moresights">${showAllSights?'Свернуть':'Все места ('+sights.length+')'}</button>`:''}</div>
-    <div class="fgroup"><h3>4 · Кто едет</h3><div class="chips">${chips('group', Object.entries(GROUPS))}</div></div>
-    <div class="fgroup"><h3>5 · Формат <span class="draft">черновик</span></h3><div class="chips">${chips('formats', Object.entries(FORMATS))}</div></div>
-    <div class="fgroup"><h3>6 · Темп <span class="draft">черновик</span></h3><div class="chips">${chips('pace', Object.entries(PACES))}</div></div>`;
+    <div class="fgroup"><h3>5 · Темп <span class="draft">черновик</span></h3><div class="chips">${chips('pace', Object.entries(PACES))}</div></div>
+    <div class="fgroup"><h3>6 · Формат <span class="draft">черновик</span></h3><div class="chips">${chips('formats', Object.entries(FORMATS))}</div></div>`;
 }
 
 const priceTxt = p => p && isFinite(p) ? '$'+p : 'цена не указана';
@@ -326,9 +328,9 @@ function scriptHTML(t, r){
   const tagline = ((t.script||'').match(/«([^»]+)»/)||[])[1];
   const ben = benefits(t);
   const inc = bullets(t.included).slice(0,4).map(l=>short(l,58)), exc = bullets(t.excluded).slice(0,4).map(l=>short(l,48,false));
-  const pays = bullets(t.payment).filter(l=>/%|валют|рубл|доллар/i.test(l)).slice(0,3).map(l=>short(l,150,true,/\s\(|;/).replace(/^Предоплата \(бронирование\) — Для подтверждения брони требуется предоплата в размере/,'Бронь — предоплата'));
+  const pays = bullets(t.payment).filter(l=>/%|валют|рубл|доллар/i.test(l) && !REFUND.test(l)).slice(0,4).map(l=>short(l,150,true,/\s\(|;/).replace(/^Предоплата \(бронирование\) — Для подтверждения брони требуется предоплата в размере/,'Бронь — предоплата'));
   const prepay = percents(t)[0] || '';
-  const near = t.open.filter(x=>x!==r && Math.abs(x.start-(r?r.start:today))<50*864e5);
+  const near = t.open.filter(x=>x!==r && (!r || +x.start!==+r.start) && Math.abs(x.start-(r?r.start:today))<50*864e5);
   const others = [...near.filter(x=>r&&x.start>r.start), ...near].slice(0,1); // сначала следующий заезд, потом предыдущий
   const steps = [
     ['Предложение', `Под ваши пожелания могу предложить тур «${esc(t.title)}»${r?` — ${dayWord(r.days)}, с ${fmtLong(r.start)} по ${fmtLong(r.end)}`:''}. Маршрут: ${esc(t.route)}.${tagline?`<div class="sub">${esc(tagline)}</div>`:''}`],
@@ -460,7 +462,7 @@ function setPanel(name, show){
 
 document.addEventListener('click', e => {
   const chip = e.target.closest('.chip');
-  if(chip){ const set = state[chip.dataset.set], k = chip.dataset.k; set.has(k)?set.delete(k):set.add(k); render(); if(current){ currentRow = pickRow(current); renderDetail(); saveHash(); } return; }
+  if(chip){ const set = state[chip.dataset.set], k = chip.dataset.k; set.has(k)?set.delete(k):set.add(k); render(); if(current){ const keep = currentRow && currentRow.open && (!state.months.size || [...currentRow.months].some(m=>state.months.has(m))); if(!keep) currentRow = pickRow(current); renderDetail(true); saveHash(); } return; }  // выбранную вручную дату не сбрасываем, если она подходит
   if(e.target.id==='moredates'){ showAllDates=!showAllDates; renderDetail(true); return; }
   if(e.target.id==='moresights'){ showAllSights=!showAllSights; renderFilters(); return; }
   if(e.target.id==='reset'){ SETS.forEach(k=>state[k].clear()); state.q=''; $('#search').value=''; render(); return; }
