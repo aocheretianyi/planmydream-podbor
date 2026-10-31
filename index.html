@@ -25,8 +25,10 @@ header h1 span{color:var(--accent)}
 #search{flex:1;max-width:360px;padding:6px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font:inherit}
 #status{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
 #status.stale{color:var(--accent);font-weight:600}
-main{display:grid;grid-template-columns:var(--cf,250px) var(--cr,290px) 1fr;min-height:0}
-body.no-filters{--cf:0px} body.no-results{--cr:0px}
+main{display:grid;grid-template-columns:250px 290px minmax(0,1fr);min-height:0}
+body.no-filters main{grid-template-columns:290px minmax(0,1fr)}
+body.no-results main{grid-template-columns:250px minmax(0,1fr)}
+body.no-filters.no-results main{grid-template-columns:minmax(0,1fr)}
 body.no-filters #filters, body.no-results #results{display:none}
 .col{overflow:auto;min-height:0}
 #filters{padding:12px 14px;border-right:1px solid var(--line);background:var(--panel)}
@@ -337,11 +339,12 @@ function scriptHTML(t, r){
     ['Что вас ждёт', ben.length ? `<ul>${ben.map(([p,g])=>`<li>${esc(p)}${g?` → <span class="g">${esc(g)}</span>`:''}</li>`).join('')}</ul>`
       : `Увидите: ${esc(t.sights.slice(0,5).join(', '))}.`],
     ['Что включено / не включено', `В стоимость уже входит:<ul>${inc.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>${exc.length?`<div class="sub">Отдельно оплачиваются: ${esc(exc.map(lc).join('; '))}.</div>`:''}`],
+    ['Как вам тур?', 'Как вам в целом тур? Устраивают такие условия?'],
     ['Стоимость', r ? `Стоимость — <b>$${r.price}</b> на человека при двухместном размещении${r.priceOld?` (полная цена $${r.priceOld})`:''}.${t.single?` Одноместный номер — доплата ${esc(t.single)}.`:''}` : 'Ближайших заездов нет.'],
     ['Схема оплаты', pays.length ? `<ul>${pays.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>` : 'Порядок оплаты на странице тура не найден — уточните.'],
     ['Закрывающий вопрос', r ? `${others.length?`Вам удобнее ${fmtLong(r.start)} или ${fmtLong(others[0].start)}? `:''}На ${fmtLong(r.start)} осталось мест: ${r.seats ?? '?'}. Давайте закреплю место за вами?${prepay?` Для брони заключаем договор и вносите ${prepay} от стоимости.`:''}` : ''],
   ];
-  return steps.map(([h, say], i) => `<div class="step ${i===5?'close':''}"><span class="n">${i+1}</span><span class="h">${h}</span><div class="say">${say}</div></div>`).join('')
+  return steps.map(([h, say], i) => `<div class="step ${i===3||i===6?'close':''}"><span class="n">${i+1}</span><span class="h">${h}</span><div class="say">${say}</div></div>`).join('')
     + `<div class="src">Шаг 2 — из продающего скрипта в таблице, остальное — с сайта.</div>`;
 }
 
@@ -352,11 +355,14 @@ function ctx(t, r){
     exc: bullets(t.excluded).slice(0,4).map(l=>lc(short(l,40,false))).join(', '),
     prepay: prepay ? prepay+' от стоимости' : 'предоплата', seats: r ? r.seats : null, group: t.group || '15',
     flight: t.flight, single: t.single, roommate: t.roommate,
+    scheme: payLines(t).slice(1).map(l=>lc(short(l,220,true,/\s\(|;/))).join('; ') || '',  // первый платёж уже назван
+    refund: lc(short(bullets(t.payment).find(l=>REFUND.test(l))||'', 220, true, /;/).replace(/^Условия возврата — /,'')),
+    start: t.route.split(/\s+—\s+/)[0], finish: t.route.split(/\s+—\s+/).pop(),
   };
 }
 
 function paneHTML(t, r){
-  const objs = (window.OBJECTIONS||[]).map(o => ({q:o.q, a:o.a(ctx(t,r)), from:'возражение'}));
+  const objs = (window.OBJECTIONS||[]).map(o => ({q:o.q, a:o.a(ctx(t,r)).replace(/…\./g,'…'), from:'возражение'}));
   const faq = t.faq.map(f => ({q:f.q, a:f.a, from:'FAQ сайта'}));
   const item = (o, open) => `<details class="obj" ${open?'open':''}><summary>${hl(o.q)}<span class="from">${o.from}</span></summary><p>${hl(o.a)}</p></details>`;
   if(ask){
