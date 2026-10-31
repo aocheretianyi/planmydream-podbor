@@ -159,7 +159,7 @@ def facts(t):
     """Короткие факты для шпаргалки и ответов: доплата за сингл, стоимость перелёта, подселение, размер группы."""
     allx = '\n'.join([t['excluded'], t['extras'], t['included'], t['payment']] + [f['a'] for f in t['faq']])
     single = re.search(r'одноместн[^\n]*?(\$\s?\d[\d\s]*|\d[\d\s]*\s?(?:₽|руб))', allx, re.I)
-    flight_line = next((l for l in t['excluded'].split('\n') if re.search(r'перел[её]т', l, re.I)), '')
+    flight_line = next((l for l in t['excluded'].split('\n') if re.search(r'перел[её]т|авиабилет', l, re.I)), '')
     flight = MONEY.search(flight_line)
     room = next((f['a'] for f in t['faq'] if 'подселени' in f['a']), '')
     m = re.search(r'[^.\n]*подселени[^\n]*', room)
