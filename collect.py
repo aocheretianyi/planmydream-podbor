@@ -16,6 +16,8 @@ from datetime import date, datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 
+from autofill import autofill
+
 STORE = ('https://store.tildaapi.one/api/getproductslist/?storepartuid=853517125224&recid=4248233303'
          '&getparts=true&getoptions=true&slice=1&size=200&flag_root=withroot')
 SHEET = ('https://docs.google.com/spreadsheets/d/1my6kd5FyYn_jJghSNghPToV2esLx8eFlUUokhLwtFNI/gviz/tq'
@@ -263,6 +265,13 @@ def main():
             warnings.append(f'{slug}: нет продающего скрипта в таблице')
         tours.append(t)
         time.sleep(0.7)
+    # новые туры и изменившиеся программы дописывает Claude (autofill.py)
+    now = datetime.now(timezone.utc).isoformat(timespec='seconds')
+    for t in tours:
+        t['_now'] = now
+    autofill(tours, warnings)
+    for t in tours:
+        t.pop('_now', None)
     data = {'generatedAt': datetime.now(timezone.utc).isoformat(timespec='seconds'),
             'source': 'planmydream.ru (каталог + страницы туров)', 'tours': tours, 'warnings': warnings}
     OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding='utf-8')
