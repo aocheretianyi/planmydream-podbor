@@ -59,8 +59,11 @@ body.no-filters #filters, body.no-results #results{display:none}
 /* карточка тура */
 .d-top{display:flex;gap:16px;align-items:flex-start}
 .d-title{font-size:19px;font-weight:700;line-height:1.25;margin:0}
-.d-sub{color:var(--muted);margin-top:3px;font-size:13px}
-.d-sub a{color:var(--accent)}
+.d-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:5px;font-size:12.5px;color:var(--muted)}
+.d-meta a{color:var(--accent)}
+.org{background:var(--chip);color:var(--ink);border-radius:999px;padding:2px 10px}
+.d-route{margin-top:5px;font-size:14px;font-weight:600}
+.d-route span{color:var(--muted);font-weight:400;margin-right:4px}
 .price{margin-left:auto;text-align:right;white-space:nowrap}
 .price b{font-size:21px}
 .price s{color:var(--muted);margin-left:4px}
@@ -110,7 +113,9 @@ body.no-filters #filters, body.no-results #results{display:none}
 .tabs{display:flex;gap:2px;flex-wrap:wrap}
 .tab{border:0;background:none;padding:6px 10px;border-radius:8px 8px 0 0;color:var(--muted);font-size:13px}
 .tab.on{background:var(--panel);color:var(--ink);font-weight:600;border:1px solid var(--line);border-bottom-color:var(--panel);margin-bottom:-1px}
-.pane{background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:10px 14px;font-size:13.5px;white-space:pre-line;min-height:120px}
+/* у всех вкладок одна высота — при переключении страница не прыгает; длинный текст листается внутри */
+.pane{background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:0 14px 10px;font-size:13.5px;white-space:pre-line;height:clamp(260px,42vh,460px);overflow:auto}
+.pane > :first-child:not(.pbar){margin-top:10px}
 .pane.rich{white-space:normal}
 .obj{border-top:1px solid var(--line);padding:6px 0}
 .obj:first-child{border-top:0}
@@ -123,9 +128,13 @@ mark{background:#fff0b3;border-radius:3px}
 .btn{border:0;background:var(--accent);color:#fff;border-radius:9px;padding:8px 14px;font-weight:600;white-space:nowrap}
 .btn.ghost{background:var(--chip);color:var(--ink);font-weight:500}
 .btn.done{background:var(--ok)}
-.copyrow{display:flex;align-items:center;gap:10px;margin-bottom:8px;white-space:normal}
-.copyrow .hint{margin:0}
-.copytext{white-space:pre-line;background:var(--bg);border-radius:8px;padding:10px 12px}
+.pbar{position:sticky;top:0;display:flex;align-items:center;gap:10px;padding:8px 0 6px;background:var(--panel);white-space:normal}
+.pbar .hint{margin:0;flex:1}
+.icopy{border:0;background:none;color:var(--accent);padding:4px;border-radius:6px;display:inline-flex;line-height:0}
+.icopy:hover{background:var(--accent-soft)}
+.icopy.done{color:var(--ok)}
+.ptext{white-space:pre-line}
+.ptext a{color:var(--accent);word-break:break-all}
 .zoom{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:9;cursor:zoom-out}
 .zoom.open{display:flex}
 .zoom img{max-width:96vw;max-height:94vh;border-radius:8px}
@@ -379,13 +388,25 @@ function paneHTML(t, r){
   }
   if(tab==='obj') return {rich:true, html:`<div class="hint" style="margin:0 0 4px">Цифры и состав подставлены со страницы тура. <span class="draft">черновик — проверьте формулировки</span></div>`+objs.map(o=>item(o)).join('')};
   if(tab==='faq') return {rich:true, html: faq.map(o=>item(o)).join('') || '—'};
-  if(tab==='prog'){
-    const c = contractText(t, r);
-    return {rich:true, html:`<div class="copyrow"><button class="btn" data-copy="prog">Скопировать программу</button><span class="hint">${c.contract ? 'Расписание по дням как в договоре (из таблицы)'+(c.redated?', даты пересчитаны под выбранный заезд':'') : 'В таблице нет расписания «как в договоре» — показана программа с сайта'}</span></div><div class="copytext">${esc(c.text)}</div>`};
+  const c = copyable(tab, t, r);
+  const linkify = h => h.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  return {rich:true, html:`<div class="pbar"><span class="hint">${esc(c.note)}</span><button class="icopy" data-copy="${tab}" title="Скопировать" aria-label="Скопировать"><svg viewBox='0 0 24 24' width='18' height='18' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><rect x='9' y='9' width='12' height='12' rx='2'/><path d='M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1'/></svg></button></div><div class="ptext">${linkify(esc(c.text || '— не найдено'))}</div>`};
+}
+// Текст вкладки — он же копируется кнопкой. note — откуда данные.
+function copyable(k, t, r){
+  if(k==='inc') return {text:t.included, note:'Что включено — со страницы тура'};
+  if(k==='exc') return {text:t.excluded, note:'Что не включено — со страницы тура'};
+  if(k==='pay') return {text:t.payment+(t.extras?'\n\nДополнительные услуги:\n'+t.extras:''), note:'Порядок оплаты — со страницы тура'};
+  if(k==='prog'){ const c = contractText(t, r); return {text:c.text, note: c.contract ? 'Как в договоре (из таблицы)'+(c.redated?', даты пересчитаны под выбранный заезд':'') : 'В таблице нет расписания «как в договоре» — программа с сайта'}; }
+  if(k==='msg') return r ? {text:r.message, note:`Для заезда ${fmtD(r.start)}–${fmtD(r.end)}, данные — с сайта`} : {text:'', note:'Нет открытых дат'};
+  if(k==='hotels'){
+    const list = t.hotelsSheet || [], key = r ? iso(r.start)+'_'+iso(r.end) : '';
+    const h = list.find(x => x.start+'_'+x.end === key) || list[0];
+    const sheet = h && !/^Нет данных/i.test(h.text) ? h.text : '';
+    return {text:[sheet, t.hotels ? (sheet ? 'С сайта: ' : '')+t.hotels : ''].filter(Boolean).join('\n\n'),
+      note: sheet ? 'Отели — из таблицы (на сайте названий нет)' : 'В таблице отелей нет — описание с сайта'};
   }
-  if(tab==='msg') return {rich:true, html: r ? `<div class="copyrow"><button class="btn" data-copy="msg">Скопировать сообщение</button><span class="hint">Для заезда ${fmtD(r.start)}–${fmtD(r.end)}; данные — с сайта</span></div><div class="copytext">${esc(r.message)}</div>` : 'Нет открытых дат'};
-  const panes = {inc:t.included, exc:t.excluded, pay:t.payment+(t.extras?'\n\nДополнительные услуги:\n'+t.extras:''), hotels:t.hotels};
-  return {rich:false, html: esc(panes[tab] || '— на странице тура не найдено')};
+  return {text:'', note:''};
 }
 function hl(s){
   let h = esc(s);
@@ -428,7 +449,8 @@ function renderDetail(keepScroll){
   $('#detail').innerHTML = `
     <div class="d-top">
       <div><h2 class="d-title">${esc(t.title)}</h2>
-        <div class="d-sub">${esc(t.org)} · ${esc(t.route)} · <a href="${esc(t.url)}" target="_blank" rel="noopener">страница тура</a>${t.booklet?` · <a href="${esc(t.booklet)}" target="_blank" rel="noopener">буклет</a>`:''}</div></div>
+        <div class="d-route"><span>Маршрут:</span>${esc(t.route.replace(/\s+—\s+/g,' → '))}</div>
+        <div class="d-meta"><span class="org">Организатор: <b>${esc(t.org)}</b></span><a href="${esc(t.url)}" target="_blank" rel="noopener">страница тура</a>${t.booklet?`<a href="${esc(t.booklet)}" target="_blank" rel="noopener">буклет</a>`:''}</div></div>
       <div class="price"><b>${r?priceTxt(r.price):priceTxt(t.price)}</b>${r&&r.priceOld?`<s>$${r.priceOld}</s>`:''}<div>${t.single?'одноместный +'+esc(t.single):t.roommate?'подселим в пару':'сингл — уточнить'}</div></div>
     </div>
     ${t.extra.note?`<div class="note">⚠︎ ${esc(t.extra.note)}</div>`:''}
@@ -499,8 +521,8 @@ document.addEventListener('click', e => {
   if(tb){ tab = tb.dataset.tab; ask = ''; $('#ask').value = ''; renderPane(); return; }   // без перерисовки карточки — прокрутка не прыгает
   const cp = e.target.closest('[data-copy]');
   if(cp && !cp.disabled){
-    const text = cp.dataset.copy==='prog' ? contractText(current, currentRow).text : currentRow.message, label = cp.textContent;
-    const ok = () => { cp.textContent='Скопировано ✓'; cp.classList.add('done'); setTimeout(()=>{cp.textContent=label;cp.classList.remove('done');},1800); };
+    const text = copyable(cp.dataset.copy, current, currentRow).text, icon = cp.classList.contains('icopy'), label = cp.innerHTML;
+    const ok = () => { if(icon) cp.title='Скопировано'; else cp.textContent='Скопировано ✓'; cp.classList.add('done'); setTimeout(()=>{cp.innerHTML=label;cp.title='Скопировать';cp.classList.remove('done');},1800); };
     (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(ok).catch(()=>{ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); ok(); });
     return;
   }
