@@ -3,14 +3,15 @@
    format: classic | nature | city | practice | holiday | beach
    pace:   calm | medium | active
    adultsOnly: true — с детьми нельзя
-   legs: переезды внутри Китая [день, откуда, куда, транспорт (plane|train|bus|night), время]
+   legs: переезды внутри Китая [день, откуда, куда, транспорт (plane|train|bus|night|move), время]
    ЧЕРНОВИК: теги и время переездов проверить; потом решить, где их вести. */
 window.TOUR_EXTRA = {
+  // Переезды сверены 31.10.2026 со страницей тура («Что включено» + программа) и расписанием «как в договоре».
+  // Время — только если оно есть на сайте, в договоре или на карте маршрута; иначе пусто («время уточнить»).
   'august-shanghai-avatar-8-dney': {
     format: ['nature', 'city'], pace: 'medium',
     note: 'Много шагов в парке Чжанцзяцзе, есть лифт и канатные дороги',
-    map: 'maps/lara-shanghai-avatar.jpg',
-    arrive: 'Шанхай', depart: 'Чунцин',
+    map: 'maps/lara-shanghai-avatar.jpg', arrive: 'Шанхай', depart: 'Чунцин',
     legs: [
       [3, 'Шанхай', 'Чжанцзяцзе', 'plane', '~2,5 ч'],
       [3, 'Чжанцзяцзе', 'Фуронг', 'bus', '~1,5 ч, вечером обратно'],
@@ -20,12 +21,26 @@ window.TOUR_EXTRA = {
   'china-november2026': {
     format: ['classic', 'nature'], pace: 'active',
     note: 'Хуанлун — высота свыше 3500 м; Хуашань — подъём пешком',
+    arrive: 'Чунцин', depart: 'Пекин',
+    legs: [
+      [3, 'Чунцин', 'Чэнду', 'train', ''],
+      [5, 'Чэнду', 'Цзючжайгоу', 'train', 'поезд + автобус'],
+      [7, 'Хуанлун', 'Чэнду', 'train', ''],
+      [8, 'Чэнду', 'Сиань', 'train', '~3 ч'],
+      [10, 'Сиань', 'Пекин', 'train', '~4 ч'],
+    ],
   },
-  'pekin-avatar-5-dney': { format: ['classic', 'nature'], pace: 'medium' },
+  'pekin-avatar-5-dney': {
+    format: ['classic', 'nature'], pace: 'medium', note: 'Опция: +2 дня в Шанхае',
+    arrive: 'Пекин', depart: 'Чжанцзяцзе (или Шанхай с опцией)',
+    legs: [
+      [3, 'Пекин', 'Чжанцзяцзе', 'plane', '~2,5 ч'],
+      [5, 'Чжанцзяцзе', 'Шанхай', 'train', 'только с опцией +2 дня'],
+    ],
+  },
   'pekin-avatar-shanghai-8-dney': {
     format: ['classic', 'nature', 'city'], pace: 'medium',
-    map: 'maps/ella-kontrasty.jpg',
-    arrive: 'Пекин', depart: 'Шанхай',
+    map: 'maps/ella-kontrasty.jpg', arrive: 'Пекин', depart: 'Шанхай',
     legs: [
       [3, 'Пекин', 'Чжанцзяцзе', 'plane', '~2,5 ч'],
       [5, 'Чжанцзяцзе', 'Шанхай', 'plane', '~2 ч'],
@@ -33,37 +48,136 @@ window.TOUR_EXTRA = {
   },
   'guanchgou-yansho-chuntsin-avatar-fenhuan-furong': {
     format: ['nature', 'city'], pace: 'active', note: 'Много переездов на скоростных поездах',
-  },
-  'novyj-god-v-kitae': { format: ['holiday', 'classic', 'city'], pace: 'calm' },
-  'china-october2026-2': { format: ['nature', 'city'], pace: 'medium' },
-  'pekin-sian-shanhaj-8-dney': {
-    format: ['classic', 'city'], pace: 'calm',
-    map: 'maps/ella-imperial.jpg',
-    arrive: 'Пекин', depart: 'Шанхай',
+    arrive: 'Гуанчжоу', depart: 'Гуанчжоу',
     legs: [
-      [3, 'Пекин', 'Сиань', 'plane', '~2 ч (уточнить)'],
-      [5, 'Сиань', 'Шанхай', 'plane', '~2 ч (уточнить)'],
+      [2, 'Гуанчжоу', 'Яншо', 'train', ''],
+      [4, 'Яншо', 'Чунцин', 'train', ''],
+      [6, 'Чунцин', 'Чжанцзяцзе', 'train', ''],
+      [8, 'Чжанцзяцзе', 'Фуронг', 'train', 'вечером, затем обратно'],
+      [9, 'Чжанцзяцзе', 'Фэнхуан', 'train', ''],
+      [10, 'Фэнхуан', 'Гуанчжоу', 'train', ''],
     ],
   },
-  'shanghai_zhujiajiao_zhangjiajie_furong_shenzhen': { format: ['nature', 'city', 'beach'], pace: 'medium', note: 'Опция: продолжение на Хайнане' },
-  'south-china-chendu-chuntsin-yansho-guanchgou': { format: ['nature', 'city'], pace: 'active', note: 'Много переездов поездом' },
-  'sacura_mart_2027': { format: ['nature', 'city'], pace: 'active', note: 'Хуаншань — пеший маршрут около 6 км' },
-  'shenchzhen-avatar-furong-shanghai': { format: ['nature', 'city'], pace: 'medium' },
+  'novyj-god-v-kitae': {
+    format: ['holiday', 'classic', 'city'], pace: 'calm', note: '3 варианта: 4 дня — только Пекин; 6 дней — + Шанхай; 7 дней — + Сиань и Шанхай',
+    arrive: 'Пекин', depart: 'Пекин или Шанхай (по варианту)',
+    legs: [
+      [4, 'Пекин', 'Шанхай', 'move', '~4 ч, поезд или самолёт — вариант 6 дней'],
+      [4, 'Пекин', 'Сиань', 'move', 'вариант 7 дней'],
+      [5, 'Сиань', 'Шанхай', 'move', 'вариант 7 дней'],
+    ],
+  },
+  'china-october2026-2': {
+    format: ['nature', 'city'], pace: 'medium',
+    arrive: 'Чунцин', depart: 'Шэньчжэнь',
+    legs: [
+      [4, 'Чунцин', 'Фуронг', 'train', ''],
+      [5, 'Фуронг', 'Чжанцзяцзе', 'train', '~30 мин'],
+      [8, 'Чжанцзяцзе', 'Шэньчжэнь', 'train', ''],
+    ],
+  },
+  'pekin-sian-shanhaj-8-dney': {
+    format: ['classic', 'city'], pace: 'calm',
+    map: 'maps/ella-imperial.jpg', arrive: 'Пекин', depart: 'Шанхай',
+    legs: [
+      [3, 'Пекин', 'Сиань', 'plane', ''],
+      [5, 'Сиань', 'Шанхай', 'plane', ''],
+    ],
+  },
+  'shanghai_zhujiajiao_zhangjiajie_furong_shenzhen': {
+    format: ['nature', 'city', 'beach'], pace: 'medium', note: 'Опция: продолжение на Хайнане',
+    arrive: 'Шанхай', depart: 'Шэньчжэнь',
+    legs: [
+      [2, 'Шанхай', 'Чжуцзяцзяо', 'bus', 'на день, вечером обратно'],
+      [4, 'Шанхай', 'Чжанцзяцзе', 'train', ''],
+      [4, 'Чжанцзяцзе', 'Фуронг', 'bus', 'вечером, затем обратно'],
+      [8, 'Чжанцзяцзе', 'Шэньчжэнь', 'plane', ''],
+    ],
+  },
+  'south-china-chendu-chuntsin-yansho-guanchgou': {
+    format: ['nature', 'city'], pace: 'active', note: 'Много переездов поездом',
+    arrive: 'Чэнду', depart: 'Гуанчжоу',
+    legs: [
+      [3, 'Чэнду', 'Цзючжайгоу', 'train', ''],
+      [4, 'Цзючжайгоу', 'Чэнду', 'train', ''],
+      [5, 'Чэнду', 'Чунцин', 'train', '~2 ч (09:17–11:20)'],
+      [6, 'Чунцин', 'Гуйлинь', 'train', '~3,5 ч (10:06–13:49)'],
+      [8, 'Гуйлинь', 'Яншо', 'bus', ''],
+      [9, 'Яншо', 'Гуанчжоу', 'train', '~2 ч (20:05–22:04)'],
+    ],
+  },
+  'sacura_mart_2027': {
+    format: ['nature', 'city'], pace: 'active', note: 'Хуаншань — пеший маршрут около 6 км. Живём в Ханчжоу, поездки на день',
+    arrive: 'Ханчжоу', depart: 'Ханчжоу',
+    legs: [
+      [2, 'Ханчжоу', 'Учжэнь', 'bus', 'на день, вечером обратно'],
+      [3, 'Ханчжоу', 'Шанхай', 'bus', 'на день, вечером обратно'],
+      [5, 'Ханчжоу', 'Шэнсянцзю → Шанжао', 'bus', ''],
+      [7, 'Хуаншань', 'Ханчжоу', 'bus', ''],
+    ],
+  },
+  'shenchzhen-avatar-furong-shanghai': {
+    format: ['nature', 'city'], pace: 'medium',
+    arrive: 'Шэньчжэнь', depart: 'Шанхай',
+    legs: [
+      [4, 'Шэньчжэнь', 'Чжанцзяцзе', 'train', ''],
+      [4, 'Чжанцзяцзе', 'Фуронг', 'bus', 'вечером, затем обратно'],
+      [8, 'Чжанцзяцзе', 'Шанхай', 'plane', ''],
+      [9, 'Шанхай', 'Чжуцзяцзяо', 'bus', 'на день, вечером обратно'],
+    ],
+  },
   'yangshuo-avatar-retreat': {
     format: ['practice', 'nature'], pace: 'calm', adultsOnly: true,
     note: 'Только для взрослых. Ежедневные телесные практики',
-    map: 'maps/aleksey-retreat.jpg',
-    arrive: 'Гуанчжоу', depart: 'Гуанчжоу',
+    map: 'maps/aleksey-retreat.jpg', arrive: 'Гуанчжоу', depart: 'Гуанчжоу',
     legs: [
       [1, 'Гуанчжоу', 'Яншо', 'train', '2–2,5 ч'],
-      [5, 'Яншо', 'Чжанцзяцзе', 'train', 'большую часть дня (маршрут уточняется)'],
+      [5, 'Яншо', 'Чжанцзяцзе', 'train', 'большую часть дня'],
       [8, 'Чжанцзяцзе', 'Гуанчжоу', 'train', '~6 ч'],
     ],
   },
-  'pekin_xian_avatar_shanghay': { format: ['classic', 'nature', 'city'], pace: 'active', note: 'Ночной поезд (купе) Пекин → Сиань' },
-  'kunming_lijiang_shangri-la_chengdu': { format: ['nature'], pace: 'medium', note: 'Шангри-ла — высокогорье' },
-  'china-october2026': { format: ['nature'], pace: 'active', note: 'Хуаншань — пешком 5–7 ч; высокогорный Хуанлун' },
-  'china-october2026-3': { format: ['nature', 'city'], pace: 'medium' },
+  'pekin_xian_avatar_shanghay': {
+    format: ['classic', 'nature', 'city'], pace: 'active', note: 'Ночной поезд (купе) Пекин → Сиань',
+    arrive: 'Пекин', depart: 'Шанхай',
+    legs: [
+      [2, 'Пекин', 'Сиань', 'night', 'ночь в купе'],
+      [4, 'Сиань', 'Чжанцзяцзе', 'plane', ''],
+      [6, 'Чжанцзяцзе', 'Шанхай', 'plane', '~2 ч (22:25–00:20)'],
+    ],
+  },
+  'kunming_lijiang_shangri-la_chengdu': {
+    format: ['nature'], pace: 'medium',
+    note: 'Шангри-ла — высокогорье. ⚠︎ День 6: на сайте — вечерний поезд в Куньмин, в договоре — перелёт в Чэнду; уточнить у организатора',
+    arrive: 'Куньмин', depart: 'Чэнду',
+    legs: [
+      [2, 'Куньмин', 'Лицзян', 'train', ''],
+      [4, 'Лицзян', 'Шангри-ла', 'bus', '~2 ч'],
+      [6, 'Шангри-ла', 'Чэнду', 'move', 'сайт и договор расходятся — уточнить'],
+    ],
+  },
+  'china-october2026': {
+    format: ['nature'], pace: 'active', note: 'Хуаншань — пешком 5–7 ч; высокогорный Хуанлун',
+    arrive: 'Шанхай', depart: 'Чэнду',
+    legs: [
+      [1, 'Шанхай', 'Хуаншань', 'train', '~3 ч'],
+      [2, 'Хуаншань', 'Чанша', 'train', '~4 ч'],
+      [3, 'Чанша', 'Чжанцзяцзе', 'train', '~2 ч'],
+      [6, 'Чжанцзяцзе', 'Чунцин', 'train', '2–3 ч'],
+      [7, 'Чунцин', 'Чэнду', 'train', '1,5–2 ч'],
+      [7, 'Чэнду', 'Цзючжайгоу', 'train', '~2 ч + автобус до отеля'],
+      [9, 'Хуанлун', 'Чэнду', 'train', '~2 ч'],
+    ],
+  },
+  'china-october2026-3': {
+    format: ['nature', 'city'], pace: 'medium', note: 'Опция: +4 дня в Шэньчжэне',
+    arrive: 'Чэнду', depart: 'Чунцин (или Шэньчжэнь с опцией)',
+    legs: [
+      [4, 'Чэнду', 'Чжанцзяцзе', 'train', ''],
+      [8, 'Чжанцзяцзе', 'Фуронг', 'bus', 'на день, вечером обратно'],
+      [9, 'Чжанцзяцзе', 'Чунцин', 'train', ''],
+      [12, 'Чунцин', 'Шэньчжэнь', 'train', 'только с опцией +4 дня'],
+    ],
+  },
 };
 
 /* Ответы на возражения. Источники: таблица «Отработка возражений» (Google Drive) и слова руководителя.

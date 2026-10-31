@@ -164,7 +164,7 @@ mark{background:#fff0b3;border-radius:3px}
 const FORMATS = {classic:'Классика и история', nature:'Природа и горы', city:'Мегаполисы', practice:'Практики, ретрит', holiday:'Праздник', beach:'Пляж (опция)'};
 const PACES = {calm:'Спокойный', medium:'Средний', active:'Активный'};
 const GROUPS = {kids:'С детьми', solo:'Один / одна', senior:'55+'};
-const TRANSPORT = {plane:['✈︎','перелёт','перелёта'], train:['🚄','поезд','поезда'], bus:['🚐','на авто','на авто'], night:['🛏','ночной поезд','ночных поезда']};
+const TRANSPORT = {plane:['✈︎','перелёт','перелёта'], train:['🚄','поезд','поезда'], bus:['🚐','на авто','на авто'], night:['🛏','ночной поезд','ночных поезда'], move:['🧳','переезд','переезда']};
 const SERVICE = /билет|отел|гид|групп|alipay|оплат|страхов|включ|трансфер|завтрак|сопровожд|чат|логистик/i;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -307,17 +307,20 @@ function pickRow(t){
   return pool.find(r=>r.start>=later) || pool[0] || t.rows[0] || null;
 }
 
-function routeHTML(t){
+function routeHTML(t, r){
   const ex = t.extra;
-  if(ex.legs && ex.legs.length){
-    const cnt = {}; ex.legs.forEach(l => cnt[l[3]]=(cnt[l[3]]||0)+1);
+  // «вариант N дней» — переезд есть только в этом варианте тура (Новый год)
+  const legs = (ex.legs||[]).filter(l => { const m = /вариант (\d+) дн/.exec(l[4]); return !m || !r || +m[1]===r.days; });
+  if(ex.legs && !legs.length) return `<div style="font-weight:600">${esc(r ? t.route.split(/\s+—\s+/)[0] : t.route)}</div><div class="legsum">В этом варианте переездов между городами нет — весь тур в одном городе.</div>`;
+  if(legs.length){
+    const cnt = {}; legs.forEach(l => cnt[l[3]]=(cnt[l[3]]||0)+1);
     const sum = Object.entries(cnt).map(([k,n])=>`${n} ${n>1?TRANSPORT[k][2]:TRANSPORT[k][1]}`).join(', ');
     return `<ul class="legs">
       ${ex.arrive?`<li><span class="ic">🛬</span><span><b>Прилёт:</b> ${esc(ex.arrive)} <small>(международный перелёт — отдельно)</small></span></li>`:''}
-      ${ex.legs.map(([d,f,to,tr,time])=>`<li><span class="ic">${TRANSPORT[tr][0]}</span><span><b>День ${d}:</b> ${esc(f)} → ${esc(to)}<br><small>${TRANSPORT[tr][1]} · ${esc(time)}</small></span></li>`).join('')}
-      ${ex.depart?`<li><span class="ic">🛫</span><span><b>Вылет домой:</b> город ${esc(ex.depart)}</span></li>`:''}
+      ${legs.map(([d,f,to,tr,time])=>`<li><span class="ic">${TRANSPORT[tr][0]}</span><span><b>День ${d}:</b> ${esc(f)} → ${esc(to)}<br><small>${TRANSPORT[tr][1]} · ${esc(time.replace(/\s*—?\s*вариант \d+ дней/,'') || 'время уточнить')}</small></span></li>`).join('')}
+      ${ex.depart?`<li><span class="ic">🛫</span><span><b>Вылет домой:</b> ${esc(ex.depart)}</span></li>`:''}
     </ul>
-    <div class="legsum">Переездов внутри Китая: <b>${ex.legs.length}</b> (${sum})</div>
+    <div class="legsum">Переездов внутри Китая: <b>${legs.length}</b> (${sum}) — по «Что включено» и программе на сайте</div>
     ${ex.map?`<img class="map" src="${esc(ex.map)}" alt="Карта маршрута" loading="lazy">`:''}`;
   }
   const lines = [];
@@ -465,7 +468,7 @@ function renderDetail(keepScroll){
     </div>
     <div class="grid2">
       <div class="box"><h2>Сценарий презентации</h2>${scriptHTML(t, r)}</div>
-      <div class="box"><h2>Маршрут и переезды</h2>${routeHTML(t)}</div>
+      <div class="box"><h2>Маршрут и переезды</h2>${routeHTML(t, r)}</div>
     </div>
     <div class="answers">
       <div class="abar"><input id="ask" placeholder="🔍 Найти ответ: виза, еда, перелёт…" value="${esc(ask)}"><div class="tabs" id="tabs"></div></div>
