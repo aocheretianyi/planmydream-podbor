@@ -1,12 +1,12 @@
 /* Подборщик туров «План Мечты» — данные, которых пока нет в Google-таблице.
-   Ключ — начало названия тура из колонки «Название тура (на сайте)».
+   Ключ — адрес страницы тура на planmydream.ru (часть после «/»).
    format: classic | nature | city | practice | holiday | beach
    pace:   calm | medium | active
    adultsOnly: true — с детьми нельзя
    legs: переезды внутри Китая [день, откуда, куда, транспорт (plane|train|bus|night), время]
-   ЧЕРНОВИК: теги и время переездов проверить; потом перенести в колонки таблицы. */
+   ЧЕРНОВИК: теги и время переездов проверить; потом решить, где их вести. */
 window.TOUR_EXTRA = {
-  'КИТАЙ: ПУТЬ ОТ НЕОНОВОГО ШАНХАЯ': {
+  'august-shanghai-avatar-8-dney': {
     format: ['nature', 'city'], pace: 'medium',
     note: 'Много шагов в парке Чжанцзяцзе, есть лифт и канатные дороги',
     map: 'maps/lara-shanghai-avatar.jpg',
@@ -17,12 +17,12 @@ window.TOUR_EXTRA = {
       [7, 'Чжанцзяцзе', 'Чунцин', 'train', '2–3,5 ч'],
     ],
   },
-  'КИТАЙ: 11 ОБЪЕКТОВ ВСЕМИРНОГО НАСЛЕДИЯ': {
+  'china-november2026': {
     format: ['classic', 'nature'], pace: 'active',
     note: 'Хуанлун — высота свыше 3500 м; Хуашань — подъём пешком',
   },
-  'КИТАЙ: ДРЕВНИЕ ДВОРЦЫ, ГОРЫ АВАТАРА': { format: ['classic', 'nature'], pace: 'medium' },
-  'КИТАЙ: КОНТРАСТЫ ПЕКИНА': {
+  'pekin-avatar-5-dney': { format: ['classic', 'nature'], pace: 'medium' },
+  'pekin-avatar-shanghai-8-dney': {
     format: ['classic', 'nature', 'city'], pace: 'medium',
     map: 'maps/ella-kontrasty.jpg',
     arrive: 'Пекин', depart: 'Шанхай',
@@ -31,12 +31,12 @@ window.TOUR_EXTRA = {
       [5, 'Чжанцзяцзе', 'Шанхай', 'plane', '~2 ч'],
     ],
   },
-  'БОЛЬШОЕ ПУТЕШЕСТВИЕ В КИТАЙ': {
+  'guanchgou-yansho-chuntsin-avatar-fenhuan-furong': {
     format: ['nature', 'city'], pace: 'active', note: 'Много переездов на скоростных поездах',
   },
-  'ВСТРЕЧАЕМ НОВЫЙ ГОД В КИТАЕ': { format: ['holiday', 'classic', 'city'], pace: 'calm' },
-  'КИТАЙ КОНТРАСТОВ: ГОРОД-ГОРА': { format: ['nature', 'city'], pace: 'medium' },
-  'КИТАЙ: ИМПЕРАТОРСКИЙ ПЕКИН': {
+  'novyj-god-v-kitae': { format: ['holiday', 'classic', 'city'], pace: 'calm' },
+  'china-october2026-2': { format: ['nature', 'city'], pace: 'medium' },
+  'pekin-sian-shanhaj-8-dney': {
     format: ['classic', 'city'], pace: 'calm',
     map: 'maps/ella-imperial.jpg',
     arrive: 'Пекин', depart: 'Шанхай',
@@ -45,11 +45,11 @@ window.TOUR_EXTRA = {
       [5, 'Сиань', 'Шанхай', 'plane', '~2 ч (уточнить)'],
     ],
   },
-  'МНОГОГРАННЫЙ КИТАЙ': { format: ['nature', 'city', 'beach'], pace: 'medium', note: 'Опция: продолжение на Хайнане' },
-  'ЮЖНЫЙ КИТАЙ: ПАНДЫ, ХОЛМЫ ЯНШО': { format: ['nature', 'city'], pace: 'active', note: 'Много переездов поездом' },
-  'КИТАЙСКАЯ ВЕСНА: САКУРА': { format: ['nature', 'city'], pace: 'active', note: 'Хуаншань — пеший маршрут около 6 км' },
-  'КАК В КИНО: 11 ДНЕЙ': { format: ['nature', 'city'], pace: 'medium' },
-  'РЕТРИТ В КИТАЕ': {
+  'shanghai_zhujiajiao_zhangjiajie_furong_shenzhen': { format: ['nature', 'city', 'beach'], pace: 'medium', note: 'Опция: продолжение на Хайнане' },
+  'south-china-chendu-chuntsin-yansho-guanchgou': { format: ['nature', 'city'], pace: 'active', note: 'Много переездов поездом' },
+  'sacura_mart_2027': { format: ['nature', 'city'], pace: 'active', note: 'Хуаншань — пеший маршрут около 6 км' },
+  'shenchzhen-avatar-furong-shanghai': { format: ['nature', 'city'], pace: 'medium' },
+  'yangshuo-avatar-retreat': {
     format: ['practice', 'nature'], pace: 'calm', adultsOnly: true,
     note: 'Только для взрослых. Ежедневные телесные практики',
     map: 'maps/aleksey-retreat.jpg',
@@ -60,15 +60,16 @@ window.TOUR_EXTRA = {
       [8, 'Чжанцзяцзе', 'Гуанчжоу', 'train', '~6 ч'],
     ],
   },
-  'КИТАЙ: ГОРЫ АВАТАРА, ВЕЛИКАЯ СТЕНА': { format: ['classic', 'nature', 'city'], pace: 'active', note: 'Ночной поезд (купе) Пекин → Сиань' },
-  'ЮНЬНАНЬ: КРАЙ ВЕЧНОЙ ВЕСНЫ': { format: ['nature'], pace: 'medium', note: 'Шангри-ла — высокогорье' },
-  'ЧЕТЫРЕ ВЕЛИЧАЙШИХ ПАРКА': { format: ['nature'], pace: 'active', note: 'Хуаншань — пешком 5–7 ч; высокогорный Хуанлун' },
-  'ЧЕТЫРЕ МИРА — ПАНДЫ': { format: ['nature', 'city'], pace: 'medium' },
+  'pekin_xian_avatar_shanghay': { format: ['classic', 'nature', 'city'], pace: 'active', note: 'Ночной поезд (купе) Пекин → Сиань' },
+  'kunming_lijiang_shangri-la_chengdu': { format: ['nature'], pace: 'medium', note: 'Шангри-ла — высокогорье' },
+  'china-october2026': { format: ['nature'], pace: 'active', note: 'Хуаншань — пешком 5–7 ч; высокогорный Хуанлун' },
+  'china-october2026-3': { format: ['nature', 'city'], pace: 'medium' },
 };
 
 /* Возражения и частые вопросы — общие для всех туров. ЧЕРНОВИК: проверить формулировки.
-   Подстановки из таблицы: {flight} — стоимость перелёта из «Что не включено», {free} — свободных мест,
-   {group} — размер группы, {prepay} — первый платёж, {single} — доплата за одноместное. */
+   Подстановки берутся со страницы тура на сайте: {flight} — стоимость перелёта из «Что не включено»,
+   {free} — свободных мест на выбранную дату, {group} — размер группы из FAQ, {prepay} — первый платёж,
+   {single} — доплата за одноместное. */
 window.OBJECTIONS = [
   { q: 'Дорого', a: 'Понимаю. Давайте посмотрим, что входит: отели с рейтингом от 8.8, завтраки, все переезды по Китаю, входные билеты и русский гид на всём маршруте. Самостоятельно это выходит не дешевле, а организовывать всё придётся вам. И платить всё сразу не нужно — сейчас только {prepay}, чтобы закрепить место.' },
   { q: 'Надо подумать', a: 'Конечно. Скажите, что именно хотите обдумать: даты, бюджет или программу? (Выслушать и ответить.) Группа маленькая — до {group} человек, свободных мест сейчас: {free}. Предоплата {prepay} закрепляет место, а остальное вы платите позже.' },

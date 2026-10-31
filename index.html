@@ -53,6 +53,8 @@ main{display:grid;grid-template-columns:270px 300px 1fr;min-height:0}
 .d-sub{color:var(--muted);margin-top:4px}
 .price{margin-left:auto;text-align:right;white-space:nowrap}
 .price b{font-size:22px}
+.price s{color:var(--muted);margin-left:4px}
+.d-sub a{color:var(--accent)}
 .price div{color:var(--muted);font-size:12px}
 .note{margin-top:8px;background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:6px 10px;font-size:13px}
 .dates{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
@@ -121,7 +123,7 @@ main{display:grid;grid-template-columns:270px 300px 1fr;min-height:0}
     <h1>План Мечты · <span>подбор тура</span></h1>
     <input id="search" placeholder="Поиск: название, город, организатор">
     <span id="status">Загружаю таблицу…</span>
-    <button id="reload" title="Перечитать Google-таблицу">Обновить</button>
+    <button id="reload" title="Перечитать данные (собираются с сайта)">Обновить</button>
   </header>
   <main>
     <aside class="col" id="filters"></aside>
@@ -132,97 +134,61 @@ main{display:grid;grid-template-columns:270px 300px 1fr;min-height:0}
 <div class="zoom" id="zoom"><img alt="Карта маршрута"></div>
 <script src="extra.js"></script>
 <script>
-const SHEET = 'https://docs.google.com/spreadsheets/d/1my6kd5FyYn_jJghSNghPToV2esLx8eFlUUokhLwtFNI/gviz/tq?tqx=out:csv&sheet=' + encodeURIComponent('Туры');
+// Данные собирает collect.py с сайта planmydream.ru (каталог + страницы туров) в data.json.
 const FORMATS = {classic:'Классика и история', nature:'Природа и горы', city:'Мегаполисы', practice:'Практики, ретрит', holiday:'Праздник', beach:'Пляж (опция)'};
 const PACES = {calm:'Спокойный', medium:'Средний', active:'Активный'};
 const GROUPS = {kids:'С детьми', couple:'Пара / друзья', solo:'Один / одна', senior:'55+'};
-const DURS = {s:['До 7 дней',0,7], m:['8–9 дней',8,9], l:['10–12 дней',10,12], xl:['13+ дней',13,99]};
 const TRANSPORT = {plane:['✈︎','перелёт'], train:['🚄','поезд'], bus:['🚐','авто'], night:['🛏','ночной поезд']};
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const money = v => /^\d[\d\s]*$/.test(v||'') ? '$'+v.trim() : (v||'');
 const today = new Date(); today.setHours(0,0,0,0);
 
-let TOURS = [], state = {cities:new Set(), dur:new Set(), months:new Set(), formats:new Set(), pace:new Set(), group:new Set(), q:''};
-let current = null, currentRow = null, tab = 'inc', showAllCities = false, showAllDates = false;
+let TOURS = [], DURS = [], state = {sights:new Set(), dur:new Set(), months:new Set(), formats:new Set(), pace:new Set(), group:new Set(), q:''};
+let current = null, currentRow = null, tab = 'inc', showAllSights = false, showAllDates = false;
 
-function parseCSV(text){
-  const rows=[]; let row=[], f='', q=false;
-  for(let i=0;i<text.length;i++){
-    const c=text[i];
-    if(q){ if(c==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=c; }
-    else if(c==='"') q=true;
-    else if(c===','){ row.push(f); f=''; }
-    else if(c==='\n'){ row.push(f); rows.push(row); row=[]; f=''; }
-    else if(c!=='\r') f+=c;
-  }
-  if(f||row.length){ row.push(f); rows.push(row); }
-  return rows;
-}
-const pdate = s => { const m=/(\d{2})\.(\d{2})\.(\d{4})/.exec(s||''); return m ? new Date(+m[3], m[2]-1, +m[1]) : null; };
+const pdate = s => { const m=/(\d{4})-(\d{2})-(\d{2})/.exec(s||''); return m ? new Date(+m[1], m[2]-1, +m[3]) : null; };
 const fmtD = d => d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'}).replace('.','');
 const monthKey = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
 const monthName = k => { const [y,m]=k.split('-'); const s=new Date(+y,m-1,1).toLocaleDateString('ru-RU',{month:'long'}); return s[0].toUpperCase()+s.slice(1)+' ’'+y.slice(2); };
+const durMin = l => parseInt((l.match(/\d+/)||[99])[0]) - (/^до/i.test(l) ? 100 : 0);
 
-function build(rows){
-  const h = rows[0], col = name => h.findIndex(x => x.trim().startsWith(name));
-  const C = {org:col('Организатор'), name:col('Название тура'), start:col('Дата начала'), end:col('Дата окончания'), days:col('Дней'), price:col('Цена'),
-    route:col('Маршрут'), total:col('Всего мест'), free:col('Свободно'), status:col('Статус'), single:col('Доплата за сингл'), hotels:col('Отели'),
-    inc:col('Что включено'), exc:col('Что не включено'), pay:col('Порядок оплаты'), script:col('Продающий скрипт'), msg:col('Сообщение для клиента'), prog:col('Расписание по дням')};
-  const map = new Map();
-  for(const r of rows.slice(1)){
-    const name = (r[C.name]||'').trim(); if(!name) continue;
-    const key = r[C.org]+'|'+name;
-    const start = pdate(r[C.start]), end = pdate(r[C.end]);
-    const v = k => (r[C[k]]||'').trim();
-    if(!map.has(key)){
-      const routeTxt = v('route');
-      const cities = routeTxt.split(/\.\s*Опция/)[0].split(/\s+—\s+/).map(s=>s.trim()).filter(Boolean);
-      const ex = Object.entries(window.TOUR_EXTRA||{}).find(([k]) => name.toUpperCase().startsWith(k.toUpperCase()));
-      map.set(key, {key, name, org:v('org'), routeTxt, cities:[...new Set(cities)], extra: ex ? ex[1] : {}, rows:[]});
-    }
-    let days = parseInt(v('days'));
-    if(!(days>0 && days<40) && start && end) days = Math.round((end-start)/864e5)+1;
-    const free = parseInt(v('free')), status = v('status');
-    map.get(key).rows.push({start, end, days, price:v('price'), total:v('total'), free: isNaN(free)?null:free, status, single:v('single'), hotels:v('hotels'),
-      inc:v('inc'), exc:v('exc'), pay:v('pay'), script:v('script'), msg:v('msg'), prog:v('prog'),
-      open: start && start>=today && !/мест нет/i.test(status) && free!==0});
-  }
-  TOURS = [...map.values()].map(t => {
-    t.rows.sort((a,b)=>(a.start||0)-(b.start||0));
-    t.open = t.rows.filter(r=>r.open);
-    const ref = t.open[0] || t.rows[t.rows.length-1];
-    t.ref = t.rows.find(r=>r.script && r===ref) || ref;
-    // текстовые поля берём из ближайшей строки, где они заполнены
-    for(const f of ['script','inc','exc','pay','prog','hotels']) if(!t.ref[f]) { const alt=t.rows.find(r=>r[f]); if(alt) t.ref = {...t.ref, [f]:alt[f]}; }
-    t.days = ref.days;
-    return t;
+function build(data){
+  TOURS = data.tours.map(t => {
+    const rows = t.departures.map(d => {
+      const start = pdate(d.start), end = pdate(d.end);
+      return {...d, start, end, days: Math.round((end-start)/864e5)+1, open: start>=today && d.seats!==0};
+    });
+    const single = ((t.excluded+'\n'+t.extras).match(/одноместн[^\n]*?(\$\s?\d[\d\s]*|\d[\d\s]*\s?(?:\$|₽|руб))/i)||[])[1] || '';
+    const group = ((t.faq.find(f=>/сколько человек/i.test(f.q))||{}).a||'').match(/до\s*(\d+)/);
+    const sights = t.sights.length ? t.sights : t.route.split(/\s+—\s+/);
+    return {...t, key:t.slug, sights:[...new Set(sights.map(s=>s.trim()).filter(Boolean))], rows, open: rows.filter(r=>r.open),
+      len: rows[0] ? rows[0].days : null, single: single.replace(/\s+/g,' ').trim(), group: group ? group[1] : '',
+      extra: (window.TOUR_EXTRA||{})[t.slug] || {}};
   });
+  DURS = [...new Set(TOURS.map(t=>t.duration).filter(Boolean))].sort((a,b)=>durMin(a)-durMin(b));
 }
 
 function score(t){
   const ex = t.extra, reasons = [];
-  let s = 0, hard = false;
-  if(!t.open.length){ hard = true; }
-  if(state.cities.size){
-    const hit = [...state.cities].filter(c => t.cities.includes(c));
-    if(!hit.length){ s -= 6; reasons.push(['no','нет: '+[...state.cities].join(', ')]); }
-    hit.forEach(c => { s += 3; reasons.push(['ok', c]); });
-    const miss = [...state.cities].filter(c => !t.cities.includes(c));
-    if(hit.length && miss.length) reasons.push(['no', miss.join(', ')]);
+  let s = 0, hard = !t.open.length;
+  if(state.sights.size){
+    const hit = [...state.sights].filter(c => t.sights.includes(c)), miss = [...state.sights].filter(c => !t.sights.includes(c));
+    s += hit.length*3 - (hit.length ? 0 : 6);
+    hit.forEach(c => reasons.push(['ok', c]));
+    if(miss.length) reasons.push(['no', miss.join(', ')]);
   }
   if(state.dur.size){
-    const ok = [...state.dur].some(k => t.days>=DURS[k][1] && t.days<=DURS[k][2]);
-    s += ok ? 2 : -3; reasons.push([ok?'ok':'no', t.days+' дн.']);
+    const ok = state.dur.has(t.duration); s += ok ? 2 : -3; reasons.push([ok?'ok':'no', t.duration.toLowerCase()]);
   }
   let dates = t.open;
   if(state.months.size){
     dates = t.open.filter(r => state.months.has(monthKey(r.start)));
-    s += dates.length ? 3 : -5; reasons.push([dates.length?'ok':'no', dates.length ? 'даты: '+dates.slice(0,2).map(r=>fmtD(r.start)).join(', ') : 'нет дат в эти месяцы']);
+    s += dates.length ? 3 : -5;
+    reasons.push([dates.length?'ok':'no', dates.length ? 'даты: '+dates.slice(0,2).map(r=>fmtD(r.start)).join(', ') : 'нет дат в эти месяцы']);
   }
   if(state.formats.size){
     const hit = (ex.format||[]).filter(f => state.formats.has(f));
-    s += hit.length*2 - (hit.length?0:3);
+    s += hit.length*2 - (hit.length ? 0 : 3);
     hit.forEach(f => reasons.push(['ok', FORMATS[f].toLowerCase()]));
     if(!hit.length) reasons.push(['no', 'другой формат']);
   }
@@ -230,14 +196,14 @@ function score(t){
     const ok = state.pace.has(ex.pace); s += ok?2:-2; reasons.push([ok?'ok':'no', 'темп: '+PACES[ex.pace].toLowerCase()]);
   }
   if(state.group.has('kids')){
-    if(ex.adultsOnly){ hard = true; reasons.push(['no','только взрослые']); }
+    if(ex.adultsOnly){ hard = true; }
     else if(ex.pace==='active'){ s -= 1; reasons.push(['warn','активный темп']); }
   }
   if(state.group.has('senior') && ex.pace==='active'){ s -= 2; reasons.push(['warn','активный темп']); }
   if(state.group.has('senior') && ex.pace==='calm'){ s += 1; reasons.push(['ok','спокойный темп']); }
-  if(state.group.has('solo')){ const sg = t.ref.single; reasons.push(['warn', sg ? 'сингл +'+money(sg) : 'сингл: уточнить']); }
+  if(state.group.has('solo')) reasons.push(['warn', t.single ? 'сингл +'+t.single : 'сингл: уточнить']);
   if(state.q){
-    const hay = (t.name+' '+t.org+' '+t.routeTxt).toLowerCase();
+    const hay = (t.title+' '+t.org+' '+t.route+' '+t.sights.join(' ')).toLowerCase();
     if(!state.q.toLowerCase().split(/\s+/).every(w=>hay.includes(w))) hard = true;
   }
   const near = dates[0] ? (dates[0].start - today)/864e5 : 999;
@@ -245,38 +211,40 @@ function score(t){
 }
 
 function renderFilters(){
-  const cityCount = {};
-  TOURS.forEach(t => t.open.length && t.cities.forEach(c => cityCount[c]=(cityCount[c]||0)+1));
-  const cities = Object.keys(cityCount).sort((a,b)=>cityCount[b]-cityCount[a]||a.localeCompare(b));
-  const shown = showAllCities ? cities : cities.slice(0,12);
+  const cnt = {};
+  TOURS.forEach(t => t.open.length && t.sights.forEach(c => cnt[c]=(cnt[c]||0)+1));
+  const sights = Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]||a.localeCompare(b));
+  const shown = showAllSights ? sights : sights.slice(0,14);
   const months = [...new Set(TOURS.flatMap(t=>t.open.map(r=>monthKey(r.start))))].sort();
-  const chips = (set, items) => items.map(([k,l,n]) => `<button class="chip ${set.has(k)?'on':''}" data-set="${set===state.cities?'cities':Object.keys(state).find(x=>state[x]===set)}" data-k="${esc(k)}">${esc(l)}${n?`<small>${n}</small>`:''}</button>`).join('');
+  const chips = (name, items) => items.map(([k,l]) => `<button class="chip ${state[name].has(k)?'on':''}" data-set="${name}" data-k="${esc(k)}">${esc(l)}</button>`).join('');
   $('#filters').innerHTML = `
-    <div class="fgroup"><h3>Города и места</h3><div class="chips">${chips(state.cities, shown.map(c=>[c,c]))}</div>
-      ${cities.length>12?`<button class="more" id="morecities">${showAllCities?'Свернуть':'Все города ('+cities.length+')'}</button>`:''}</div>
-    <div class="fgroup"><h3>Длительность</h3><div class="chips">${chips(state.dur, Object.entries(DURS).map(([k,v])=>[k,v[0]]))}</div></div>
-    <div class="fgroup"><h3>Месяц поездки</h3><div class="chips">${chips(state.months, months.map(m=>[m,monthName(m)]))}</div></div>
-    <div class="fgroup"><h3>Формат <span class="draft">черновик</span></h3><div class="chips">${chips(state.formats, Object.entries(FORMATS))}</div></div>
-    <div class="fgroup"><h3>Темп <span class="draft">черновик</span></h3><div class="chips">${chips(state.pace, Object.entries(PACES))}</div></div>
-    <div class="fgroup"><h3>Кто едет</h3><div class="chips">${chips(state.group, Object.entries(GROUPS))}</div></div>
+    <div class="fgroup"><h3>Города и места</h3><div class="chips">${chips('sights', shown.map(c=>[c,c]))}</div>
+      ${sights.length>14?`<button class="more" id="moresights">${showAllSights?'Свернуть':'Все места ('+sights.length+')'}</button>`:''}</div>
+    <div class="fgroup"><h3>Длительность</h3><div class="chips">${chips('dur', DURS.map(d=>[d,d]))}</div></div>
+    <div class="fgroup"><h3>Месяц поездки</h3><div class="chips">${chips('months', months.map(m=>[m,monthName(m)]))}</div></div>
+    <div class="fgroup"><h3>Формат <span class="draft">черновик</span></h3><div class="chips">${chips('formats', Object.entries(FORMATS))}</div></div>
+    <div class="fgroup"><h3>Темп <span class="draft">черновик</span></h3><div class="chips">${chips('pace', Object.entries(PACES))}</div></div>
+    <div class="fgroup"><h3>Кто едет</h3><div class="chips">${chips('group', Object.entries(GROUPS))}</div></div>
     <button id="reset">Сбросить всё</button>`;
 }
 
+const priceTxt = t => t.price ? '$'+t.price : 'цена на сайте не указана';
+
 function renderResults(){
-  const active = state.cities.size+state.dur.size+state.months.size+state.formats.size+state.pace.size+state.group.size+(state.q?1:0);
+  const active = ['sights','dur','months','formats','pace','group'].some(k=>state[k].size);
   const list = TOURS.map(score).filter(x=>!x.hard).sort((a,b)=>b.s-a.s);
+  window._scored = list;
   const card = (x, top) => `<div class="card ${top?'top':''} ${current===x.t?'sel':''}" data-key="${esc(x.t.key)}">
-      <div class="t">${esc(x.t.name)}</div>
-      <div class="m">${esc(x.t.org)} · ${x.t.days} дн. · ${esc(x.t.ref.price)} · ближ. ${x.dates[0]?fmtD(x.dates[0].start):'—'}</div>
+      <div class="t">${esc(x.t.title)}</div>
+      <div class="m">${esc(x.t.org)} · ${x.t.len||'?'} дн. · ${esc(priceTxt(x.t))} · ближ. ${x.dates[0]?fmtD(x.dates[0].start):'—'}</div>
       ${x.reasons.length?`<div class="why">${x.reasons.map(([k,l])=>`<span class="tag ${k==='ok'?'':k}">${esc(l)}</span>`).join('')}</div>`:''}
     </div>`;
   if(!list.length){ $('#results').innerHTML = '<div class="empty">Ничего не нашлось. Снимите часть фильтров.</div>'; return; }
-  if(!active){ $('#results').innerHTML = `<div class="rhead">Все туры с открытыми датами · ${list.length}</div><div class="compact">${list.map(x=>card(x,false)).join('')}</div>`; return; }
+  if(!active){ $('#results').innerHTML = `<div class="rhead">${state.q?'Найдено':'Все туры с открытыми датами'} · ${list.length}</div><div class="compact">${list.map(x=>card(x,false)).join('')}</div>`; return; }
   const good = list.filter(x=>x.s>0);
   const top = (good.length?good:list).slice(0,2), rest = list.filter(x=>!top.includes(x));
   $('#results').innerHTML = `<div class="rhead">${good.length?'Предложите':'Точных совпадений нет — ближайшие'}</div>${top.map(x=>card(x,true)).join('')}
     ${rest.length?`<div class="rhead" style="margin-top:14px">Другие варианты</div><div class="compact">${rest.map(x=>card(x,false)).join('')}</div>`:''}`;
-  window._scored = list;
 }
 
 function routeHTML(t){
@@ -286,35 +254,39 @@ function routeHTML(t){
     if(ex.arrive) parts.push(`<span class="city ext">прилёт</span><span class="leg"><span class="ic">✈︎</span><span class="ar">→</span></span>`);
     let prev = null;
     ex.legs.forEach(([d, from, to, tr, time]) => {
-      if(from!==prev) { if(prev!==null) parts.push(`<span class="leg"><span class="ar">·</span></span>`); parts.push(`<span class="city">${esc(from)}</span>`); }
-      const [ic, label] = TRANSPORT[tr]||['→',''];
+      if(from!==prev){ if(prev!==null) parts.push(`<span class="leg"><span class="ar">·</span></span>`); parts.push(`<span class="city">${esc(from)}</span>`); }
+      const [ic] = TRANSPORT[tr]||['→'];
       parts.push(`<span class="leg"><span class="ic">${ic}</span><span>${esc(time.split(/ \(|, /)[0])}</span><span class="ar">——→</span><span>день ${d}</span></span><span class="city">${esc(to)}</span>`);
       prev = to;
     });
     if(ex.depart) parts.push(`<span class="leg"><span class="ic">✈︎</span><span class="ar">→</span></span><span class="city ext">вылет из ${esc(ex.depart)}</span>`);
     const cnt = {}; ex.legs.forEach(l => cnt[l[3]]=(cnt[l[3]]||0)+1);
-    const sum = Object.entries(cnt).map(([k,n])=>`${n} ${TRANSPORT[k][1]}${n>1?(k==='plane'?'а':k==='bus'?'':'а'):''}`).join(' · ');
+    const sum = Object.entries(cnt).map(([k,n])=>`${n} ${TRANSPORT[k][1]}${n>1&&k!=='bus'?'а':''}`).join(' · ');
     return `<div class="route">${parts.join('')}</div>
-      <div class="legsum">Переездов внутри Китая: <b>${ex.legs.length}</b> (${sum}) — все включены в стоимость</div>
+      <div class="legsum">Переездов внутри Китая: <b>${ex.legs.length}</b> (${sum})</div>
       <ul class="leglist">${ex.legs.map(([d,f,to,tr,time])=>`<li>${TRANSPORT[tr][0]} <b>День ${d}.</b> ${esc(f)} → ${esc(to)}, ${TRANSPORT[tr][1]} — ${esc(time)}</li>`).join('')}</ul>
       ${ex.map?`<img class="map" src="${esc(ex.map)}" alt="Карта маршрута" loading="lazy">`:''}`;
   }
-  // запасной вариант: строки расписания, где упомянут транспорт
-  const lines = (t.ref.prog||'').split('\n').filter(l => /перел[её]т|поезд|переезд|автобус|вылет|возвращение/i.test(l));
-  return `<div class="route">${t.cities.map(c=>`<span class="city">${esc(c)}</span>`).join('<span class="leg"><span class="ar">→</span></span>')}</div>
-    ${lines.length?`<ul class="auto" style="margin-top:10px">${lines.map(l=>`<li>${esc(l.length>190?l.slice(0,190)+'…':l)}</li>`).join('')}</ul>`:''}
-    <div class="hint">Схема переездов с временем для этого тура ещё не заполнена — показаны строки из программы.</div>`;
+  // запасной вариант: фразы о переездах из программы на сайте
+  const lines = [];
+  t.days.forEach(d => {
+    const head = d.split('\n')[0];
+    d.split(/\n|(?<=[.!])\s+/).forEach(p => { if(/перел[её]т|поезд|переезд|автобус|трансфер на вокзал/i.test(p) && p.length<260) lines.push([head, p.trim()]); });
+  });
+  return `<div class="route">${t.route.split(/\s+—\s+/).map(c=>`<span class="city">${esc(c)}</span>`).join('<span class="leg"><span class="ar">→</span></span>')}</div>
+    ${lines.length?`<ul class="auto" style="margin-top:10px">${lines.slice(0,8).map(([h,l])=>`<li><b>${esc(h)}.</b> ${esc(l)}</li>`).join('')}</ul>`:''}
+    <div class="hint">Схема переездов с временем для этого тура ещё не заполнена — показаны фразы о переездах из программы на сайте.</div>`;
 }
 
-function scriptHTML(txt){
-  if(!txt) return '<div class="hint">В таблице нет продающего скрипта для этого тура.</div>';
+function scriptHTML(t){
+  const txt = t.script;
+  if(!txt) return `<div class="hint">Продающего скрипта пока нет. Описание с сайта:</div><p style="white-space:pre-line;font-size:13.5px">${esc(t.intro)}</p>`;
   const lines = txt.split('\n').map(s=>s.trim()).filter(Boolean);
-  let tag='', bridge='', pay='', items=[], other=[];
+  let tag='', bridge='', items=[], other=[];
   for(const l of lines){
     if(/^«/.test(l) && !tag) tag = l;
     else if(/^Мостик/i.test(l)) bridge = l.replace(/^Мостик:\s*/i,'');
-    else if(/^Оплата/i.test(l)) pay = l;
-    else if(/^Свойство\s*→/i.test(l)) continue;
+    else if(/^Оплата/i.test(l) || /^Свойство\s*→/i.test(l)) continue;  // оплату показываем с сайта
     else if(/^[•\-–]/.test(l)) items.push(l.replace(/^[•\-–]\s*/,''));
     else other.push(l);
   }
@@ -322,58 +294,59 @@ function scriptHTML(txt){
     <ul class="ben">${items.map(i=>{ const [p,...g]=i.split('→'); return `<li>${g.length?`<span class="p">${esc(p.trim())}</span> → <span class="g">${esc(g.join('→').trim())}</span>`:esc(i)}</li>`; }).join('')}</ul>
     ${other.map(o=>`<div class="hint">${esc(o)}</div>`).join('')}
     ${bridge?`<div class="bridge">💬 ${esc(bridge)}</div>`:''}
-    ${pay?`<div class="hint">${esc(pay)}</div>`:''}`;
+    <div class="hint" style="margin-top:8px">Скрипт — из таблицы. Цены, даты и условия — с сайта.</div>`;
 }
 
 function fill(a, t, r){
-  const flight = ((r.exc||t.ref.exc).match(/перел[её]т[^\n(]*\(([^)]+)\)/i)||[])[1] || 'уточню по датам';
-  const prepay = ((r.pay||t.ref.pay).match(/(\d+)\s*%/)||[])[0] || 'первый платёж';
-  const single = r.single || t.ref.single || 'по запросу';
-  return a.replace('{flight}', flight).replace(/\{prepay\}/g, prepay+' от стоимости').replace('{free}', r.free ?? '—').replace('{group}', r.total||'до 10').replace('{single}', money(single));
+  const flight = (t.excluded.match(/перел[её]т[^\n(]*\(([^)]+)\)/i)||[])[1] || 'уточню по вашим датам';
+  const prepay = (t.payment.match(/(\d+)\s*%/)||[])[0];
+  return a.replace('{flight}', flight)
+    .replace(/\{prepay\}/g, prepay ? prepay+' от стоимости' : 'предоплата')
+    .replace('{free}', r && r.seats!=null ? r.seats : '—')
+    .replace('{group}', t.group || '10')
+    .replace('{single}', t.single || '(уточню)');
 }
 
 function visibleDates(t, r, all = showAllDates){
-  const fut = t.rows.filter(x=>x.start && x.start>=today);
-  if(all) return fut;
-  return fut.filter((x,i) => i<6 || x===r || (state.months.size && state.months.has(monthKey(x.start))));
+  if(all) return t.rows;
+  return t.rows.filter((x,i) => i<6 || x===r || (state.months.size && state.months.has(monthKey(x.start))));
 }
 const hiddenDates = (t, r) => visibleDates(t, r, true).length - visibleDates(t, r, false).length;
 
 function renderDetail(){
   const t = current; if(!t) return;
-  const r = currentRow || t.open[0] || t.ref;
-  const matchMonths = state.months;
+  const r = currentRow || t.open[0] || t.rows[0] || null;
   const panes = {
-    inc: ['Включено', r.inc||t.ref.inc],
-    exc: ['Не включено', r.exc||t.ref.exc],
-    pay: ['Порядок оплаты', r.pay||t.ref.pay],
+    inc: ['Включено', t.included],
+    exc: ['Не включено', t.excluded],
+    pay: ['Оплата', t.payment + (t.extras ? '\n\nДополнительные услуги:\n'+t.extras : '')],
     obj: ['Возражения', null],
-    prog: ['Программа по дням', r.prog||t.ref.prog],
-    hotels: ['Отели', r.hotels||t.ref.hotels],
+    faq: ['FAQ с сайта', null],
+    prog: ['Программа', t.days.join('\n\n')],
+    hotels: ['Проживание', t.hotels],
   };
-  const paneBody = tab==='obj'
-    ? `<div class="hint" style="margin-bottom:6px">Общие ответы, подставлены данные тура. <span class="draft">черновик — проверьте формулировки</span></div>` +
-      (window.OBJECTIONS||[]).map(o=>`<details class="obj"><summary>${esc(o.q)}</summary><p>${esc(fill(o.a,t,r))}</p></details>`).join('')
-    : tab==='hotels'
-      ? (panes.hotels[1]||'—').split('\n').map(l=>esc(l).replace(/(https?:\/\/\S+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')).join('<br>')
-      : esc(panes[tab][1]||'— в таблице не заполнено');
-  const msg = r.msg || '';
+  let body;
+  if(tab==='obj') body = `<div class="hint" style="margin-bottom:6px">Цифры подставлены со страницы тура. <span class="draft">черновик — проверьте формулировки</span></div>` +
+      (window.OBJECTIONS||[]).map(o=>`<details class="obj"><summary>${esc(o.q)}</summary><p>${esc(fill(o.a,t,r))}</p></details>`).join('');
+  else if(tab==='faq') body = t.faq.map(f=>`<details class="obj"><summary>${esc(f.q)}</summary><p style="white-space:pre-line">${esc(f.a)}</p></details>`).join('') || '—';
+  else body = esc(panes[tab][1] || '— на странице тура не найдено');
+  const msg = r ? r.message : '';
   $('#detail').innerHTML = `
     <div class="d-top">
-      <div><h2 class="d-title">${esc(t.name)}</h2>
-        <div class="d-sub">${esc(t.org)} · ${r.days} дней · ${esc(t.routeTxt)}</div></div>
-      <div class="price"><b>${esc(r.price)}</b><div>доплата за сингл ${esc(money(r.single)||'—')}</div></div>
+      <div><h2 class="d-title">${esc(t.title)}</h2>
+        <div class="d-sub">${esc(t.org)} · ${t.len||'?'} дней · ${esc(t.route)} · <a href="${esc(t.url)}" target="_blank" rel="noopener">страница тура</a>${t.booklet?` · <a href="${esc(t.booklet)}" target="_blank" rel="noopener">буклет</a>`:''}</div></div>
+      <div class="price"><b>${esc(priceTxt(t))}</b>${t.priceOld?` <s>$${t.priceOld}</s>`:''}<div>${t.single?'доплата за сингл '+esc(t.single):'сингл — уточнить'}</div></div>
     </div>
     ${t.extra.note?`<div class="note">⚠︎ ${esc(t.extra.note)}</div>`:''}
-    <div class="dates">${visibleDates(t, r).map(x=>`<button class="date ${x===r?'on':''} ${!x.open?'full':''} ${matchMonths.size&&x.start&&matchMonths.has(monthKey(x.start))?'match':''}" data-i="${t.rows.indexOf(x)}" ${!x.open?'disabled':''}>${fmtD(x.start)}–${fmtD(x.end)}<small>${x.open?(x.free??'?')+' мест':'мест нет'}</small></button>`).join('')}${hiddenDates(t, r)?`<button class="more" id="moredates">${showAllDates?'Свернуть даты':'ещё '+hiddenDates(t, r)+' дат'}</button>`:''}</div>
+    <div class="dates">${visibleDates(t, r).map(x=>`<button class="date ${x===r?'on':''} ${!x.open?'full':''} ${state.months.size&&state.months.has(monthKey(x.start))?'match':''}" data-i="${t.rows.indexOf(x)}" ${!x.open?'disabled':''}>${fmtD(x.start)}–${fmtD(x.end)}<small>мест: ${x.seats??'?'}</small></button>`).join('') || '<span class="hint">Ближайших заездов на сайте нет</span>'}${hiddenDates(t, r)?`<button class="more" id="moredates">${showAllDates?'Свернуть даты':'ещё '+hiddenDates(t, r)+' дат'}</button>`:''}</div>
     <div class="grid2">
       <div class="box"><h2>Маршрут и переезды</h2>${routeHTML(t)}</div>
-      <div class="box"><h2>Что сказать</h2>${scriptHTML(r.script||t.ref.script)}</div>
+      <div class="box"><h2>Что сказать</h2>${scriptHTML(t)}</div>
     </div>
     <div class="tabs">${Object.entries(panes).map(([k,[l]])=>`<button class="tab ${tab===k?'on':''}" data-tab="${k}">${l}</button>`).join('')}</div>
-    <div class="pane ${tab==='obj'||tab==='hotels'?'rich':''}">${paneBody}</div>
+    <div class="pane ${tab==='obj'||tab==='faq'?'rich':''}">${body}</div>
     <div class="msgbar">
-      <span class="pv">${msg?esc(msg.split('\n')[0]):'В таблице нет сообщения для клиента на эти даты'}</span>
+      <span class="pv">${msg?esc(msg.split('\n')[1]||msg):'Нет открытых дат'}</span>
       <button class="btn ghost" id="msgtoggle" ${msg?'':'disabled'}>Показать</button>
       <button class="btn" id="copymsg" ${msg?'':'disabled'}>Скопировать сообщение клиенту</button>
     </div>
@@ -387,7 +360,7 @@ document.addEventListener('click', e => {
   const chip = e.target.closest('.chip');
   if(chip){ const set = state[chip.dataset.set], k = chip.dataset.k; set.has(k)?set.delete(k):set.add(k); render(); return; }
   if(e.target.id==='moredates'){ showAllDates=!showAllDates; renderDetail(); return; }
-  if(e.target.id==='morecities'){ showAllCities=!showAllCities; renderFilters(); return; }
+  if(e.target.id==='moresights'){ showAllSights=!showAllSights; renderFilters(); return; }
   if(e.target.id==='reset'){ for(const k in state) if(state[k] instanceof Set) state[k].clear(); state.q=''; $('#search').value=''; render(); return; }
   const card = e.target.closest('.card');
   if(card){
@@ -402,30 +375,29 @@ document.addEventListener('click', e => {
   if(tb){ tab = tb.dataset.tab; renderDetail(); return; }
   if(e.target.id==='msgtoggle'){ const f=$('#msgfull'); f.classList.toggle('open'); e.target.textContent=f.classList.contains('open')?'Скрыть':'Показать'; if(f.classList.contains('open')) f.scrollIntoView({block:'nearest'}); return; }
   if(e.target.id==='copymsg'){
-    const r = currentRow || current.open[0] || current.ref, btn = e.target;
+    const r = currentRow || current.open[0], btn = e.target;
     const ok = () => { btn.textContent='Скопировано ✓'; btn.classList.add('done'); setTimeout(()=>{btn.textContent='Скопировать сообщение клиенту';btn.classList.remove('done');},1800); };
-    (navigator.clipboard ? navigator.clipboard.writeText(r.msg) : Promise.reject()).then(ok).catch(()=>{ const ta=document.createElement('textarea'); ta.value=r.msg; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); ok(); });
+    (navigator.clipboard ? navigator.clipboard.writeText(r.message) : Promise.reject()).then(ok).catch(()=>{ const ta=document.createElement('textarea'); ta.value=r.message; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); ok(); });
     return;
   }
   if(e.target.classList.contains('map')){ const z=$('#zoom'); z.querySelector('img').src=e.target.src; z.classList.add('open'); return; }
   if(e.target.closest('#zoom')) $('#zoom').classList.remove('open');
 });
 $('#search').addEventListener('input', e => { state.q = e.target.value.trim(); renderResults(); });
-$('#reload').addEventListener('click', () => load(true));
+$('#reload').addEventListener('click', () => load());
 
 async function load(){
-  $('#status').textContent = 'Загружаю таблицу…';
+  $('#status').textContent = 'Загружаю…';
   try{
-    const res = await fetch(SHEET + '&_=' + Date.now());
+    const res = await fetch('data.json?_=' + Date.now());
     if(!res.ok) throw new Error(res.status);
-    const text = await res.text();
-    build(parseCSV(text));
-    try{ localStorage.setItem('podbor-cache', text); }catch(_){}
-    $('#status').textContent = 'Данные из таблицы · ' + new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    const data = await res.json();
+    build(data);
+    const at = new Date(data.generatedAt);
+    $('#status').textContent = 'Данные с сайта на ' + at.toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    $('#status').title = (data.warnings||[]).join('\n');
   }catch(err){
-    let cached = null; try{ cached = localStorage.getItem('podbor-cache'); }catch(_){}
-    if(cached){ build(parseCSV(cached)); $('#status').textContent = 'Нет связи с таблицей — показана сохранённая копия'; }
-    else { $('#status').textContent = 'Не удалось загрузить таблицу'; return; }
+    $('#status').textContent = 'Не удалось загрузить данные (data.json)'; return;
   }
   if(current){ const k=current.key; current=TOURS.find(t=>t.key===k)||null; currentRow=null; }
   render(); if(current) renderDetail();
