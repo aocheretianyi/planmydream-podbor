@@ -1,0 +1,43 @@
+# Раз в 4 часа собирает данные туров с planmydream.ru и выкладывает подборщик на GitHub Pages.
+name: Обновить данные и выложить
+
+on:
+  schedule:
+    - cron: '17 */4 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Собрать данные с сайта
+        run: python3 collect.py
+      - name: Сохранить data.json, если изменился
+        run: |
+          if ! git diff --quiet -- data.json; then
+            git config user.name "podbor-bot"
+            git config user.email "podbor-bot@users.noreply.github.com"
+            git commit -m "Данные с сайта: $(date -u +'%Y-%m-%d %H:%M') UTC" -- data.json
+            git push
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deploy
+        uses: actions/deploy-pages@v4
