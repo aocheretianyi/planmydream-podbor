@@ -123,8 +123,9 @@ mark{background:#fff0b3;border-radius:3px}
 .btn{border:0;background:var(--accent);color:#fff;border-radius:9px;padding:8px 14px;font-weight:600;white-space:nowrap}
 .btn.ghost{background:var(--chip);color:var(--ink);font-weight:500}
 .btn.done{background:var(--ok)}
-#msgfull{display:none;white-space:pre-line;font-size:13px;background:var(--bg);border-radius:8px;padding:10px 12px;margin:0 0 10px}
-#msgfull.open{display:block}
+.copyrow{display:flex;align-items:center;gap:10px;margin-bottom:8px;white-space:normal}
+.copyrow .hint{margin:0}
+.copytext{white-space:pre-line;background:var(--bg);border-radius:8px;padding:10px 12px}
 .zoom{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:9;cursor:zoom-out}
 .zoom.open{display:flex}
 .zoom img{max-width:96vw;max-height:94vh;border-radius:8px}
@@ -378,7 +379,12 @@ function paneHTML(t, r){
   }
   if(tab==='obj') return {rich:true, html:`<div class="hint" style="margin:0 0 4px">Цифры и состав подставлены со страницы тура. <span class="draft">черновик — проверьте формулировки</span></div>`+objs.map(o=>item(o)).join('')};
   if(tab==='faq') return {rich:true, html: faq.map(o=>item(o)).join('') || '—'};
-  const panes = {inc:t.included, exc:t.excluded, pay:t.payment+(t.extras?'\n\nДополнительные услуги:\n'+t.extras:''), prog:t.days.join('\n\n'), hotels:t.hotels};
+  if(tab==='prog'){
+    const c = contractText(t, r);
+    return {rich:true, html:`<div class="copyrow"><button class="btn" data-copy="prog">Скопировать программу</button><span class="hint">${c.contract ? 'Расписание по дням как в договоре (из таблицы)'+(c.redated?', даты пересчитаны под выбранный заезд':'') : 'В таблице нет расписания «как в договоре» — показана программа с сайта'}</span></div><div class="copytext">${esc(c.text)}</div>`};
+  }
+  if(tab==='msg') return {rich:true, html: r ? `<div class="copyrow"><button class="btn" data-copy="msg">Скопировать сообщение</button><span class="hint">Для заезда ${fmtD(r.start)}–${fmtD(r.end)}; данные — с сайта</span></div><div class="copytext">${esc(r.message)}</div>` : 'Нет открытых дат'};
+  const panes = {inc:t.included, exc:t.excluded, pay:t.payment+(t.extras?'\n\nДополнительные услуги:\n'+t.extras:''), hotels:t.hotels};
   return {rich:false, html: esc(panes[tab] || '— на странице тура не найдено')};
 }
 function hl(s){
@@ -386,7 +392,21 @@ function hl(s){
   if(ask) ask.split(/\s+/).filter(w=>w.length>1).forEach(w => { h = h.replace(new RegExp('('+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'), '<mark>$1</mark>'); });
   return h;
 }
-const TABS = {obj:'Возражения', faq:'FAQ с сайта', inc:'Включено', exc:'Не включено', pay:'Оплата', prog:'Программа', hotels:'Проживание'};
+const TABS = {obj:'Возражения', faq:'FAQ с сайта', inc:'Включено', exc:'Не включено', pay:'Оплата', prog:'Программа по дням', msg:'Сообщение туристу', hotels:'Проживание'};
+
+// Программа «как в договоре» — из таблицы. Если для выбранного заезда её нет, берём расписание
+// другого заезда этого тура и пересчитываем даты в заголовках «День N (дд.мм)».
+function contractText(t, r){
+  const list = t.contract || [];
+  if(!list.length) return {text: t.days.join('\n\n'), contract:false};
+  const key = r ? iso(r.start)+'_'+iso(r.end) : '';
+  const exact = list.find(c => c.start+'_'+c.end === key);
+  if(exact || !r) return {text: (exact||list[0]).text, contract:true};
+  const same = list.find(c => pdate(c.end) && Math.round((pdate(c.end)-pdate(c.start))/864e5)+1 === r.days) || list[0];
+  const dd = n => { const x = new Date(r.start); x.setDate(x.getDate()+n-1); return String(x.getDate()).padStart(2,'0')+'.'+String(x.getMonth()+1).padStart(2,'0'); };
+  const text = same.text.replace(/((?:День|Дни)\s*)(\d+)(?:\s*[–-]\s*(\d+))?\s*\([^)]*\)/g, (m, w, a, b) => `${w}${a}${b?'–'+b:''} (${dd(+a)}${b?'–'+dd(+b):''})`);
+  return {text, contract:true, redated:true};
+}
 function renderPane(){
   const t = current, r = currentRow;
   const p = paneHTML(t, r);
@@ -429,10 +449,9 @@ function renderDetail(keepScroll){
     </div>
     <div class="msgbar">
       <span class="pv">${r?esc(r.message.split('\n')[1]||''):'Нет открытых дат'}</span>
-      <button class="btn ghost" id="msgtoggle" ${r?'':'disabled'}>Показать</button>
-      <button class="btn" id="copymsg" ${r?'':'disabled'}>Скопировать сообщение клиенту</button>
+      <button class="btn" data-copy="msg" ${r?'':'disabled'}>Скопировать сообщение туристу</button>
     </div>
-    <div id="msgfull">${r?esc(r.message):''}</div>`;
+`;
   renderPane();
   $('#detail').scrollTop = keepScroll ? scroll : 0;
 }
@@ -478,11 +497,11 @@ document.addEventListener('click', e => {
   if(d && !d.disabled){ currentRow = current.rows[+d.dataset.i]; renderDetail(true); saveHash(); return; }
   const tb = e.target.closest('.tab');
   if(tb){ tab = tb.dataset.tab; ask = ''; $('#ask').value = ''; renderPane(); return; }   // без перерисовки карточки — прокрутка не прыгает
-  if(e.target.id==='msgtoggle'){ const f=$('#msgfull'); f.classList.toggle('open'); e.target.textContent=f.classList.contains('open')?'Скрыть':'Показать'; if(f.classList.contains('open')) f.scrollIntoView({block:'nearest'}); return; }
-  if(e.target.id==='copymsg'){
-    const msg = currentRow.message, btn = e.target;
-    const ok = () => { btn.textContent='Скопировано ✓'; btn.classList.add('done'); setTimeout(()=>{btn.textContent='Скопировать сообщение клиенту';btn.classList.remove('done');},1800); };
-    (navigator.clipboard ? navigator.clipboard.writeText(msg) : Promise.reject()).then(ok).catch(()=>{ const ta=document.createElement('textarea'); ta.value=msg; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); ok(); });
+  const cp = e.target.closest('[data-copy]');
+  if(cp && !cp.disabled){
+    const text = cp.dataset.copy==='prog' ? contractText(current, currentRow).text : currentRow.message, label = cp.textContent;
+    const ok = () => { cp.textContent='Скопировано ✓'; cp.classList.add('done'); setTimeout(()=>{cp.textContent=label;cp.classList.remove('done');},1800); };
+    (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(ok).catch(()=>{ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); ok(); });
     return;
   }
   if(e.target.classList.contains('map')){ const z=$('#zoom'); z.querySelector('img').src=e.target.src; z.classList.add('open'); return; }
