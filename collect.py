@@ -6,7 +6,7 @@
   * страница каждого тура — программа по дням, «Что включено / не включено», порядок оплаты,
     доп. услуги, FAQ, проживание, описание первого экрана, ссылка на буклет.
 Из Google-таблицы берутся только продающий скрипт («свойство → выгода»), ссылка на буклет и
-«Расписание по дням как в договоре»: на сайте их нет.
+«Расписание по дням как в договоре», «Отели»: на сайте их нет.
 
 Запуск:  python3 podbor/collect.py      → пишет podbor/data.json
 Страницы качаются через curl (на Mac у python.org-Python нет сертификатов, а curl есть везде).
@@ -182,6 +182,7 @@ def scripts_from_sheet():
     h = rows[0]
     col = lambda name: next(i for i, x in enumerate(h) if x.startswith(name))
     ci, cm, cp = col('Продающий скрипт'), col('Сообщение для клиента'), col('Расписание по дням')
+    ch = col('Отели')
     cs, ce = col('Дата начала'), col('Дата окончания')
     iso = lambda v: '-'.join(reversed(v.strip().split('.'))) if re.match(r'\d{2}\.\d{2}\.\d{4}$', v.strip()) else ''
     out = {}
@@ -190,7 +191,7 @@ def scripts_from_sheet():
         m = re.search(r'planmydream\.ru/([\w\-]+)', r[cm])
         if not m:
             continue
-        o = out.setdefault(m.group(1), {'script': '', 'booklet': '', 'contract': []})
+        o = out.setdefault(m.group(1), {'script': '', 'booklet': '', 'contract': [], 'hotels': []})
         if r[ci].strip() and not o['script']:
             o['script'] = r[ci].strip()
         b = re.search(r'https://\S*bookflip\S*', r[cm])
@@ -198,6 +199,8 @@ def scripts_from_sheet():
             o['booklet'] = b.group(0)
         if r[cp].strip():  # даты в расписании — от этого заезда; страница подставит даты выбранного
             o['contract'].append({'start': iso(r[cs]), 'end': iso(r[ce]), 'text': r[cp].strip()})
+        if r[ch].strip():  # отели на сайте не названы — список с ссылками ведём в таблице
+            o['hotels'].append({'start': iso(r[cs]), 'end': iso(r[ce]), 'text': r[ch].strip()})
     return out
 
 
@@ -244,6 +247,7 @@ def main():
         if not t['booklet']:  # ссылки на флипбук на страницах нет — берём из таблицы
             t['booklet'] = scripts.get(slug, {}).get('booklet', '')
         t['contract'] = scripts.get(slug, {}).get('contract', [])
+        t['hotelsSheet'] = scripts.get(slug, {}).get('hotels', [])
         t.update(facts(t))
         # У большинства туров цена одна (цена товара со скидкой, в заезде — полная).
         # Если у заездов разные цены (Новый год: 4, 6 и 7 дней) — цена заезда и есть цена варианта.
