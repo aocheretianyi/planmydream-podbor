@@ -5,7 +5,8 @@
   * каталог туров Tilda Store — название, организатор, цена, маршрут, места/фильтры, заезды (даты, места);
   * страница каждого тура — программа по дням, «Что включено / не включено», порядок оплаты,
     доп. услуги, FAQ, проживание, описание первого экрана, ссылка на буклет.
-Из Google-таблицы берутся только продающий скрипт («свойство → выгода») и ссылка на буклет: на сайте их нет.
+Из Google-таблицы берутся только продающий скрипт («свойство → выгода»), ссылка на буклет и
+«Расписание по дням как в договоре»: на сайте их нет.
 
 Запуск:  python3 podbor/collect.py      → пишет podbor/data.json
 Страницы качаются через curl (на Mac у python.org-Python нет сертификатов, а curl есть везде).
@@ -171,21 +172,32 @@ def facts(t):
 
 
 def scripts_from_sheet():
-    """Продающие скрипты из таблицы: ключ — адрес тура из колонки «Сообщение для клиента»."""
+    """Из таблицы — только то, чего нет на сайте: продающий скрипт, ссылка на буклет и
+    «Расписание по дням как в договоре». Ключ — адрес тура из колонки «Сообщение для клиента»."""
     try:
         rows = list(csv.reader(io.StringIO(fetch(SHEET))))
     except Exception as e:  # таблица — не главное, без неё подборщик работает
         print('! таблица не загрузилась:', e, file=sys.stderr)
         return {}
     h = rows[0]
-    ci = next(i for i, x in enumerate(h) if x.startswith('Продающий скрипт'))
-    cm = next(i for i, x in enumerate(h) if x.startswith('Сообщение для клиента'))
+    col = lambda name: next(i for i, x in enumerate(h) if x.startswith(name))
+    ci, cm, cp = col('Продающий скрипт'), col('Сообщение для клиента'), col('Расписание по дням')
+    cs, ce = col('Дата начала'), col('Дата окончания')
+    iso = lambda v: '-'.join(reversed(v.strip().split('.'))) if re.match(r'\d{2}\.\d{2}\.\d{4}$', v.strip()) else ''
     out = {}
     for r in rows[1:]:
-        m = re.search(r'planmydream\.ru/([\w\-]+)', r[cm] if len(r) > cm else '')
-        if m and r[ci].strip() and m.group(1) not in out:
-            b = re.search(r'https://\S*bookflip\S*', r[cm])
-            out[m.group(1)] = {'script': r[ci].strip(), 'booklet': b.group(0) if b else ''}
+        r = r + [''] * (len(h) - len(r))
+        m = re.search(r'planmydream\.ru/([\w\-]+)', r[cm])
+        if not m:
+            continue
+        o = out.setdefault(m.group(1), {'script': '', 'booklet': '', 'contract': []})
+        if r[ci].strip() and not o['script']:
+            o['script'] = r[ci].strip()
+        b = re.search(r'https://\S*bookflip\S*', r[cm])
+        if b and not o['booklet']:
+            o['booklet'] = b.group(0)
+        if r[cp].strip():  # даты в расписании — от этого заезда; страница подставит даты выбранного
+            o['contract'].append({'start': iso(r[cs]), 'end': iso(r[ce]), 'text': r[cp].strip()})
     return out
 
 
@@ -231,6 +243,7 @@ def main():
             t.update(parse_page(''))
         if not t['booklet']:  # ссылки на флипбук на страницах нет — берём из таблицы
             t['booklet'] = scripts.get(slug, {}).get('booklet', '')
+        t['contract'] = scripts.get(slug, {}).get('contract', [])
         t.update(facts(t))
         # У большинства туров цена одна (цена товара со скидкой, в заезде — полная).
         # Если у заездов разные цены (Новый год: 4, 6 и 7 дней) — цена заезда и есть цена варианта.
