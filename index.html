@@ -204,6 +204,18 @@ const payLines = t => bullets(t.payment).filter(l=>/%/.test(l) && !REFUND.test(l
 const percents = t => [...new Set((payLines(t).join(' ').match(/\d+\s*%/g)||[]).map(x=>x.replace(/\s/,'')))];
 const exclShort = t => { const m = (t.intro||'').match(/Вс[её] включено[^\n.]*/); return m ? m[0].trim() : (bullets(t.excluded).length ? 'Не входит: '+bullets(t.excluded).slice(0,3).map(l=>lc(short(l,40,false))).join(', ') : ''); };
 
+// Ручные данные (extra.js) или — для нового тура / изменившейся программы — автодописанные Claude (data.json → auto)
+function withAuto(t){
+  const manual = (window.TOUR_EXTRA||{})[t.slug] || {}, a = t.auto;
+  if(!a) return {extra: manual, seeList: (window.TOUR_SEE||{})[t.slug] || [], isAuto: false};
+  const {map, ...rest} = manual;  // старая карта может не совпадать с новой программой
+  return {
+    extra: {...rest, format: a.format, pace: a.pace, adultsOnly: a.adultsOnly, note: a.note || rest.note, arrive: a.arrive, depart: a.depart,
+      legs: a.legs.map(l => [l.day, l.from, l.to, l.transport, l.time])},
+    seeList: a.see.map(x => [x.city, x.what, x.benefit]), isAuto: true, autoReason: a.reason,
+  };
+}
+
 function build(data){
   GENERATED = new Date(data.generatedAt);
   TOURS = data.tours.map(t => {
@@ -217,7 +229,7 @@ function build(data){
     return {...t, key:t.slug, sights:[...new Set(sights.map(s=>s.trim()).filter(Boolean))], rows, open: rows.filter(r=>r.open),
       lenTxt: lens.length>1 ? lens[0]+'–'+lens[lens.length-1]+' дн.' : (lens[0]||'?')+' дн.',
       minPrice: Math.min(...rows.filter(r=>r.open).map(r=>r.price||Infinity), t.price||Infinity),
-      extra: (window.TOUR_EXTRA||{})[t.slug] || {}};
+      ...withAuto(t)};
   });
   DURS = [...new Set(TOURS.map(t=>t.duration).filter(Boolean))].sort((a,b)=>durMin(a)-durMin(b));
 }
@@ -341,7 +353,7 @@ function benefits(t){
 
 function scriptHTML(t, r){
   const tagline = ((t.script||'').match(/«([^»]+)»/)||[])[1];
-  const see = ((window.TOUR_SEE||{})[t.slug]||[]).filter(([c]) => !/вариант\S*\s*\d/.test(c) || !r || (c.match(/\d+/g)||[]).map(Number).includes(r.days));
+  const see = (t.seeList||[]).filter(([c]) => !/вариант\S*\s*\d/.test(c) || !r || (c.match(/\d+/g)||[]).map(Number).includes(r.days));
   const ben = benefits(t);
   const inc = bullets(t.included).slice(0,4).map(l=>short(l,58)), exc = bullets(t.excluded).slice(0,4).map(l=>short(l,48,false));
   const pays = bullets(t.payment).filter(l=>/%|валют|рубл|доллар/i.test(l) && !REFUND.test(l)).slice(0,4).map(l=>short(l,150,true,/\s\(|;/).replace(/^Предоплата \(бронирование\) — Для подтверждения брони требуется предоплата в размере/,'Бронь — предоплата'));
@@ -350,7 +362,7 @@ function scriptHTML(t, r){
   const others = [...near.filter(x=>r&&x.start>r.start), ...near].slice(0,1); // сначала следующий заезд, потом предыдущий
   const steps = [
     ['Предложение', `Под ваши пожелания могу предложить тур «${esc(t.title)}»${r?` — ${dayWord(r.days)}, с ${fmtLong(r.start)} по ${fmtLong(r.end)}`:''}. Маршрут: ${esc(t.route)}.${tagline?`<div class="sub">${esc(tagline)}</div>`:''}`],
-    ['Что вас ждёт', see.length ? `<ul>${see.map(([c,w,g])=>`<li><b>${esc(c)}:</b> ${esc(w)}${g?` → <span class="g">${esc(g)}</span>`:''}</li>`).join('')}</ul>` : ben.length ? `<ul>${ben.map(([p,g])=>`<li>${esc(p)}${g?` → <span class="g">${esc(g)}</span>`:''}</li>`).join('')}</ul>`
+    ['Что вас ждёт'+(t.isAuto?AUTO_TAG(t):''), see.length ? `<ul>${see.map(([c,w,g])=>`<li><b>${esc(c)}:</b> ${esc(w)}${g?` → <span class="g">${esc(g)}</span>`:''}</li>`).join('')}</ul>` : ben.length ? `<ul>${ben.map(([p,g])=>`<li>${esc(p)}${g?` → <span class="g">${esc(g)}</span>`:''}</li>`).join('')}</ul>`
       : `Увидите: ${esc(t.sights.slice(0,5).join(', '))}.`],
     ['Что включено / не включено', `В стоимость уже входит:<ul>${inc.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>${exc.length?`<div class="sub">Отдельно оплачиваются: ${esc(exc.map(lc).join('; '))}.</div>`:''}`],
     ['Как вам тур?', 'Как вам в целом тур? Устраивают такие условия?'],
@@ -419,6 +431,7 @@ function hl(s){
   if(ask) ask.split(/\s+/).filter(w=>w.length>1).forEach(w => { h = h.replace(new RegExp('('+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'), '<mark>$1</mark>'); });
   return h;
 }
+const AUTO_TAG = t => ` <span class="draft" title="${esc(t.autoReason||'')}">🤖 составлено ИИ — проверьте</span>`;
 const TABS = {obj:'Возражения', faq:'FAQ с сайта', inc:'Включено', exc:'Не включено', pay:'Оплата', prog:'Программа по дням', msg:'Сообщение туристу', hotels:'Проживание'};
 
 // Программа «как в договоре» — из таблицы. Если для выбранного заезда её нет, берём расписание
@@ -471,7 +484,7 @@ function renderDetail(keepScroll){
     </div>
     <div class="grid2">
       <div class="box"><h2>Сценарий презентации</h2>${scriptHTML(t, r)}</div>
-      <div class="box"><h2>Маршрут и переезды</h2>${routeHTML(t, r)}</div>
+      <div class="box"><h2>Маршрут и переезды${t.isAuto?AUTO_TAG(t):''}</h2>${routeHTML(t, r)}</div>
     </div>
     <div class="answers">
       <div class="abar"><input id="ask" placeholder="🔍 Найти ответ: виза, еда, перелёт…" value="${esc(ask)}"><div class="tabs" id="tabs"></div></div>
