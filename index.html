@@ -386,17 +386,19 @@ function paneHTML(t, r){
     const found = docs.filter(o => hit(o.q+' '+o.a));
     return {rich:true, html: found.length ? found.slice(0,12).map(o=>item(o,true)).join('') : 'Ничего не нашлось — попробуйте другое слово.'};
   }
-  if(tab==='obj') return {rich:true, html:`<div class="hint" style="margin:0 0 4px">Цифры и состав подставлены со страницы тура. <span class="draft">черновик — проверьте формулировки</span></div>`+objs.map(o=>item(o)).join('')};
-  if(tab==='faq') return {rich:true, html: faq.map(o=>item(o)).join('') || '—'};
+  const fold = `<button class="link" data-fold="open">Раскрыть все</button><button class="link" data-fold="close">Свернуть все</button>`;
+  if(tab==='obj') return {rich:true, html:`<div class="pbar"><span class="hint">Цифры и состав подставлены со страницы тура. <span class="draft">черновик — проверьте формулировки</span></span>${fold}</div>`+objs.map(o=>item(o)).join('')};
+  if(tab==='faq') return {rich:true, html: faq.length ? `<div class="pbar"><span class="hint">Ответы со страницы тура</span>${fold}</div>`+faq.map(o=>item(o)).join('') : '—'};
   const c = copyable(tab, t, r);
   const linkify = h => h.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
   return {rich:true, html:`<div class="pbar"><span class="hint">${esc(c.note)}</span><button class="icopy" data-copy="${tab}" title="Скопировать" aria-label="Скопировать"><svg viewBox='0 0 24 24' width='18' height='18' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><rect x='9' y='9' width='12' height='12' rx='2'/><path d='M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1'/></svg></button></div><div class="ptext">${linkify(esc(c.text || '— не найдено'))}</div>`};
 }
 // Текст вкладки — он же копируется кнопкой. note — откуда данные.
 function copyable(k, t, r){
-  if(k==='inc') return {text:t.included, note:'Что включено — со страницы тура'};
-  if(k==='exc') return {text:t.excluded, note:'Что не включено — со страницы тура'};
-  if(k==='pay') return {text:t.payment+(t.extras?'\n\nДополнительные услуги:\n'+t.extras:''), note:'Порядок оплаты — со страницы тура'};
+  const tight = x => (x||'').replace(/\n\s*\n+/g, '\n');  // без пустых строк между пунктами
+  if(k==='inc') return {text:tight(t.included), note:'Что включено — со страницы тура'};
+  if(k==='exc') return {text:tight(t.excluded), note:'Что не включено — со страницы тура'};
+  if(k==='pay') return {text:tight(t.payment)+(t.extras?'\n\nДополнительные услуги:\n'+tight(t.extras):''), note:'Порядок оплаты — со страницы тура'};
   if(k==='prog'){ const c = contractText(t, r); return {text:c.text, note: c.contract ? 'Как в договоре (из таблицы)'+(c.redated?', даты пересчитаны под выбранный заезд':'') : 'В таблице нет расписания «как в договоре» — программа с сайта'}; }
   if(k==='msg') return r ? {text:r.message, note:`Для заезда ${fmtD(r.start)}–${fmtD(r.end)}, данные — с сайта`} : {text:'', note:'Нет открытых дат'};
   if(k==='hotels'){
@@ -519,6 +521,8 @@ document.addEventListener('click', e => {
   if(d && !d.disabled){ currentRow = current.rows[+d.dataset.i]; renderDetail(true); saveHash(); return; }
   const tb = e.target.closest('.tab');
   if(tb){ tab = tb.dataset.tab; ask = ''; $('#ask').value = ''; renderPane(); return; }   // без перерисовки карточки — прокрутка не прыгает
+  const fold = e.target.closest('[data-fold]');
+  if(fold){ document.querySelectorAll('#pane details').forEach(d => d.open = fold.dataset.fold==='open'); return; }
   const cp = e.target.closest('[data-copy]');
   if(cp && !cp.disabled){
     const text = copyable(cp.dataset.copy, current, currentRow).text, icon = cp.classList.contains('icopy'), label = cp.innerHTML;
