@@ -5,130 +5,144 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Подборщик туров</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23c2412d'/%3E%3Cpath d='M32 12c-8.3 0-15 6.5-15 14.6C17 37.5 32 52 32 52s15-14.5 15-25.4C47 18.5 40.3 12 32 12z' fill='%23fff'/%3E%3Ccircle cx='32' cy='27' r='6' fill='%23c2412d'/%3E%3C/svg%3E">
 <style>
 :root{
   --bg:#f6f3ee; --panel:#ffffff; --ink:#1f1d1a; --muted:#6f6a62; --line:#e6e0d6;
   --accent:#c2412d; --accent-soft:#fbe9e5; --ok:#2f7d4f; --ok-soft:#e5f3ea; --warn:#9a6a00; --warn-soft:#fbf1d9;
-  --chip:#f1ece4; --chip-on:#1f1d1a; --chip-on-ink:#fff; --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.05);
+  --chip:#f1ece4; --chip-on:#1f1d1a; --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.05);
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 body{background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
 button{font:inherit;color:inherit;cursor:pointer}
 .app{display:grid;grid-template-rows:auto 1fr;height:100vh}
-header{display:flex;align-items:center;gap:16px;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line)}
-header h1{font-size:16px;margin:0;white-space:nowrap}
+header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+header h1{font-size:15px;margin:0 6px 0 0;white-space:nowrap}
 header h1 span{color:var(--accent)}
-#search{flex:1;max-width:420px;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font:inherit}
+.tgl{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:5px 10px;font-size:13px;white-space:nowrap}
+.tgl[aria-pressed="true"]{background:var(--chip-on);color:#fff;border-color:var(--chip-on)}
+#search{flex:1;max-width:360px;padding:6px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font:inherit}
 #status{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
-#reload{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:5px 10px;font-size:12px}
-main{display:grid;grid-template-columns:270px 300px 1fr;min-height:0}
+#status.stale{color:var(--accent);font-weight:600}
+main{display:grid;grid-template-columns:var(--cf,250px) var(--cr,290px) 1fr;min-height:0}
+body.no-filters{--cf:0px} body.no-results{--cr:0px}
+body.no-filters #filters, body.no-results #results{display:none}
 .col{overflow:auto;min-height:0}
-#filters{padding:14px 16px;border-right:1px solid var(--line);background:var(--panel)}
-#results{padding:14px 12px;border-right:1px solid var(--line)}
-#detail{padding:18px 22px 0}
-.fgroup{margin-bottom:14px}
-.fgroup h3{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
-.chips{display:flex;flex-wrap:wrap;gap:5px}
-.chip{border:0;background:var(--chip);border-radius:999px;padding:4px 10px;font-size:13px}
-.chip.on{background:var(--chip-on);color:var(--chip-on-ink)}
-.chip small{opacity:.6;margin-left:3px}
-.more{border:0;background:none;color:var(--accent);font-size:12px;padding:4px 2px}
-#reset{width:100%;border:1px solid var(--line);background:none;border-radius:8px;padding:6px;color:var(--muted)}
+#filters{padding:12px 14px;border-right:1px solid var(--line);background:var(--panel)}
+#results{padding:12px 10px;border-right:1px solid var(--line)}
+#detail{padding:14px 20px 0}
+.ftop{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:13px}
+.ftop b{font-size:15px}
+.link{border:0;background:none;color:var(--accent);padding:2px 0;font-size:12.5px}
+.fgroup{margin-bottom:12px}
+.fgroup h3{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 5px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{border:0;background:var(--chip);border-radius:999px;padding:3px 9px;font-size:12.5px}
+.chip.on{background:var(--chip-on);color:#fff}
+.draft{font-size:10px;color:var(--warn);margin-left:4px;font-weight:400;text-transform:none;letter-spacing:0}
 .rhead{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 4px 8px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer;box-shadow:var(--shadow)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 11px;margin-bottom:7px;cursor:pointer;box-shadow:var(--shadow)}
 .card.top{border-color:#e8b9ae}
 .card.sel{outline:2px solid var(--accent);outline-offset:-1px}
 .card .t{font-weight:600;font-size:13px;line-height:1.3}
 .card .m{color:var(--muted);font-size:12px;margin-top:3px}
-.card .why{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px}
+.card .why{margin-top:5px;display:flex;flex-wrap:wrap;gap:4px}
 .tag{font-size:11px;border-radius:6px;padding:1px 6px;background:var(--ok-soft);color:var(--ok)}
 .tag.no{background:var(--chip);color:var(--muted);text-decoration:line-through}
 .tag.warn{background:var(--warn-soft);color:var(--warn)}
-.compact .card{padding:8px 10px;box-shadow:none}
+.compact .card{padding:7px 10px;box-shadow:none}
 .empty{color:var(--muted);padding:30px 10px;text-align:center}
-/* detail */
+.welcome{color:var(--muted);max-width:520px;margin:60px auto;text-align:center;line-height:1.6}
+/* карточка тура */
 .d-top{display:flex;gap:16px;align-items:flex-start}
-.d-title{font-size:20px;font-weight:700;line-height:1.25;margin:0}
-.d-sub{color:var(--muted);margin-top:4px}
-.price{margin-left:auto;text-align:right;white-space:nowrap}
-.price b{font-size:22px}
-.price s{color:var(--muted);margin-left:4px}
+.d-title{font-size:19px;font-weight:700;line-height:1.25;margin:0}
+.d-sub{color:var(--muted);margin-top:3px;font-size:13px}
 .d-sub a{color:var(--accent)}
+.price{margin-left:auto;text-align:right;white-space:nowrap}
+.price b{font-size:21px}
+.price s{color:var(--muted);margin-left:4px}
 .price div{color:var(--muted);font-size:12px}
-.note{margin-top:8px;background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:6px 10px;font-size:13px}
-.dates{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
-.date{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:4px 9px;font-size:13px}
+.note{margin-top:8px;background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:5px 10px;font-size:13px}
+.dates{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 2px;align-items:center}
+.date{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:3px 8px;font-size:12.5px}
 .date small{color:var(--muted);margin-left:4px}
 .date.match{border-color:var(--ok)}
 .date.on{background:var(--chip-on);color:#fff;border-color:var(--chip-on)}
 .date.on small{color:#ddd}
 .date.full{opacity:.45;text-decoration:line-through;cursor:default}
-.grid2{display:grid;grid-template-columns:1.05fr 1fr;gap:16px;margin-top:14px}
-.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
-.box h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
-/* route */
-.route{display:flex;flex-wrap:wrap;align-items:center;gap:4px 2px}
-.city{background:var(--chip);border-radius:8px;padding:3px 8px;font-weight:600;font-size:13px}
-.city.ext{background:none;border:1px dashed var(--line);font-weight:400;color:var(--muted)}
-.leg{display:flex;flex-direction:column;align-items:center;min-width:64px;padding:0 4px;font-size:11px;color:var(--muted);line-height:1.2;text-align:center}
-.leg .ic{font-size:15px}
-.leg .ar{color:#bbb;letter-spacing:-2px}
-.legsum{margin-top:10px;font-size:13px}
+.more{border:0;background:none;color:var(--accent);font-size:12px;padding:3px 2px}
+.cheat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
+.cell{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.35}
+.cell i{display:block;font-style:normal;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;margin-top:10px;align-items:start}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 14px}
+.box h2{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+/* сценарий */
+.step{display:grid;grid-template-columns:22px 1fr;gap:4px 8px;padding:7px 0;border-top:1px solid var(--line)}
+.step:first-of-type{border-top:0;padding-top:2px}
+.step .n{width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.step .h{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.step .say{grid-column:2;font-size:14px}
+.step ul{margin:3px 0 0;padding-left:17px}
+.step li{margin:2px 0}
+.step .g{color:var(--ok)}
+.step .sub{color:var(--muted);font-size:12.5px;margin-top:3px}
+.step.close .say{background:var(--accent-soft);border-radius:8px;padding:6px 9px}
+.src{color:var(--muted);font-size:11.5px;margin-top:6px}
+/* маршрут */
+.legs{list-style:none;margin:0;padding:0;font-size:13.5px}
+.legs li{display:grid;grid-template-columns:24px 1fr;gap:6px;padding:5px 0;border-top:1px dashed var(--line)}
+.legs li:first-child{border-top:0}
+.legs .ic{text-align:center}
+.legs b{font-weight:600}
+.legs small{color:var(--muted)}
+.legsum{margin-top:6px;font-size:13px}
 .legsum b{color:var(--accent)}
-.leglist{margin:8px 0 0;padding:0;list-style:none;font-size:13px}
-.leglist li{padding:3px 0;border-top:1px dashed var(--line)}
-.leglist li:first-child{border-top:0}
-.map{margin-top:10px;width:100%;border-radius:8px;cursor:zoom-in;display:block}
-.auto{font-size:13px;margin:0;padding-left:16px}
-.auto li{margin:3px 0}
+.map{margin-top:8px;width:100%;border-radius:8px;cursor:zoom-in;display:block}
 .hint{color:var(--muted);font-size:12px;margin-top:6px}
-/* script */
-.tagline{font-size:15px;font-weight:600;margin:0 0 8px}
-.ben{list-style:none;margin:0;padding:0}
-.ben li{padding:5px 0;border-top:1px solid var(--line);font-size:13.5px}
-.ben li:first-child{border-top:0}
-.ben .p{font-weight:600}
-.ben .g{color:var(--ok)}
-.bridge{margin-top:8px;background:var(--accent-soft);border-radius:8px;padding:7px 10px;font-size:13.5px}
-/* tabs */
-.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-top:16px;border-bottom:1px solid var(--line)}
-.tab{border:0;background:none;padding:7px 11px;border-radius:8px 8px 0 0;color:var(--muted)}
+/* ответы */
+.answers{margin-top:12px}
+.abar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+#ask{flex:0 1 260px;padding:5px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font:inherit;margin-bottom:5px}
+.tabs{display:flex;gap:2px;flex-wrap:wrap}
+.tab{border:0;background:none;padding:6px 10px;border-radius:8px 8px 0 0;color:var(--muted);font-size:13px}
 .tab.on{background:var(--panel);color:var(--ink);font-weight:600;border:1px solid var(--line);border-bottom-color:var(--panel);margin-bottom:-1px}
-.pane{background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:12px 14px;font-size:13.5px;white-space:pre-line}
+.pane{background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:10px 14px;font-size:13.5px;white-space:pre-line;min-height:120px}
 .pane.rich{white-space:normal}
-.obj{border-top:1px solid var(--line);padding:7px 0}
+.obj{border-top:1px solid var(--line);padding:6px 0}
 .obj:first-child{border-top:0}
 .obj summary{cursor:pointer;font-weight:600}
-.obj p{margin:6px 0 2px}
-.draft{font-size:11px;color:var(--warn);margin-left:6px;font-weight:400}
-/* message */
-.msgbar{position:sticky;bottom:0;margin:16px -22px 0;padding:10px 22px;background:var(--panel);border-top:1px solid var(--line);display:flex;gap:12px;align-items:center}
+.obj p{margin:5px 0 2px;white-space:pre-line}
+.obj .from{font-size:11px;color:var(--muted);font-weight:400;margin-left:6px}
+mark{background:#fff0b3;border-radius:3px}
+.msgbar{position:sticky;bottom:0;margin:14px -20px 0;padding:9px 20px;background:var(--panel);border-top:1px solid var(--line);display:flex;gap:10px;align-items:center}
 .msgbar .pv{flex:1;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.btn{border:0;background:var(--accent);color:#fff;border-radius:9px;padding:9px 16px;font-weight:600;white-space:nowrap}
+.btn{border:0;background:var(--accent);color:#fff;border-radius:9px;padding:8px 14px;font-weight:600;white-space:nowrap}
 .btn.ghost{background:var(--chip);color:var(--ink);font-weight:500}
 .btn.done{background:var(--ok)}
-#msgfull{display:none;white-space:pre-line;font-size:13px;background:var(--bg);border-radius:8px;padding:10px 12px;margin:10px 0 0}
+#msgfull{display:none;white-space:pre-line;font-size:13px;background:var(--bg);border-radius:8px;padding:10px 12px;margin:0 0 10px}
 #msgfull.open{display:block}
 .zoom{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:9;cursor:zoom-out}
 .zoom.open{display:flex}
 .zoom img{max-width:96vw;max-height:94vh;border-radius:8px}
-.welcome{color:var(--muted);max-width:520px;margin:60px auto;text-align:center;line-height:1.6}
-@media (max-width:1100px){main{grid-template-columns:240px 260px 1fr}.grid2{grid-template-columns:1fr}}
+@media (max-width:1200px){.grid2{grid-template-columns:1fr}.cheat{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
 <div class="app">
   <header>
     <h1>План Мечты · <span>подбор тура</span></h1>
-    <input id="search" placeholder="Поиск: название, город, организатор">
-    <span id="status">Загружаю таблицу…</span>
-    <button id="reload" title="Перечитать данные (собираются с сайта)">Обновить</button>
+    <button class="tgl" id="tgl-filters" aria-pressed="true" title="Показать / скрыть фильтры">☰ Фильтры</button>
+    <button class="tgl" id="tgl-results" aria-pressed="true" title="Показать / скрыть список туров">▤ Подборка</button>
+    <input id="search" placeholder="Поиск тура: название, город, организатор">
+    <span id="status">Загружаю…</span>
+    <button class="tgl" id="reload" title="Перечитать данные (собираются с сайта раз в 4 часа)">Обновить</button>
   </header>
   <main>
     <aside class="col" id="filters"></aside>
     <section class="col" id="results"></section>
-    <section class="col" id="detail"><div class="welcome">Отметьте слева, что важно туристу: города, длительность, месяц, формат, состав группы.<br>Справа появятся 1–2 лучших тура — их и предлагайте.</div></section>
+    <section class="col" id="detail"><div class="welcome">Отметьте слева, что важно туристу: когда, сколько дней, что хочет увидеть, кто едет.<br>В подборке появятся 1–2 лучших тура — их и предлагайте.</div></section>
   </main>
 </div>
 <div class="zoom" id="zoom"><img alt="Карта маршрута"></div>
@@ -137,71 +151,96 @@ main{display:grid;grid-template-columns:270px 300px 1fr;min-height:0}
 // Данные собирает collect.py с сайта planmydream.ru (каталог + страницы туров) в data.json.
 const FORMATS = {classic:'Классика и история', nature:'Природа и горы', city:'Мегаполисы', practice:'Практики, ретрит', holiday:'Праздник', beach:'Пляж (опция)'};
 const PACES = {calm:'Спокойный', medium:'Средний', active:'Активный'};
-const GROUPS = {kids:'С детьми', couple:'Пара / друзья', solo:'Один / одна', senior:'55+'};
-const TRANSPORT = {plane:['✈︎','перелёт'], train:['🚄','поезд'], bus:['🚐','авто'], night:['🛏','ночной поезд']};
+const GROUPS = {kids:'С детьми', solo:'Один / одна', senior:'55+'};
+const TRANSPORT = {plane:['✈︎','перелёт','перелёта'], train:['🚄','поезд','поезда'], bus:['🚐','на авто','на авто'], night:['🛏','ночной поезд','ночных поезда']};
+const SERVICE = /билет|отел|гид|групп|alipay|оплат|страхов|включ|трансфер|завтрак|сопровожд|чат|логистик/i;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const today = new Date(); today.setHours(0,0,0,0);
+const SOON = 14; // заезды ближе 14 дней по умолчанию не предлагаем — новый клиент не успеет
 
-let TOURS = [], DURS = [], state = {sights:new Set(), dur:new Set(), months:new Set(), formats:new Set(), pace:new Set(), group:new Set(), q:''};
-let current = null, currentRow = null, tab = 'inc', showAllSights = false, showAllDates = false;
+let TOURS = [], DURS = [], GENERATED = null;
+const SETS = ['months','dur','sights','group','formats','pace'];
+const state = {months:new Set(), dur:new Set(), sights:new Set(), group:new Set(), formats:new Set(), pace:new Set(), q:''};
+let current = null, currentRow = null, tab = 'obj', ask = '', showAllSights = false, showAllDates = false;
 
 const pdate = s => { const m=/(\d{4})-(\d{2})-(\d{2})/.exec(s||''); return m ? new Date(+m[1], m[2]-1, +m[3]) : null; };
+const iso = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const fmtD = d => d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'}).replace('.','');
+const fmtLong = d => d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
 const monthKey = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
 const monthName = k => { const [y,m]=k.split('-'); const s=new Date(+y,m-1,1).toLocaleDateString('ru-RU',{month:'long'}); return s[0].toUpperCase()+s.slice(1)+' ’'+y.slice(2); };
 const durMin = l => parseInt((l.match(/\d+/)||[99])[0]) - (/^до/i.test(l) ? 100 : 0);
+const plural = (n, a, b, c) => { n=Math.abs(n)%100; const k=n%10; return n>10&&n<20 ? c : k===1 ? a : k>=2&&k<=4 ? b : c; };
+const dayWord = n => n+' '+plural(n,'день','дня','дней');
+const store = (k, v) => { try{ v===undefined ? localStorage.removeItem(k) : localStorage.setItem(k, v); }catch(_){} };
+const load_ = k => { try{ return localStorage.getItem(k); }catch(_){ return null; } };
+
+// --- разбор текстов сайта -------------------------------------------------
+const bullets = txt => (txt||'').split('\n').map(l=>l.replace(/^•\s*/,'').trim()).filter(l=>l && !/^(Следующие|Также можно)/.test(l));
+function short(line, max = 64, withDetail = true, cut = /\s\(|;|\. /){
+  let s = line.replace(/\s+/g,' ').trim();
+  const c = s.indexOf(':');
+  if(c>0 && c<45){ const head = s.slice(0,c).trim(), tail = s.slice(c+1).trim().split(cut)[0]; s = withDetail && tail ? head+' — '+tail : head; }
+  else s = s.split(cut)[0];
+  if(s.length>max){ s = s.slice(0,max); s = s.slice(0, Math.max(s.lastIndexOf(' '), max-15)).replace(/[,—\-\s]+$/,'')+'…'; }
+  return s.replace(/\.$/,'');
+}
+const lc = s => s ? s[0].toLowerCase()+s.slice(1) : s;
+const percents = t => [...new Set((bullets(t.payment).filter(l=>/%/.test(l)).slice(0,2).join(' ').match(/\d+\s*%/g)||[]).map(x=>x.replace(/\s/,'')))];
+const exclShort = t => { const m = (t.intro||'').match(/Вс[её] включено[^\n.]*/); return m ? m[0].trim() : (bullets(t.excluded).length ? 'Не входит: '+bullets(t.excluded).slice(0,3).map(l=>lc(short(l,40,false))).join(', ') : ''); };
 
 function build(data){
+  GENERATED = new Date(data.generatedAt);
   TOURS = data.tours.map(t => {
     const rows = t.departures.map(d => {
-      const start = pdate(d.start), end = pdate(d.end);
-      return {...d, start, end, days: Math.round((end-start)/864e5)+1, open: start>=today && d.seats!==0};
+      const start = pdate(d.start), end = pdate(d.end), months = new Set();
+      for(let x = new Date(start.getFullYear(), start.getMonth(), 1); x <= end; x.setMonth(x.getMonth()+1)) months.add(monthKey(x));
+      return {...d, start, end, months, days: Math.round((end-start)/864e5)+1, open: start>=today && d.seats!==0};
     });
-    const single = ((t.excluded+'\n'+t.extras).match(/одноместн[^\n]*?(\$\s?\d[\d\s]*|\d[\d\s]*\s?(?:\$|₽|руб))/i)||[])[1] || '';
-    const group = ((t.faq.find(f=>/сколько человек/i.test(f.q))||{}).a||'').match(/до\s*(\d+)/);
     const sights = t.sights.length ? t.sights : t.route.split(/\s+—\s+/);
+    const lens = [...new Set(rows.map(r=>r.days))].sort((a,b)=>a-b);
     return {...t, key:t.slug, sights:[...new Set(sights.map(s=>s.trim()).filter(Boolean))], rows, open: rows.filter(r=>r.open),
-      len: rows[0] ? rows[0].days : null, single: single.replace(/\s+/g,' ').trim(), group: group ? group[1] : '',
+      lenTxt: lens.length>1 ? lens[0]+'–'+lens[lens.length-1]+' дн.' : (lens[0]||'?')+' дн.',
+      minPrice: Math.min(...rows.filter(r=>r.open).map(r=>r.price||Infinity), t.price||Infinity),
       extra: (window.TOUR_EXTRA||{})[t.slug] || {}};
   });
   DURS = [...new Set(TOURS.map(t=>t.duration).filter(Boolean))].sort((a,b)=>durMin(a)-durMin(b));
 }
 
+// --- подбор ----------------------------------------------------------------
 function score(t){
   const ex = t.extra, reasons = [];
   let s = 0, hard = !t.open.length;
+  let dates = t.open;
+  if(state.months.size){
+    dates = t.open.filter(r => [...r.months].some(m => state.months.has(m)));
+    s += dates.length ? 3 : -5;
+    reasons.push([dates.length?'ok':'no', dates.length ? 'даты: '+dates.slice(0,2).map(r=>fmtD(r.start)).join(', ') : 'нет дат в эти месяцы']);
+  }
+  if(state.dur.size){ const ok = state.dur.has(t.duration); s += ok ? 2 : -3; reasons.push([ok?'ok':'no', t.duration.toLowerCase()]); }
   if(state.sights.size){
     const hit = [...state.sights].filter(c => t.sights.includes(c)), miss = [...state.sights].filter(c => !t.sights.includes(c));
     s += hit.length*3 - (hit.length ? 0 : 6);
     hit.forEach(c => reasons.push(['ok', c]));
     if(miss.length) reasons.push(['no', miss.join(', ')]);
   }
-  if(state.dur.size){
-    const ok = state.dur.has(t.duration); s += ok ? 2 : -3; reasons.push([ok?'ok':'no', t.duration.toLowerCase()]);
+  if(state.group.has('kids')){
+    if(ex.adultsOnly) hard = true;
+    else if(ex.pace==='active'){ s -= 1; reasons.push(['warn','активный темп']); }
   }
-  let dates = t.open;
-  if(state.months.size){
-    dates = t.open.filter(r => state.months.has(monthKey(r.start)));
-    s += dates.length ? 3 : -5;
-    reasons.push([dates.length?'ok':'no', dates.length ? 'даты: '+dates.slice(0,2).map(r=>fmtD(r.start)).join(', ') : 'нет дат в эти месяцы']);
+  if(state.group.has('senior')){
+    if(ex.pace==='active'){ s -= 2; reasons.push(['warn','активный темп']); }
+    if(ex.pace==='calm'){ s += 1; reasons.push(['ok','спокойный темп']); }
   }
+  if(state.group.has('solo')) reasons.push([t.single||t.roommate?'ok':'warn', t.single ? 'сингл +'+t.single : t.roommate ? 'подселим в пару' : 'сингл: уточнить']);
   if(state.formats.size){
     const hit = (ex.format||[]).filter(f => state.formats.has(f));
     s += hit.length*2 - (hit.length ? 0 : 3);
     hit.forEach(f => reasons.push(['ok', FORMATS[f].toLowerCase()]));
     if(!hit.length) reasons.push(['no', 'другой формат']);
   }
-  if(state.pace.size && ex.pace){
-    const ok = state.pace.has(ex.pace); s += ok?2:-2; reasons.push([ok?'ok':'no', 'темп: '+PACES[ex.pace].toLowerCase()]);
-  }
-  if(state.group.has('kids')){
-    if(ex.adultsOnly){ hard = true; }
-    else if(ex.pace==='active'){ s -= 1; reasons.push(['warn','активный темп']); }
-  }
-  if(state.group.has('senior') && ex.pace==='active'){ s -= 2; reasons.push(['warn','активный темп']); }
-  if(state.group.has('senior') && ex.pace==='calm'){ s += 1; reasons.push(['ok','спокойный темп']); }
-  if(state.group.has('solo')) reasons.push(['warn', t.single ? 'сингл +'+t.single : 'сингл: уточнить']);
+  if(state.pace.size && ex.pace){ const ok = state.pace.has(ex.pace); s += ok?2:-2; reasons.push([ok?'ok':'no', 'темп: '+PACES[ex.pace].toLowerCase()]); }
   if(state.q){
     const hay = (t.title+' '+t.org+' '+t.route+' '+t.sights.join(' ')).toLowerCase();
     if(!state.q.toLowerCase().split(/\s+/).every(w=>hay.includes(w))) hard = true;
@@ -209,181 +248,242 @@ function score(t){
   const near = dates[0] ? (dates[0].start - today)/864e5 : 999;
   return {t, s: s - near/1000, hard, reasons, dates};
 }
+const scored = () => TOURS.map(score).filter(x=>!x.hard).sort((a,b)=>b.s-a.s);
+const activeFilters = () => SETS.some(k=>state[k].size);
 
 function renderFilters(){
   const cnt = {};
   TOURS.forEach(t => t.open.length && t.sights.forEach(c => cnt[c]=(cnt[c]||0)+1));
   const sights = Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]||a.localeCompare(b));
-  const shown = showAllSights ? sights : sights.slice(0,14);
-  const months = [...new Set(TOURS.flatMap(t=>t.open.map(r=>monthKey(r.start))))].sort();
+  const shown = showAllSights ? sights : sights.filter((c,i)=>i<14 || state.sights.has(c));
+  const months = [...new Set(TOURS.flatMap(t=>t.open.flatMap(r=>[...r.months])))].sort();
   const chips = (name, items) => items.map(([k,l]) => `<button class="chip ${state[name].has(k)?'on':''}" data-set="${name}" data-k="${esc(k)}">${esc(l)}</button>`).join('');
+  const n = scored().length;
   $('#filters').innerHTML = `
-    <div class="fgroup"><h3>Города и места</h3><div class="chips">${chips('sights', shown.map(c=>[c,c]))}</div>
+    <div class="ftop"><span>Найдено туров: <b>${n}</b></span>${activeFilters()||state.q?'<button class="link" id="reset">Сбросить</button>':''}</div>
+    <div class="fgroup"><h3>1 · Когда</h3><div class="chips">${chips('months', months.map(m=>[m,monthName(m)]))}</div></div>
+    <div class="fgroup"><h3>2 · Сколько дней</h3><div class="chips">${chips('dur', DURS.map(d=>[d,d]))}</div></div>
+    <div class="fgroup"><h3>3 · Что хочет увидеть</h3><div class="chips">${chips('sights', shown.map(c=>[c,c]))}</div>
       ${sights.length>14?`<button class="more" id="moresights">${showAllSights?'Свернуть':'Все места ('+sights.length+')'}</button>`:''}</div>
-    <div class="fgroup"><h3>Длительность</h3><div class="chips">${chips('dur', DURS.map(d=>[d,d]))}</div></div>
-    <div class="fgroup"><h3>Месяц поездки</h3><div class="chips">${chips('months', months.map(m=>[m,monthName(m)]))}</div></div>
-    <div class="fgroup"><h3>Формат <span class="draft">черновик</span></h3><div class="chips">${chips('formats', Object.entries(FORMATS))}</div></div>
-    <div class="fgroup"><h3>Темп <span class="draft">черновик</span></h3><div class="chips">${chips('pace', Object.entries(PACES))}</div></div>
-    <div class="fgroup"><h3>Кто едет</h3><div class="chips">${chips('group', Object.entries(GROUPS))}</div></div>
-    <button id="reset">Сбросить всё</button>`;
+    <div class="fgroup"><h3>4 · Кто едет</h3><div class="chips">${chips('group', Object.entries(GROUPS))}</div></div>
+    <div class="fgroup"><h3>5 · Формат <span class="draft">черновик</span></h3><div class="chips">${chips('formats', Object.entries(FORMATS))}</div></div>
+    <div class="fgroup"><h3>6 · Темп <span class="draft">черновик</span></h3><div class="chips">${chips('pace', Object.entries(PACES))}</div></div>`;
 }
 
-const priceTxt = t => t.price ? '$'+t.price : 'цена на сайте не указана';
-
+const priceTxt = p => p && isFinite(p) ? '$'+p : 'цена не указана';
 function renderResults(){
-  const active = ['sights','dur','months','formats','pace','group'].some(k=>state[k].size);
-  const list = TOURS.map(score).filter(x=>!x.hard).sort((a,b)=>b.s-a.s);
-  window._scored = list;
+  const list = scored();
   const card = (x, top) => `<div class="card ${top?'top':''} ${current===x.t?'sel':''}" data-key="${esc(x.t.key)}">
       <div class="t">${esc(x.t.title)}</div>
-      <div class="m">${esc(x.t.org)} · ${x.t.len||'?'} дн. · ${esc(priceTxt(x.t))} · ближ. ${x.dates[0]?fmtD(x.dates[0].start):'—'}</div>
+      <div class="m">${esc(x.t.org)} · ${x.t.lenTxt} · ${x.t.rows.length>1&&new Set(x.t.rows.map(r=>r.price)).size>1?'от ':''}${priceTxt(x.t.minPrice)} · ближ. ${x.dates[0]?fmtD(x.dates[0].start):'—'}</div>
       ${x.reasons.length?`<div class="why">${x.reasons.map(([k,l])=>`<span class="tag ${k==='ok'?'':k}">${esc(l)}</span>`).join('')}</div>`:''}
     </div>`;
   if(!list.length){ $('#results').innerHTML = '<div class="empty">Ничего не нашлось. Снимите часть фильтров.</div>'; return; }
-  if(!active){ $('#results').innerHTML = `<div class="rhead">${state.q?'Найдено':'Все туры с открытыми датами'} · ${list.length}</div><div class="compact">${list.map(x=>card(x,false)).join('')}</div>`; return; }
+  if(!activeFilters()){ $('#results').innerHTML = `<div class="rhead">${state.q?'Найдено':'Все туры с открытыми датами'} · ${list.length}</div><div class="compact">${list.map(x=>card(x,false)).join('')}</div>`; return; }
   const good = list.filter(x=>x.s>0);
   const top = (good.length?good:list).slice(0,2), rest = list.filter(x=>!top.includes(x));
   $('#results').innerHTML = `<div class="rhead">${good.length?'Предложите':'Точных совпадений нет — ближайшие'}</div>${top.map(x=>card(x,true)).join('')}
-    ${rest.length?`<div class="rhead" style="margin-top:14px">Другие варианты</div><div class="compact">${rest.map(x=>card(x,false)).join('')}</div>`:''}`;
+    ${rest.length?`<div class="rhead" style="margin-top:12px">Другие варианты</div><div class="compact">${rest.map(x=>card(x,false)).join('')}</div>`:''}`;
+}
+
+// --- карточка тура ---------------------------------------------------------
+function pickRow(t){
+  const sc = score(t), pool = sc.dates.length ? sc.dates : t.open;
+  const later = new Date(today); later.setDate(later.getDate()+SOON);
+  return pool.find(r=>r.start>=later) || pool[0] || t.rows[0] || null;
 }
 
 function routeHTML(t){
   const ex = t.extra;
   if(ex.legs && ex.legs.length){
-    const parts = [];
-    if(ex.arrive) parts.push(`<span class="city ext">прилёт</span><span class="leg"><span class="ic">✈︎</span><span class="ar">→</span></span>`);
-    let prev = null;
-    ex.legs.forEach(([d, from, to, tr, time]) => {
-      if(from!==prev){ if(prev!==null) parts.push(`<span class="leg"><span class="ar">·</span></span>`); parts.push(`<span class="city">${esc(from)}</span>`); }
-      const [ic] = TRANSPORT[tr]||['→'];
-      parts.push(`<span class="leg"><span class="ic">${ic}</span><span>${esc(time.split(/ \(|, /)[0])}</span><span class="ar">——→</span><span>день ${d}</span></span><span class="city">${esc(to)}</span>`);
-      prev = to;
-    });
-    if(ex.depart) parts.push(`<span class="leg"><span class="ic">✈︎</span><span class="ar">→</span></span><span class="city ext">вылет из ${esc(ex.depart)}</span>`);
     const cnt = {}; ex.legs.forEach(l => cnt[l[3]]=(cnt[l[3]]||0)+1);
-    const sum = Object.entries(cnt).map(([k,n])=>`${n} ${TRANSPORT[k][1]}${n>1&&k!=='bus'?'а':''}`).join(' · ');
-    return `<div class="route">${parts.join('')}</div>
-      <div class="legsum">Переездов внутри Китая: <b>${ex.legs.length}</b> (${sum})</div>
-      <ul class="leglist">${ex.legs.map(([d,f,to,tr,time])=>`<li>${TRANSPORT[tr][0]} <b>День ${d}.</b> ${esc(f)} → ${esc(to)}, ${TRANSPORT[tr][1]} — ${esc(time)}</li>`).join('')}</ul>
-      ${ex.map?`<img class="map" src="${esc(ex.map)}" alt="Карта маршрута" loading="lazy">`:''}`;
+    const sum = Object.entries(cnt).map(([k,n])=>`${n} ${n>1?TRANSPORT[k][2]:TRANSPORT[k][1]}`).join(', ');
+    return `<ul class="legs">
+      ${ex.arrive?`<li><span class="ic">🛬</span><span><b>Прилёт:</b> ${esc(ex.arrive)} <small>(международный перелёт — отдельно)</small></span></li>`:''}
+      ${ex.legs.map(([d,f,to,tr,time])=>`<li><span class="ic">${TRANSPORT[tr][0]}</span><span><b>День ${d}:</b> ${esc(f)} → ${esc(to)}<br><small>${TRANSPORT[tr][1]} · ${esc(time)}</small></span></li>`).join('')}
+      ${ex.depart?`<li><span class="ic">🛫</span><span><b>Вылет домой:</b> город ${esc(ex.depart)}</span></li>`:''}
+    </ul>
+    <div class="legsum">Переездов внутри Китая: <b>${ex.legs.length}</b> (${sum})</div>
+    ${ex.map?`<img class="map" src="${esc(ex.map)}" alt="Карта маршрута" loading="lazy">`:''}`;
   }
-  // запасной вариант: фразы о переездах из программы на сайте
   const lines = [];
   t.days.forEach(d => {
-    const head = d.split('\n')[0];
-    d.split(/\n|(?<=[.!])\s+/).forEach(p => { if(/перел[её]т|поезд|переезд|автобус|трансфер на вокзал/i.test(p) && p.length<260) lines.push([head, p.trim()]); });
+    const head = d.split('\n')[0].replace(/\s*\(.*\)$/,'');
+    d.split(/\n|(?<=[.!])\s+/).forEach(p => { if(/перел[её]т|поезд|переезд|автобус|трансфер на вокзал/i.test(p) && p.length<220) lines.push([head, p.trim()]); });
   });
-  return `<div class="route">${t.route.split(/\s+—\s+/).map(c=>`<span class="city">${esc(c)}</span>`).join('<span class="leg"><span class="ar">→</span></span>')}</div>
-    ${lines.length?`<ul class="auto" style="margin-top:10px">${lines.slice(0,8).map(([h,l])=>`<li><b>${esc(h)}.</b> ${esc(l)}</li>`).join('')}</ul>`:''}
-    <div class="hint">Схема переездов с временем для этого тура ещё не заполнена — показаны фразы о переездах из программы на сайте.</div>`;
+  return `<div style="font-weight:600;margin-bottom:4px">${esc(t.route)}</div>
+    ${lines.length?`<ul class="legs">${lines.slice(0,8).map(([h,l])=>`<li><span class="ic">${/перел[её]т|аэропорт/i.test(l)?'✈︎':/поезд|вокзал/i.test(l)?'🚄':'🚐'}</span><span><b>${esc(h)}:</b> ${esc(l)}</span></li>`).join('')}</ul>`:''}
+    <div class="hint">Точная схема с временем переездов для этого тура ещё не заполнена — показаны фразы о переездах из программы на сайте.</div>`;
 }
 
-function scriptHTML(t){
-  const txt = t.script;
-  if(!txt) return `<div class="hint">Продающего скрипта пока нет. Описание с сайта:</div><p style="white-space:pre-line;font-size:13.5px">${esc(t.intro)}</p>`;
-  const lines = txt.split('\n').map(s=>s.trim()).filter(Boolean);
-  let tag='', bridge='', items=[], other=[];
-  for(const l of lines){
-    if(/^«/.test(l) && !tag) tag = l;
-    else if(/^Мостик/i.test(l)) bridge = l.replace(/^Мостик:\s*/i,'');
-    else if(/^Оплата/i.test(l) || /^Свойство\s*→/i.test(l)) continue;  // оплату показываем с сайта
-    else if(/^[•\-–]/.test(l)) items.push(l.replace(/^[•\-–]\s*/,''));
-    else other.push(l);
+function benefits(t){
+  const items = (t.script||'').split('\n').map(s=>s.trim()).filter(l=>/^[•\-–]/.test(l) && l.includes('→')).map(l=>l.replace(/^[•\-–]\s*/,''));
+  const places = items.filter(i=>!SERVICE.test(i.split('→')[0]));
+  return (places.length ? places : items).slice(0,3).map(i => { const [p,...g]=i.split('→'); return [short(p,80,true).replace(' — ',': '), g.join('→').trim()]; });
+}
+
+function scriptHTML(t, r){
+  const tagline = ((t.script||'').match(/«([^»]+)»/)||[])[1];
+  const ben = benefits(t);
+  const inc = bullets(t.included).slice(0,4).map(l=>short(l,58)), exc = bullets(t.excluded).slice(0,4).map(l=>short(l,48,false));
+  const pays = bullets(t.payment).filter(l=>/%|валют|рубл|доллар/i.test(l)).slice(0,3).map(l=>short(l,150,true,/\s\(|;/).replace(/^Предоплата \(бронирование\) — Для подтверждения брони требуется предоплата в размере/,'Бронь — предоплата'));
+  const prepay = percents(t)[0] || '';
+  const near = t.open.filter(x=>x!==r && Math.abs(x.start-(r?r.start:today))<50*864e5);
+  const others = [...near.filter(x=>r&&x.start>r.start), ...near].slice(0,1); // сначала следующий заезд, потом предыдущий
+  const steps = [
+    ['Предложение', `Под ваши пожелания могу предложить тур «${esc(t.title)}»${r?` — ${dayWord(r.days)}, с ${fmtLong(r.start)} по ${fmtLong(r.end)}`:''}. Маршрут: ${esc(t.route)}.${tagline?`<div class="sub">${esc(tagline)}</div>`:''}`],
+    ['Что вас ждёт', ben.length ? `<ul>${ben.map(([p,g])=>`<li>${esc(p)}${g?` → <span class="g">${esc(g)}</span>`:''}</li>`).join('')}</ul>`
+      : `Увидите: ${esc(t.sights.slice(0,5).join(', '))}.`],
+    ['Что включено / не включено', `В стоимость уже входит:<ul>${inc.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>${exc.length?`<div class="sub">Отдельно оплачиваются: ${esc(exc.map(lc).join('; '))}.</div>`:''}`],
+    ['Стоимость', r ? `Стоимость — <b>$${r.price}</b> на человека при двухместном размещении${r.priceOld?` (полная цена $${r.priceOld})`:''}.${t.single?` Одноместный номер — доплата ${esc(t.single)}.`:''}` : 'Ближайших заездов нет.'],
+    ['Схема оплаты', pays.length ? `<ul>${pays.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>` : 'Порядок оплаты на странице тура не найден — уточните.'],
+    ['Закрывающий вопрос', r ? `${others.length?`Вам удобнее ${fmtLong(r.start)} или ${fmtLong(others[0].start)}? `:''}На ${fmtLong(r.start)} осталось мест: ${r.seats ?? '?'}. Давайте закреплю место за вами?${prepay?` Для брони заключаем договор и вносите ${prepay} от стоимости.`:''}` : ''],
+  ];
+  return steps.map(([h, say], i) => `<div class="step ${i===5?'close':''}"><span class="n">${i+1}</span><span class="h">${h}</span><div class="say">${say}</div></div>`).join('')
+    + `<div class="src">Шаг 2 — из продающего скрипта в таблице, остальное — с сайта.</div>`;
+}
+
+function ctx(t, r){
+  const prepay = percents(t)[0];
+  return {
+    has: re => re.test(t.included), inc: bullets(t.included).slice(0,5).map(l=>lc(short(l,50,false))).join(', '),
+    exc: bullets(t.excluded).slice(0,4).map(l=>lc(short(l,40,false))).join(', '),
+    prepay: prepay ? prepay+' от стоимости' : 'предоплата', seats: r ? r.seats : null, group: t.group || '15',
+    flight: t.flight, single: t.single, roommate: t.roommate,
+  };
+}
+
+function paneHTML(t, r){
+  const objs = (window.OBJECTIONS||[]).map(o => ({q:o.q, a:o.a(ctx(t,r)), from:'возражение'}));
+  const faq = t.faq.map(f => ({q:f.q, a:f.a, from:'FAQ сайта'}));
+  const item = (o, open) => `<details class="obj" ${open?'open':''}><summary>${hl(o.q)}<span class="from">${o.from}</span></summary><p>${hl(o.a)}</p></details>`;
+  if(ask){
+    const words = ask.toLowerCase().split(/\s+/).filter(Boolean);
+    const hit = s => words.every(w => s.toLowerCase().includes(w));
+    const docs = [...objs, ...faq,
+      ...bullets(t.included).map(l=>({q:'Включено', a:l, from:'включено'})),
+      ...bullets(t.excluded).map(l=>({q:'Не включено', a:l, from:'не включено'})),
+      ...bullets(t.payment).map(l=>({q:'Оплата', a:l, from:'оплата'})),
+      ...t.days.map(d=>({q:d.split('\n')[0], a:d, from:'программа'}))];
+    const found = docs.filter(o => hit(o.q+' '+o.a));
+    return {rich:true, html: found.length ? found.slice(0,12).map(o=>item(o,true)).join('') : 'Ничего не нашлось — попробуйте другое слово.'};
   }
-  return `${tag?`<p class="tagline">${esc(tag)}</p>`:''}
-    <ul class="ben">${items.map(i=>{ const [p,...g]=i.split('→'); return `<li>${g.length?`<span class="p">${esc(p.trim())}</span> → <span class="g">${esc(g.join('→').trim())}</span>`:esc(i)}</li>`; }).join('')}</ul>
-    ${other.map(o=>`<div class="hint">${esc(o)}</div>`).join('')}
-    ${bridge?`<div class="bridge">💬 ${esc(bridge)}</div>`:''}
-    <div class="hint" style="margin-top:8px">Скрипт — из таблицы. Цены, даты и условия — с сайта.</div>`;
+  if(tab==='obj') return {rich:true, html:`<div class="hint" style="margin:0 0 4px">Цифры и состав подставлены со страницы тура. <span class="draft">черновик — проверьте формулировки</span></div>`+objs.map(o=>item(o)).join('')};
+  if(tab==='faq') return {rich:true, html: faq.map(o=>item(o)).join('') || '—'};
+  const panes = {inc:t.included, exc:t.excluded, pay:t.payment+(t.extras?'\n\nДополнительные услуги:\n'+t.extras:''), prog:t.days.join('\n\n'), hotels:t.hotels};
+  return {rich:false, html: esc(panes[tab] || '— на странице тура не найдено')};
 }
-
-function fill(a, t, r){
-  const flight = (t.excluded.match(/перел[её]т[^\n(]*\(([^)]+)\)/i)||[])[1] || 'уточню по вашим датам';
-  const prepay = (t.payment.match(/(\d+)\s*%/)||[])[0];
-  return a.replace('{flight}', flight)
-    .replace(/\{prepay\}/g, prepay ? prepay+' от стоимости' : 'предоплата')
-    .replace('{free}', r && r.seats!=null ? r.seats : '—')
-    .replace('{group}', t.group || '10')
-    .replace('{single}', t.single || '(уточню)');
+function hl(s){
+  let h = esc(s);
+  if(ask) ask.split(/\s+/).filter(w=>w.length>1).forEach(w => { h = h.replace(new RegExp('('+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'), '<mark>$1</mark>'); });
+  return h;
+}
+const TABS = {obj:'Возражения', faq:'FAQ с сайта', inc:'Включено', exc:'Не включено', pay:'Оплата', prog:'Программа', hotels:'Проживание'};
+function renderPane(){
+  const t = current, r = currentRow;
+  const p = paneHTML(t, r);
+  $('#tabs').innerHTML = Object.entries(TABS).map(([k,l])=>`<button class="tab ${!ask&&tab===k?'on':''}" data-tab="${k}">${l}</button>`).join('');
+  const pane = $('#pane'); pane.className = 'pane'+(p.rich?' rich':''); pane.innerHTML = p.html;
 }
 
 function visibleDates(t, r, all = showAllDates){
   if(all) return t.rows;
-  return t.rows.filter((x,i) => i<6 || x===r || (state.months.size && state.months.has(monthKey(x.start))));
+  return t.rows.filter((x,i) => i<6 || x===r || (state.months.size && [...x.months].some(m=>state.months.has(m))));
 }
 const hiddenDates = (t, r) => visibleDates(t, r, true).length - visibleDates(t, r, false).length;
 
-function renderDetail(){
-  const t = current; if(!t) return;
-  const r = currentRow || t.open[0] || t.rows[0] || null;
-  const panes = {
-    inc: ['Включено', t.included],
-    exc: ['Не включено', t.excluded],
-    pay: ['Оплата', t.payment + (t.extras ? '\n\nДополнительные услуги:\n'+t.extras : '')],
-    obj: ['Возражения', null],
-    faq: ['FAQ с сайта', null],
-    prog: ['Программа', t.days.join('\n\n')],
-    hotels: ['Проживание', t.hotels],
-  };
-  let body;
-  if(tab==='obj') body = `<div class="hint" style="margin-bottom:6px">Цифры подставлены со страницы тура. <span class="draft">черновик — проверьте формулировки</span></div>` +
-      (window.OBJECTIONS||[]).map(o=>`<details class="obj"><summary>${esc(o.q)}</summary><p>${esc(fill(o.a,t,r))}</p></details>`).join('');
-  else if(tab==='faq') body = t.faq.map(f=>`<details class="obj"><summary>${esc(f.q)}</summary><p style="white-space:pre-line">${esc(f.a)}</p></details>`).join('') || '—';
-  else body = esc(panes[tab][1] || '— на странице тура не найдено');
-  const msg = r ? r.message : '';
+function renderDetail(keepScroll){
+  const t = current; if(!t){ return; }
+  const r = currentRow;
+  const scroll = $('#detail').scrollTop;
+  const pc = percents(t);
   $('#detail').innerHTML = `
     <div class="d-top">
       <div><h2 class="d-title">${esc(t.title)}</h2>
-        <div class="d-sub">${esc(t.org)} · ${t.len||'?'} дней · ${esc(t.route)} · <a href="${esc(t.url)}" target="_blank" rel="noopener">страница тура</a>${t.booklet?` · <a href="${esc(t.booklet)}" target="_blank" rel="noopener">буклет</a>`:''}</div></div>
-      <div class="price"><b>${esc(priceTxt(t))}</b>${t.priceOld?` <s>$${t.priceOld}</s>`:''}<div>${t.single?'доплата за сингл '+esc(t.single):'сингл — уточнить'}</div></div>
+        <div class="d-sub">${esc(t.org)} · ${esc(t.route)} · <a href="${esc(t.url)}" target="_blank" rel="noopener">страница тура</a>${t.booklet?` · <a href="${esc(t.booklet)}" target="_blank" rel="noopener">буклет</a>`:''}</div></div>
+      <div class="price"><b>${r?priceTxt(r.price):priceTxt(t.price)}</b>${r&&r.priceOld?`<s>$${r.priceOld}</s>`:''}<div>${t.single?'одноместный +'+esc(t.single):t.roommate?'подселим в пару':'сингл — уточнить'}</div></div>
     </div>
     ${t.extra.note?`<div class="note">⚠︎ ${esc(t.extra.note)}</div>`:''}
-    <div class="dates">${visibleDates(t, r).map(x=>`<button class="date ${x===r?'on':''} ${!x.open?'full':''} ${state.months.size&&state.months.has(monthKey(x.start))?'match':''}" data-i="${t.rows.indexOf(x)}" ${!x.open?'disabled':''}>${fmtD(x.start)}–${fmtD(x.end)}<small>мест: ${x.seats??'?'}</small></button>`).join('') || '<span class="hint">Ближайших заездов на сайте нет</span>'}${hiddenDates(t, r)?`<button class="more" id="moredates">${showAllDates?'Свернуть даты':'ещё '+hiddenDates(t, r)+' дат'}</button>`:''}</div>
+    <div class="dates">${visibleDates(t, r).map(x=>`<button class="date ${x===r?'on':''} ${!x.open?'full':''} ${state.months.size&&[...x.months].some(m=>state.months.has(m))?'match':''}" data-i="${t.rows.indexOf(x)}" ${!x.open?'disabled':''} title="${x.days} дн. · $${x.price}">${fmtD(x.start)}–${fmtD(x.end)}<small>${new Set(t.rows.map(y=>y.days)).size>1?x.days+' дн. · ':''}мест: ${x.seats??'?'}</small></button>`).join('') || '<span class="hint">Ближайших заездов на сайте нет</span>'}${hiddenDates(t, r)?`<button class="more" id="moredates">${showAllDates?'Свернуть даты':'ещё '+hiddenDates(t, r)+' дат'}</button>`:''}</div>
+    <div class="cheat">
+      <div class="cell"><i>Цена</i><b>${r?priceTxt(r.price):'—'}</b> на чел.${t.single?`<br>сингл +${esc(t.single)}`:''}</div>
+      <div class="cell"><i>Даты</i>${r?`${fmtD(r.start)}–${fmtD(r.end)}, ${dayWord(r.days)}<br>мест: ${r.seats??'?'}`:'—'}</div>
+      <div class="cell"><i>Включено</i>${esc(exclShort(t)||'см. вкладку «Включено»')}</div>
+      <div class="cell"><i>Оплата</i>${pc.length?esc(pc.join(' → ')):'см. вкладку'}${t.flight?`<br>перелёт ≈ ${esc(t.flight)}`:''}</div>
+    </div>
     <div class="grid2">
+      <div class="box"><h2>Сценарий презентации</h2>${scriptHTML(t, r)}</div>
       <div class="box"><h2>Маршрут и переезды</h2>${routeHTML(t)}</div>
-      <div class="box"><h2>Что сказать</h2>${scriptHTML(t)}</div>
     </div>
-    <div class="tabs">${Object.entries(panes).map(([k,[l]])=>`<button class="tab ${tab===k?'on':''}" data-tab="${k}">${l}</button>`).join('')}</div>
-    <div class="pane ${tab==='obj'||tab==='faq'?'rich':''}">${body}</div>
+    <div class="answers">
+      <div class="abar"><input id="ask" placeholder="🔍 Найти ответ: виза, еда, перелёт…" value="${esc(ask)}"><div class="tabs" id="tabs"></div></div>
+      <div class="pane" id="pane"></div>
+    </div>
     <div class="msgbar">
-      <span class="pv">${msg?esc(msg.split('\n')[1]||msg):'Нет открытых дат'}</span>
-      <button class="btn ghost" id="msgtoggle" ${msg?'':'disabled'}>Показать</button>
-      <button class="btn" id="copymsg" ${msg?'':'disabled'}>Скопировать сообщение клиенту</button>
+      <span class="pv">${r?esc(r.message.split('\n')[1]||''):'Нет открытых дат'}</span>
+      <button class="btn ghost" id="msgtoggle" ${r?'':'disabled'}>Показать</button>
+      <button class="btn" id="copymsg" ${r?'':'disabled'}>Скопировать сообщение клиенту</button>
     </div>
-    <div id="msgfull">${esc(msg)}</div>`;
-  $('#detail').scrollTop = 0;
+    <div id="msgfull">${r?esc(r.message):''}</div>`;
+  renderPane();
+  $('#detail').scrollTop = keepScroll ? scroll : 0;
 }
 
-function render(){ renderFilters(); renderResults(); }
+// --- адрес страницы: подборку можно обновить или отправить ссылкой --------
+function saveHash(){
+  const p = new URLSearchParams();
+  SETS.forEach(k => state[k].size && p.set(k, [...state[k]].join('|')));
+  if(state.q) p.set('q', state.q);
+  if(current) p.set('t', current.key);
+  if(current && currentRow) p.set('d', iso(currentRow.start)+'_'+iso(currentRow.end));
+  history.replaceState(null, '', '#'+p.toString());
+}
+function readHash(){
+  const p = new URLSearchParams(location.hash.slice(1));
+  SETS.forEach(k => { state[k] = new Set((p.get(k)||'').split('|').filter(Boolean)); });
+  state.q = p.get('q')||''; $('#search').value = state.q;
+  current = TOURS.find(t=>t.key===p.get('t')) || null;
+  currentRow = null;
+  if(current){ const d = p.get('d'); currentRow = (d && current.rows.find(r=>iso(r.start)+'_'+iso(r.end)===d && r.open)) || pickRow(current); }
+}
+
+function render(){ renderFilters(); renderResults(); saveHash(); }
+function openTour(t){ current = t; currentRow = pickRow(t); showAllDates = false; renderResults(); renderDetail(); saveHash(); }
+
+// --- шторки ----------------------------------------------------------------
+function setPanel(name, show){
+  document.body.classList.toggle('no-'+name, !show);
+  $('#tgl-'+name).setAttribute('aria-pressed', show);
+  store('podbor-'+name, show ? undefined : 'hidden');
+}
+['filters','results'].forEach(n => { setPanel(n, load_('podbor-'+n)!=='hidden'); $('#tgl-'+n).addEventListener('click', () => setPanel(n, document.body.classList.contains('no-'+n))); });
 
 document.addEventListener('click', e => {
   const chip = e.target.closest('.chip');
-  if(chip){ const set = state[chip.dataset.set], k = chip.dataset.k; set.has(k)?set.delete(k):set.add(k); render(); return; }
-  if(e.target.id==='moredates'){ showAllDates=!showAllDates; renderDetail(); return; }
+  if(chip){ const set = state[chip.dataset.set], k = chip.dataset.k; set.has(k)?set.delete(k):set.add(k); render(); if(current){ currentRow = pickRow(current); renderDetail(); saveHash(); } return; }
+  if(e.target.id==='moredates'){ showAllDates=!showAllDates; renderDetail(true); return; }
   if(e.target.id==='moresights'){ showAllSights=!showAllSights; renderFilters(); return; }
-  if(e.target.id==='reset'){ for(const k in state) if(state[k] instanceof Set) state[k].clear(); state.q=''; $('#search').value=''; render(); return; }
+  if(e.target.id==='reset'){ SETS.forEach(k=>state[k].clear()); state.q=''; $('#search').value=''; render(); return; }
   const card = e.target.closest('.card');
-  if(card){
-    current = TOURS.find(t=>t.key===card.dataset.key);
-    const sc = (window._scored||[]).find(x=>x.t===current);
-    currentRow = (sc && sc.dates[0]) || current.open[0] || null;
-    tab = 'inc'; showAllDates = false; renderResults(); renderDetail(); return;
-  }
+  if(card){ openTour(TOURS.find(t=>t.key===card.dataset.key)); return; }
   const d = e.target.closest('.date');
-  if(d && !d.disabled){ currentRow = current.rows[+d.dataset.i]; renderDetail(); return; }
+  if(d && !d.disabled){ currentRow = current.rows[+d.dataset.i]; renderDetail(true); saveHash(); return; }
   const tb = e.target.closest('.tab');
-  if(tb){ tab = tb.dataset.tab; renderDetail(); return; }
+  if(tb){ tab = tb.dataset.tab; ask = ''; $('#ask').value = ''; renderPane(); return; }   // без перерисовки карточки — прокрутка не прыгает
   if(e.target.id==='msgtoggle'){ const f=$('#msgfull'); f.classList.toggle('open'); e.target.textContent=f.classList.contains('open')?'Скрыть':'Показать'; if(f.classList.contains('open')) f.scrollIntoView({block:'nearest'}); return; }
   if(e.target.id==='copymsg'){
-    const r = currentRow || current.open[0], btn = e.target;
+    const msg = currentRow.message, btn = e.target;
     const ok = () => { btn.textContent='Скопировано ✓'; btn.classList.add('done'); setTimeout(()=>{btn.textContent='Скопировать сообщение клиенту';btn.classList.remove('done');},1800); };
-    (navigator.clipboard ? navigator.clipboard.writeText(r.message) : Promise.reject()).then(ok).catch(()=>{ const ta=document.createElement('textarea'); ta.value=r.message; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); ok(); });
+    (navigator.clipboard ? navigator.clipboard.writeText(msg) : Promise.reject()).then(ok).catch(()=>{ const ta=document.createElement('textarea'); ta.value=msg; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); ok(); });
     return;
   }
   if(e.target.classList.contains('map')){ const z=$('#zoom'); z.querySelector('img').src=e.target.src; z.classList.add('open'); return; }
   if(e.target.closest('#zoom')) $('#zoom').classList.remove('open');
 });
-$('#search').addEventListener('input', e => { state.q = e.target.value.trim(); renderResults(); });
+document.addEventListener('input', e => {
+  if(e.target.id==='search'){ state.q = e.target.value.trim(); renderFilters(); renderResults(); saveHash(); }
+  if(e.target.id==='ask'){ ask = e.target.value.trim(); renderPane(); }
+});
 $('#reload').addEventListener('click', () => load());
 
 async function load(){
@@ -391,16 +491,14 @@ async function load(){
   try{
     const res = await fetch('data.json?_=' + Date.now());
     if(!res.ok) throw new Error(res.status);
-    const data = await res.json();
-    build(data);
-    const at = new Date(data.generatedAt);
-    $('#status').textContent = 'Данные с сайта на ' + at.toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-    $('#status').title = (data.warnings||[]).join('\n');
-  }catch(err){
-    $('#status').textContent = 'Не удалось загрузить данные (data.json)'; return;
-  }
-  if(current){ const k=current.key; current=TOURS.find(t=>t.key===k)||null; currentRow=null; }
-  render(); if(current) renderDetail();
+    build(await res.json());
+  }catch(err){ $('#status').textContent = 'Не удалось загрузить данные'; return; }
+  const ageH = (Date.now() - GENERATED) / 36e5, st = $('#status');
+  st.textContent = (ageH > 12 ? '⚠︎ Данные устарели: ' : 'Данные с сайта на ') + GENERATED.toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  st.classList.toggle('stale', ageH > 12);
+  readHash();
+  renderFilters(); renderResults();
+  if(current) renderDetail();
 }
 load();
 </script>
