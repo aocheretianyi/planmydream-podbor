@@ -116,7 +116,8 @@ def parse_page(page):
     acc = [(titles[k], descrs.get(k, '')) for k in titles]
     sect = {t: d for t, d in acc}
     service = {'Что включено', 'Что не включено', 'Порядок оплаты', 'Дополнительные услуги'}
-    faq = [{'q': t, 'a': d} for t, d in acc if t not in service and d]
+    not_faq = {'Сомневаетесь?'}  # призыв к действию, а не ответ
+    faq = [{'q': t, 'a': d} for t, d in acc if t not in service | not_faq and d]
     booklet = next((l for l in p.links if 'bookflip' in l), '')
     return {
         'included': sect.get('Что включено', ''), 'excluded': sect.get('Что не включено', ''),
@@ -142,13 +143,31 @@ def message(t, dep):
              f'📅 Даты: {ru_range(a, b)}',
              f'🗺 Маршрут: {t["route"]}',
              f'⏱️ Длительность: {n} дней ({n - 1} ночей)',
-             f'💰 Стоимость: ${t["price"]}']
+             f'💰 Стоимость: ${dep["price"]}']
     if incl:
         lines.append('✅ ' + incl.group(1).strip().rstrip('.'))
     lines.append(f'🔗 Ссылка: {t["url"]}')
     if t['booklet']:
         lines.append(f'📖 Буклет: {t["booklet"]}')
     return '\n'.join(lines)
+
+
+MONEY = re.compile(r'(от \$?\s?\d[\d\s]*до \$?\s?\d+|\$\s?\d+\s*[-–]\s*\$?\s?\d+|\d[\d\s]*[-–]\s*\d[\d\s]*(?:тыс\.?\s*руб\w*|₽))')
+
+
+def facts(t):
+    """Короткие факты для шпаргалки и ответов: доплата за сингл, стоимость перелёта, подселение, размер группы."""
+    allx = '\n'.join([t['excluded'], t['extras'], t['included'], t['payment']] + [f['a'] for f in t['faq']])
+    single = re.search(r'одноместн[^\n]*?(\$\s?\d[\d\s]*|\d[\d\s]*\s?(?:₽|руб))', allx, re.I)
+    flight_line = next((l for l in t['excluded'].split('\n') if re.search(r'перел[её]т', l, re.I)), '')
+    flight = MONEY.search(flight_line)
+    room = next((f['a'] for f in t['faq'] if 'подселени' in f['a']), '')
+    m = re.search(r'[^.\n]*подселени[^\n]*', room)
+    room = ' '.join(re.split(r'(?<=[.!])\s+', m.group(0).strip())[:2]).replace('Если если', 'Если') if m else ''
+    group = next((re.search(r'до\s*(\d+)', f['a']) for f in t['faq'] if re.search('сколько человек', f['q'], re.I)), None)
+    return {'single': re.sub(r'\s+', ' ', single.group(1)).strip() if single else '',
+            'flight': re.sub(r'\s+', ' ', flight.group(1)).strip() if flight else '',
+            'roommate': room, 'group': group.group(1) if group else ''}
 
 
 def scripts_from_sheet():
@@ -212,7 +231,13 @@ def main():
             t.update(parse_page(''))
         if not t['booklet']:  # ссылки на флипбук на страницах нет — берём из таблицы
             t['booklet'] = scripts.get(slug, {}).get('booklet', '')
+        t.update(facts(t))
+        # У большинства туров цена одна (цена товара со скидкой, в заезде — полная).
+        # Если у заездов разные цены (Новый год: 4, 6 и 7 дней) — цена заезда и есть цена варианта.
+        varied = len({d['priceFull'] for d in deps}) > 1
         for d in deps:
+            d['price'] = d['priceFull'] if varied else t['price']
+            d['priceOld'] = None if varied else (t['priceOld'] if (t['priceOld'] or 0) > (t['price'] or 0) else None)
             d['message'] = message(t, d)
         for need, label in [('included', 'Что включено'), ('payment', 'Порядок оплаты'), ('days', 'программа по дням')]:
             if not t[need]:
