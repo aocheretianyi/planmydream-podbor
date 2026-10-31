@@ -113,8 +113,8 @@ body.no-filters #filters, body.no-results #results{display:none}
 .tabs{display:flex;gap:2px;flex-wrap:wrap}
 .tab{border:0;background:none;padding:6px 10px;border-radius:8px 8px 0 0;color:var(--muted);font-size:13px}
 .tab.on{background:var(--panel);color:var(--ink);font-weight:600;border:1px solid var(--line);border-bottom-color:var(--panel);margin-bottom:-1px}
-/* у всех вкладок одна высота — при переключении страница не прыгает; длинный текст листается внутри */
-.pane{background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:0 14px 10px;font-size:13.5px;white-space:pre-line;height:clamp(260px,42vh,460px);overflow:auto}
+/* без внутренней прокрутки: высота вкладки растёт под текст и не уменьшается при переключении (renderPane) — страница не прыгает */
+.pane{background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:0 14px 10px;font-size:13.5px;white-space:pre-line;min-height:300px}
 .pane > :first-child:not(.pbar){margin-top:10px}
 .pane.rich{white-space:normal}
 .obj{border-top:1px solid var(--line);padding:6px 0}
@@ -341,6 +341,7 @@ function benefits(t){
 
 function scriptHTML(t, r){
   const tagline = ((t.script||'').match(/«([^»]+)»/)||[])[1];
+  const see = ((window.TOUR_SEE||{})[t.slug]||[]).filter(([c]) => !/вариант\S*\s*\d/.test(c) || !r || (c.match(/\d+/g)||[]).map(Number).includes(r.days));
   const ben = benefits(t);
   const inc = bullets(t.included).slice(0,4).map(l=>short(l,58)), exc = bullets(t.excluded).slice(0,4).map(l=>short(l,48,false));
   const pays = bullets(t.payment).filter(l=>/%|валют|рубл|доллар/i.test(l) && !REFUND.test(l)).slice(0,4).map(l=>short(l,150,true,/\s\(|;/).replace(/^Предоплата \(бронирование\) — Для подтверждения брони требуется предоплата в размере/,'Бронь — предоплата'));
@@ -349,7 +350,7 @@ function scriptHTML(t, r){
   const others = [...near.filter(x=>r&&x.start>r.start), ...near].slice(0,1); // сначала следующий заезд, потом предыдущий
   const steps = [
     ['Предложение', `Под ваши пожелания могу предложить тур «${esc(t.title)}»${r?` — ${dayWord(r.days)}, с ${fmtLong(r.start)} по ${fmtLong(r.end)}`:''}. Маршрут: ${esc(t.route)}.${tagline?`<div class="sub">${esc(tagline)}</div>`:''}`],
-    ['Что вас ждёт', ben.length ? `<ul>${ben.map(([p,g])=>`<li>${esc(p)}${g?` → <span class="g">${esc(g)}</span>`:''}</li>`).join('')}</ul>`
+    ['Что вас ждёт', see.length ? `<ul>${see.map(([c,w,g])=>`<li><b>${esc(c)}:</b> ${esc(w)}${g?` → <span class="g">${esc(g)}</span>`:''}</li>`).join('')}</ul>` : ben.length ? `<ul>${ben.map(([p,g])=>`<li>${esc(p)}${g?` → <span class="g">${esc(g)}</span>`:''}</li>`).join('')}</ul>`
       : `Увидите: ${esc(t.sights.slice(0,5).join(', '))}.`],
     ['Что включено / не включено', `В стоимость уже входит:<ul>${inc.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>${exc.length?`<div class="sub">Отдельно оплачиваются: ${esc(exc.map(lc).join('; '))}.</div>`:''}`],
     ['Как вам тур?', 'Как вам в целом тур? Устраивают такие условия?'],
@@ -358,7 +359,7 @@ function scriptHTML(t, r){
     ['Закрывающий вопрос', r ? `${others.length?`Вам удобнее ${fmtLong(r.start)} или ${fmtLong(others[0].start)}? `:''}На ${fmtLong(r.start)} осталось мест: ${r.seats ?? '?'}. Давайте закреплю место за вами?${prepay?` Для брони заключаем договор и вносите ${prepay} от стоимости.`:''}` : ''],
   ];
   return steps.map(([h, say], i) => `<div class="step ${i===3||i===6?'close':''}"><span class="n">${i+1}</span><span class="h">${h}</span><div class="say">${say}</div></div>`).join('')
-    + `<div class="src">Шаг 2 — из продающего скрипта в таблице, остальное — с сайта.</div>`;
+    + `<div class="src">Шаг 2 — по программе тура на сайте, остальное — с сайта.</div>`;
 }
 
 function ctx(t, r){
@@ -437,7 +438,9 @@ function renderPane(){
   const t = current, r = currentRow;
   const p = paneHTML(t, r);
   $('#tabs').innerHTML = Object.entries(TABS).map(([k,l])=>`<button class="tab ${!ask&&tab===k?'on':''}" data-tab="${k}">${l}</button>`).join('');
-  const pane = $('#pane'); pane.className = 'pane'+(p.rich?' rich':''); pane.innerHTML = p.html;
+  const pane = $('#pane'), before = pane.offsetHeight;
+  pane.className = 'pane'+(p.rich?' rich':''); pane.innerHTML = p.html;
+  pane.style.minHeight = Math.max(before, 300) + 'px';  // не сжимаем: короткая вкладка не «подтягивает» страницу
 }
 
 function visibleDates(t, r, all = showAllDates){
