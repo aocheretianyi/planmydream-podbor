@@ -146,7 +146,7 @@ def message(t, dep):
              f'📅 Даты: {ru_range(a, b)}',
              f'🗺 Маршрут: {t["route"]}',
              f'⏱️ Длительность: {n} дней ({n - 1} ночей)',
-             f'💰 Стоимость: ${dep["price"]}']
+             f'💰 Стоимость: ${dep["price"]}' + (f' (без скидки ${dep["priceOld"]})' if dep.get('priceOld') else '')]
     if incl:
         lines.append('✅ ' + incl.group(1).strip().rstrip('.'))
     lines.append(f'🔗 Ссылка: {t["url"]}')
@@ -256,7 +256,10 @@ def main():
         varied = len({d['priceFull'] for d in deps}) > 1
         for d in deps:
             d['price'] = d['priceFull'] if varied else t['price']
-            d['priceOld'] = None if varied else (t['priceOld'] if (t['priceOld'] or 0) > (t['price'] or 0) else None)
+            if varied:  # у вариантов своя цена; старая — по правилу «цена × 1,1 до десятка», если у тура задана старая цена
+                d['priceOld'] = int((d['priceFull'] * 1.1 + 5) // 10 * 10) if t['priceOld'] and d['priceFull'] else None
+            else:
+                d['priceOld'] = t['priceOld'] if (t['priceOld'] or 0) > (t['price'] or 0) else None
             d['message'] = message(t, d)
         for need, label in [('included', 'Что включено'), ('payment', 'Порядок оплаты'), ('days', 'программа по дням')]:
             if not t[need]:
