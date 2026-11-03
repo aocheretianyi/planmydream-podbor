@@ -52,28 +52,56 @@ def tour_airports(t):
     return CN_AIR.get(arr), CN_AIR.get(dep)
 
 
+MODE = {'how': 'header'}   # как передавать токен: заголовком X-Access-Token или параметром token
+
+
+def call(token, q):
+    """Запрос к API. Не принят заголовок — пробуем параметр; оба 401/403 — выходим с текстом ошибки (без токена)."""
+    def get(how):
+        if how == 'header':
+            req = urllib.request.Request(f'{API}?{q}', headers={'X-Access-Token': token})
+        else:
+            req = urllib.request.Request(f'{API}?{q}&token={urllib.parse.quote(token)}')
+        with urllib.request.urlopen(req, timeout=60) as r:
+            return json.loads(r.read().decode('utf-8'))
+    try:
+        return get(MODE['how'])
+    except urllib.error.HTTPError as e:
+        if e.code not in (401, 403) or MODE['how'] == 'param':
+            if e.code in (401, 403):
+                body = e.read().decode('utf-8', 'ignore')[:300].replace(token, '***')
+                sys.exit(f'Travelpayouts не принял токен (HTTP {e.code}: {body}). Длина токена: {len(token)} (ожидается 32)')
+            raise
+        body = e.read().decode('utf-8', 'ignore')[:300].replace(token, '***')
+        try:
+            data = get('param')
+            MODE['how'] = 'param'
+            print('заголовок не принят, токен параметром — принят')
+            return data
+        except urllib.error.HTTPError as e2:
+            body2 = e2.read().decode('utf-8', 'ignore')[:300].replace(token, '***')
+            sys.exit(f'Travelpayouts не принял токен (заголовком: HTTP {e.code} {body} | параметром: HTTP {e2.code} {body2}). '
+                     f'Длина токена: {len(token)} (ожидается 32)')
+
+
 def month_prices(token, origin, dest, month, cache):
     key = (origin, dest, month)
     if key in cache:
         return cache[key]
     q = urllib.parse.urlencode({'origin': origin, 'destination': dest, 'departure_at': month, 'one_way': 'true',
                                 'currency': 'rub', 'sorting': 'price', 'direct': 'false', 'limit': 1000})
-    req = urllib.request.Request(f'{API}?{q}', headers={'X-Access-Token': token, 'Accept-Encoding': 'identity'})
     best = {}
     for i in range(3):
         try:
-            with urllib.request.urlopen(req, timeout=60) as r:
-                data = json.loads(r.read().decode('utf-8'))
+            data = call(token, q)
             for x in data.get('data') or []:
                 day = (x.get('departure_at') or '')[:10]
                 if day and (day not in best or x['price'] < best[day]['p']):
                     best[day] = {'p': x['price'], 'a': x.get('airline', ''), 't': x.get('transfers', 0),
                                  'h': round((x.get('duration_to') or x.get('duration') or 0) / 60, 1)}
             break
-        except urllib.error.HTTPError as e:
-            if e.code in (401, 403):
-                sys.exit(f'Travelpayouts не принял токен (HTTP {e.code}) — проверьте секрет TRAVELPAYOUTS_TOKEN')
-            time.sleep(5 * (i + 1))
+        except SystemExit:
+            raise
         except Exception:
             time.sleep(5 * (i + 1))
     time.sleep(0.4)
