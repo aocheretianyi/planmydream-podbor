@@ -1,0 +1,38 @@
+# Раз в неделю (понедельник, ~09:40 МСК) обновляет hainan.json для «Отелей TEZ»: факты и условия отелей Хайнаня с сайта TEZ
+# и перелёты (из каких городов есть туры, аэропорт, цена перелёта, месяцы вылетов). Потом запускает выкладку сайта.
+name: Хайнань — обновить отели и перелёты
+
+on:
+  schedule:
+    - cron: '40 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: hainan
+  cancel-in-progress: false
+
+jobs:
+  hainan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Собрать hainan.json (сайт и поиск TEZ)
+        run: python3 hainan_update.py
+      - name: Сохранить, если изменилось, и выложить сайт
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! git diff --quiet -- hainan.json || [ -n "$(git status --porcelain hainan.json)" ]; then
+            git config user.name "podbor-bot"
+            git config user.email "podbor-bot@users.noreply.github.com"
+            git add hainan.json
+            git commit -m "Хайнань: отели и перелёты $(date -u +'%Y-%m-%d') UTC"
+            git push || (git pull --rebase -X theirs && git push)
+            # пуш от бота сам выкладку не запускает — запускаем вручную
+            gh workflow run update.yml
+          fi
