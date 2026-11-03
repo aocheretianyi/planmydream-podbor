@@ -57,6 +57,33 @@ body.no-filters #filters, body.no-results #results{display:none}
 .compact .card{padding:7px 10px;box-shadow:none}
 .empty{color:var(--muted);padding:30px 10px;text-align:center}
 .welcome{color:var(--muted);max-width:520px;margin:60px auto;text-align:center;line-height:1.6}
+/* карта мест на пустом экране */
+.mapview{display:flex;flex-direction:column;gap:8px;height:calc(100vh - 80px);padding-bottom:14px}
+.mapview .mh{color:var(--muted);font-size:13px;line-height:1.45}
+.mapview .mh b{color:var(--ink)}
+#cmap{flex:1;min-height:380px;border-radius:12px;border:1px solid var(--line);background:#e8eef0}
+.pin{position:relative;width:14px;height:14px;cursor:pointer}
+.pin i{position:absolute;inset:0;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.pin span{position:absolute;top:-5px;left:18px;white-space:nowrap;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:999px;padding:2px 8px;font:600 12px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.pin span b{color:var(--muted);font-weight:500;margin-left:2px}
+.pin.l span{left:auto;right:18px}
+.pin.b span{top:17px;left:50%;transform:translateX(-50%)}
+.pin:hover span{border-color:var(--accent);color:var(--accent)}
+.pin.on i{background:var(--accent);border-color:#fff}
+.pin.on span{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pin.on span b{color:#fde3dd}
+#cmap.small .pin span{display:none}
+#cmap.small .pin:hover span,#cmap.small .pin.on span{display:block;z-index:5}
+#cmap.small .pin:hover{z-index:1000}
+.pin.part i{background:linear-gradient(90deg,var(--accent) 50%,#fff 50%)}
+.leaflet-popup-content .pchips{display:flex;flex-direction:column;gap:4px;min-width:250px}
+.leaflet-popup-content .pchip{white-space:nowrap}
+.leaflet-popup-content .pchips h4{margin:0 0 2px;font-size:13px}
+.leaflet-popup-content .pchip{border:0;background:var(--chip);border-radius:999px;padding:4px 10px;font:12.5px/1.3 inherit;font-family:inherit;text-align:left;cursor:pointer}
+.leaflet-popup-content .pchip:hover{background:#e7e0d4}
+.leaflet-popup-content .pchip.on{background:var(--chip-on);color:#fff}
+.tomap{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:3px 9px;font-size:12px;color:var(--ink);margin-bottom:8px}
+.tomap:hover{background:var(--chip)}
 /* карточка тура */
 .d-top{display:flex;gap:16px;align-items:flex-start}
 .d-title{font-size:19px;font-weight:700;line-height:1.25;margin:0}
@@ -470,6 +497,7 @@ function renderDetail(keepScroll){
   const scroll = $('#detail').scrollTop;
   const pc = percents(t);
   $('#detail').innerHTML = `
+    <button class="tomap" id="tomap" title="Закрыть тур и вернуться к карте мест">← Карта мест</button>
     <div class="d-top">
       <div><h2 class="d-title">${esc(t.title)}</h2>
         <div class="d-route"><span>Маршрут:</span>${esc(t.route.replace(/\s+—\s+/g,' → '))}</div>
@@ -520,7 +548,104 @@ function readHash(){
   if(current){ const d = p.get('d'); currentRow = (d && current.rows.find(r=>iso(r.start)+'_'+iso(r.end)===d && r.open)) || pickRow(current); }
 }
 
-function render(){ renderFilters(); renderResults(); saveHash(); }
+// --- карта мест (пустой экран справа) ---------------------------------------
+// Координаты мест из «Что хочет увидеть». Близкие места — одна метка, клик открывает список.
+// dir — куда подпись: r (вправо), l (влево), b (вниз). Новое место без координат попадёт в строку «Нет на карте».
+const PIN_GROUPS = [
+  {label:'Пекин', ll:[40.0, 116.4], dir:'r', places:['Пекин', 'Запретный город', 'Великая Китайская стена']},
+  {label:'Сиань', ll:[34.38, 109.4], dir:'r', places:['Терракотовая армия', 'Горы Хуашань']},
+  {label:'Цзючжайгоу', ll:[33.26, 103.92], dir:'l', places:['Цзючжайгоу']},
+  {label:'Чэнду', ll:[30.66, 104.06], dir:'l', places:['Панды Чэнду']},
+  {label:'Чунцин', ll:[29.56, 106.55], dir:'b', places:['Чунцин']},
+  {label:'Чжанцзяцзе', ll:[28.9, 110.1], dir:'r', places:['Горы Аватара (Чжанцзяцзе)', 'Фуронг', 'Фэнхуан']},
+  {label:'Гуйлинь · Яншо', ll:[24.78, 110.4], dir:'r', places:['Гуйлинь и Яншо']},
+  {label:'Гуанчжоу · Шэньчжэнь', ll:[22.85, 113.65], dir:'r', places:['Гуанчжоу', 'Шэньчжэнь']},
+  {label:'Хуаншань', ll:[30.13, 118.17], dir:'l', places:['Хуаншань']},
+  {label:'Вансянгу', ll:[28.49, 117.93], dir:'b', places:['Вансянгу']},
+  {label:'Шанхай · Ханчжоу', ll:[30.85, 120.9], dir:'r', places:['Шанхай', 'Ханчжоу', 'Учжэнь']},
+  {label:'Шэнсянцзю', ll:[28.68, 120.63], dir:'r', places:['Шэнсянцзю']},
+  {label:'Куньмин', ll:[25.04, 102.71], dir:'l', places:['Куньмин']},
+  {label:'Лицзян · Шангри-ла', ll:[27.3, 100.0], dir:'l', places:['Лицзян', 'Шангри-ла']}
+];
+let cmap = null, pinMarkers = [];
+const placeCounts = () => { const c = {}; TOURS.forEach(t => t.open.length && t.sights.forEach(s => c[s] = (c[s] || 0) + 1)); return c; };
+
+function loadLeaflet(){
+  if (window.L) return Promise.resolve();
+  if (loadLeaflet.p) return loadLeaflet.p;
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+  document.head.appendChild(css);
+  return loadLeaflet.p = new Promise((ok, bad) => {
+    const s = document.createElement('script'); s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    s.onload = ok; s.onerror = () => { loadLeaflet.p = null; bad(); }; document.head.appendChild(s);
+  });
+}
+
+function pinHtml(g, cnt){
+  const sel = g.places.filter(p => state.sights.has(p)).length;
+  const n = new Set(TOURS.filter(t => t.open.length && t.sights.some(s => g.places.includes(s))).map(t => t.key)).size;
+  return `<div class="pin ${g.dir} ${sel ? (sel === g.places.filter(p => cnt[p]).length ? 'on' : 'on part') : ''}" title="${esc(g.places.join(', '))}"><i></i><span>${esc(g.label)} <b>${n}</b></span></div>`;
+}
+function popupHtml(g, cnt){
+  return `<div class="pchips"><h4>${esc(g.label)}</h4>${g.places.filter(p => cnt[p]).map(p =>
+    `<button class="pchip ${state.sights.has(p) ? 'on' : ''}" data-k="${esc(p)}">${state.sights.has(p) ? '✓ ' : ''}${esc(p)} · ${cnt[p]} ${cnt[p] === 1 ? 'тур' : cnt[p] < 5 ? 'тура' : 'туров'}</button>`).join('')}</div>`;
+}
+function toggleSight(k){ state.sights.has(k) ? state.sights.delete(k) : state.sights.add(k); render(); }
+
+async function renderMapView(){
+  if (current) return;
+  const cnt = placeCounts();
+  const mapped = new Set(PIN_GROUPS.flatMap(g => g.places));
+  const lost = Object.keys(cnt).filter(p => !mapped.has(p));
+  $('#detail').innerHTML = `<div class="mapview">
+    <div class="mh"><b>Карта мест из наших туров.</b> Нажмите на город — он отметится в «Что хочет увидеть» (как кнопки слева), подборка пересчитается. Цифра — сколько туров с открытыми датами туда едут. Откройте тур — карта уступит ему место.</div>
+    <div id="cmap" role="region" aria-label="Карта мест туров"></div>
+    ${lost.length ? `<div class="mh">Нет на карте: <span class="chips" style="display:inline-flex">${lost.map(p => `<button class="chip ${state.sights.has(p) ? 'on' : ''}" data-set="sights" data-k="${esc(p)}">${esc(p)}</button>`).join('')}</span></div>` : ''}
+  </div>`;
+  try { await loadLeaflet(); } catch(e){ $('#cmap').innerHTML = '<div class="welcome">Карта не загрузилась — проверьте интернет. Места можно выбрать слева.</div>'; return; }
+  if (current || !$('#cmap')) return;
+  if (cmap){ cmap.remove(); cmap = null; }
+  cmap = L.map('cmap', {scrollWheelZoom:false, zoomSnap:0.25, attributionControl:true});
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom:12, attribution:'Tiles &copy; Esri — Esri, HERE, Garmin, &copy; OpenStreetMap contributors'
+  }).addTo(cmap);
+  pinMarkers = PIN_GROUPS.filter(g => g.places.some(p => cnt[p])).map(g => {
+    const m = L.marker(g.ll, {icon:L.divIcon({className:'', html:pinHtml(g, cnt), iconSize:[14, 14], iconAnchor:[7, 7]}), keyboard:true, title:g.places.join(', ')}).addTo(cmap);
+    const live = g.places.filter(p => cnt[p]);
+    if (live.length > 1){
+      m.bindPopup(() => popupHtml(g, placeCounts()), {closeButton:true, offset:[0, -4]});
+      m.on('popupopen', e => e.popup.getElement().addEventListener('click', ev => {
+        const b = ev.target.closest('.pchip'); if (!b) return;
+        toggleSight(b.dataset.k);
+        // правим кнопки на месте: если заменить содержимое, Leaflet сочтёт клик кликом мимо и закроет список
+        e.popup.getElement().querySelectorAll('.pchip').forEach(x => {
+          const on = state.sights.has(x.dataset.k); x.classList.toggle('on', on);
+          x.textContent = (on ? '✓ ' : '') + x.textContent.replace(/^✓ /, '');
+        });
+      }));
+    } else m.on('click', () => toggleSight(live[0]));
+    m._g = g; return m;
+  });
+  cmap.on('zoomend', syncPinLabels);
+  fitCMap(); syncPinLabels();
+}
+function fitCMap(){
+  if (!cmap) return;
+  cmap.invalidateSize();
+  cmap.fitBounds(L.latLngBounds(PIN_GROUPS.map(g => g.ll)), {animate:false, paddingTopLeft:[150, 30], paddingBottomRight:[170, 40]});   // поля под подписи
+}
+// мелкий масштаб (узкий экран) — подписи только при наведении и у отмеченных, иначе наезжают друг на друга
+const syncPinLabels = () => cmap && $('#cmap') && $('#cmap').classList.toggle('small', cmap.getZoom() < 4.7);   // 4.75 (1366 px) — подписи помещаются, 4.5 — уже наезжают
+function updatePins(){
+  if (!cmap || current || !$('#cmap')) return;
+  const cnt = placeCounts();
+  // только содержимое значка: setIcon закрыл бы открытый список мест у метки
+  pinMarkers.forEach(m => { const el = m.getElement(); if (el) el.innerHTML = pinHtml(m._g, cnt); });
+  document.querySelectorAll('.mapview .chips .chip').forEach(c => c.classList.toggle('on', state.sights.has(c.dataset.k)));
+}
+addEventListener('resize', () => { clearTimeout(fitCMap.t); fitCMap.t = setTimeout(() => { if ($('#cmap')) fitCMap(); }, 200); });
+
+function render(){ renderFilters(); renderResults(); saveHash(); updatePins(); }
 function openTour(t){ current = t; currentRow = pickRow(t); showAllDates = false; renderResults(); renderDetail(); saveHash(); }
 
 // --- шторки ----------------------------------------------------------------
@@ -534,6 +659,7 @@ function setPanel(name, show){
 document.addEventListener('click', e => {
   const chip = e.target.closest('.chip');
   if(chip){ const set = state[chip.dataset.set], k = chip.dataset.k; set.has(k)?set.delete(k):set.add(k); render(); if(current){ const keep = currentRow && currentRow.open && (!state.months.size || [...currentRow.months].some(m=>state.months.has(m))); if(!keep) currentRow = pickRow(current); renderDetail(true); saveHash(); } return; }  // выбранную вручную дату не сбрасываем, если она подходит
+  if(e.target.id==='tomap'){ current = null; currentRow = null; renderResults(); saveHash(); renderMapView(); return; }
   if(e.target.id==='moredates'){ showAllDates=!showAllDates; renderDetail(true); return; }
   if(e.target.id==='moresights'){ showAllSights=!showAllSights; renderFilters(); return; }
   if(e.target.id==='reset'){ SETS.forEach(k=>state[k].clear()); state.q=''; $('#search').value=''; render(); return; }
@@ -573,7 +699,7 @@ async function load(){
   st.classList.toggle('stale', ageH > 12);
   readHash();
   renderFilters(); renderResults();
-  if(current) renderDetail();
+  if(current) renderDetail(); else renderMapView();
 }
 load();
 </script>
