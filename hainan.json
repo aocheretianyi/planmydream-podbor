@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-03 11:46 UTC",
+ "updated": "2026-11-03 12:03 UTC",
  "hotels": {
   "208826": {
    "url": "https://www.tez-tour.com/hotel.html?id=208826",
@@ -323,10 +323,11 @@
     "Отель": "Открыт в 2025 г. Всего 194 номера."
    },
    "notes": [
+    "В Dongrong Guest Luxury Duplex Suite (Three Bedrooms, One Living Room) все размещения до 6ти человек на имеющихся спальных местах\nдля 6+1 если ребенку нужна доп кровать бронировать 7\nдля 6+2 если ребенку нужна доп кровать бронировать 7+1\nдля 7+1 ребенок без доп кровати",
     "При заселении берется депозит в размере 300 юаней за номер.",
     "Бесплатный групповой трансфер предоставляется только при бронировании минимум 5 ночей проживания. При неиспользовании трансфера а/п-отель обратный трансфер в аэропорт предоставляться не будет.",
     "Минимальное проживание в период с 05.08.2026 по 31.07.2027 - 3 ночи",
-    "Возраста: 0 - 5,99, 9 - 11,99 доплата за питание учтена, без доп кровати\nДоп. кровать предоставляется только в номере Executive Suite King-size Bed Room: для 2+1 если ребенку нужна доп кровать бронировать 3\nдля 2+2 если ребенку нужна доп кровать бронировать 3+1\nдля 3+1 ребенок без доп кровати"
+    "Возраста: 0 - 5,99, 9 - 11,99 доплата за питание учтена, без доп кровати\nВ Dongrong Guest House Senior Deluxe Bedroom, Dongrong Guest Deluxe Room,\nDongrong Guest Premium Room (King Beds), Dongrong Guest House Luxurious Deluxe King Room by the Pool, Dongrong Luxury Mountain and Sea Grand Bedroom, Half-Mountain Kids' Fun Family Room\n(1 King Bed + 1 Twin Bed), Guest Poolside Family Room (1 King Bed + 1 Twin Bed) доп. кровать не предоставляется.\nВ Dongrong Guest Deluxe Suite King-Size Bed Room, Dongrong Guest Executive Suite, Dongrong Guest Luxury Duplex Suite (One Bedroom, One Living Room)\nдля 2+"
    ],
    "blurb": ""
   },
@@ -364,7 +365,7 @@
    "arrivals": [
     "Хайнань (Регулярные рейсы)"
    ],
-   "flightFrom": 589,
+   "flightFrom": 587,
    "months": [
     "ноя 26",
     "дек 26",
@@ -416,7 +417,7 @@
    "arrivals": [
     "Хайнань (Регулярные рейсы)"
    ],
-   "flightFrom": 1051,
+   "flightFrom": 927,
    "months": [
     "ноя 26",
     "дек 26",
