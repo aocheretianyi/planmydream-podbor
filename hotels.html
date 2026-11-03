@@ -114,6 +114,8 @@ td small{color:var(--muted)}
 .item .t{font-weight:600;padding-right:22px}
 .item .m{color:var(--muted);font-size:12px}
 .item .p{margin-top:3px}
+.item .thumbs{display:flex;gap:4px;margin-top:5px}
+.item .thumbs img{width:56px;height:40px;object-fit:cover;border-radius:5px;background:var(--chip)}
 .item .old{color:var(--warn);font-size:12px;margin-top:2px}
 .item .x{position:absolute;top:4px;right:4px;border:0;background:none;color:var(--muted);font-size:15px;line-height:1;padding:4px 6px;border-radius:6px}
 .item .x:hover{background:var(--accent-soft);color:var(--accent)}
@@ -320,6 +322,9 @@ async function init(){
   $('#markup').value = markup;
   $('#sign').value = signature;
   renderBasket();
+  basket.filter(b => b.photos === undefined).forEach(b => attachPhotos(b.key));   // подборка из прошлых версий страницы
+  // «← Подбор тура» — к тем же фильтрам и туру, что были открыты в подборщике
+  try { const h = localStorage.getItem('podbor-lasthash'); if (h) $('a.tgl[href="index.html"]').href = 'index.html' + h; } catch(e){}
   try {
     REFS = await api('refs', {locale:'ru'});
     const cities = REFS.cities.filter(c => c.countryId === 1102).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
@@ -335,6 +340,7 @@ async function init(){
     if (!$('#country').value) $('#country').value = CHINA;
     syncType();
     await loadCountry(f);
+    restoreView();
   } catch(e){
     status('Не загрузились справочники TEZ: ' + e.message + '. Обновите страницу.', true);
   }
@@ -529,6 +535,7 @@ function renderResults(capped){
   const inBasket = new Set(basket.map(b => b.key));
   let html = `<div class="rhead"><b>${list.length} ${plural(list.length,'отель','отеля','отелей')}, ${shown.length} ${plural(shown.length,'вариант','варианта','вариантов')}</b>
     ${lastQuery.grouped ? '' : `<select id="sort" title="Порядок строк в таблице"><option value="price" ${sortBy==='price'?'selected':''}>сначала дешевле</option><option value="date" ${sortBy==='date'?'selected':''}>по дате заезда</option></select>`}
+    ${fromHainan && isChina() ? '<button class="tgl" id="hnopen" title="Вернуться к бухтам и отелям Хайнаня">← Бухты Хайнаня</button>' : ''}
     ${fromOverview ? `<button class="tgl" id="back" title="Вернуться к обзору">← Все отели ${backBay ? 'бухты' : 'страны'}</button>` : ''}
     ${lastQuery.bay ? `<span class="hint" style="margin:0">Бухта: <b>${esc(BAYS.find(b => b.id === lastQuery.bay).name)}</b></span>` : ''}
     <span class="hint" style="margin:0">Цена за всех туристов: TEZ → наша с наценкой ${markup}%</span></div>`;
@@ -566,11 +573,40 @@ function renderResults(capped){
   const y = $('#results').scrollTop, wy = window.scrollY;
   $('#results').innerHTML = html;
   $('#results').scrollTop = y; window.scrollTo(0, wy);
+  view = 'results'; saveView();
 }
 const sorter = (a, b) => sortBy === 'date' ? ruToDate(a.date) - ruToDate(b.date) || a.total - b.total : a.total - b.total || ruToDate(a.date) - ruToDate(b.date);
 
 // ---------- подборка ----------
 function saveBasket(){ store.set('basket', basket); renderBasket(); }
+
+// Фото номера: галерея отеля на tez-tour.com (открыта для любых сайтов), подписи фото содержат тип номера
+const galleries = {};
+async function roomPhotos(o){
+  const m = String(o.thumb || o.img || '').match(/\/hotel\/(\d+)\//);
+  if (!m) return {photos:[], kind:''};
+  galleries[m[1]] = galleries[m[1]] || fetch(`https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=${m[1]}&lang=ru`)
+    .then(r => r.json()).catch(() => null);
+  const g = await galleries[m[1]];
+  const all = (g && g.siteGalleries) || [];
+  const url = x => `https://s.tez-tour.com/${x.folder}/${x.name}`;
+  const words = s => String(s).toLowerCase().replace(/\(\d+\)|\.jpe?g/g, ' ').replace(/[^a-z]+/g, ' ').split(' ')
+    .filter(w => w.length > 2 && !['room', 'rom', 'the', 'and', 'with', 'view'].includes(w));
+  const want = words(o.room);
+  const scored = all.map(x => { const t = words(x.description); const hit = want.filter(w => t.includes(w)).length;
+    return {x, s: want.length ? hit / want.length : 0, isRoom: /room|suite|villa|bedroom/i.test(x.description)}; });
+  const exact = scored.filter(s => s.s >= 0.6).sort((a, b) => b.s - a.s).map(s => url(s.x));
+  if (exact.length) return {photos:[...new Set(exact)].slice(0, 4), kind:'room'};
+  const rooms = scored.filter(s => s.isRoom).map(s => url(s.x));
+  if (rooms.length) return {photos:rooms.slice(0, 4), kind:'rooms'};
+  return {photos:all.slice(0, 4).map(url), kind:'hotel'};
+}
+const PHOTO_KIND = {room:'Фото номера', rooms:'Фото номеров отеля', hotel:'Фото отеля'};
+async function attachPhotos(key){
+  const b = basket.find(x => x.key === key); if (!b || b.photos) return;
+  try { Object.assign(b, await roomPhotos(b)); } catch(e){ b.photos = []; }
+  if (basket.includes(b)) saveBasket();
+}
 
 function renderBasket(){
   const pvOpen = !!$('#bitems details.pv[open]');   // не сворачивать просмотр текста при наборе подписи и наценки
@@ -582,6 +618,8 @@ function renderBasket(){
       <div class="m">${b.from} — ${b.to}, ${nightsTxt(b.nights)} · ${esc(b.people)}</div>
       <div class="m">${esc(b.room)} · ${esc(b.meal)}</div>
       <div class="p">TEZ ${b.total} $ → <b>${ourPrice(b.total)} $</b></div>
+      ${b.photos === undefined ? '<div class="m">Подбираю фото номера…</div>' : b.photos.length
+        ? `<div class="thumbs" title="${PHOTO_KIND[b.kind] || ''} — попадут в предложение">${b.photos.map(u => `<img src="${esc(u.replace(/\.jpg$/i, '_small.jpg'))}" alt="" onerror="this.remove()">`).join('')}</div><div class="m">${PHOTO_KIND[b.kind] || ''}</div>` : ''}
       ${b.added && b.added !== todayRu() ? `<div class="old">Цена от ${b.added.slice(0,5)} — перед отправкой найдите заново</div>` : ''}</div>`;
   });
   if (basket.length){
@@ -629,7 +667,8 @@ function offerHtml(){
         <dt>Номер</dt><dd>${esc(b.room)}</dd>
         <dt>Питание</dt><dd>${esc(b.meal)}</dd>
         <dt>Входит</dt><dd>${esc(whatIncluded(b))}</dd></dl>
-        <div class="price">${ourPrice(b.total)} $ <span>за всех</span></div></div></div>`).join('');
+        <div class="price">${ourPrice(b.total)} $ <span>за всех</span></div>
+        ${b.photos && b.photos.length ? `<div class="rp"><div class="rpl">${PHOTO_KIND[b.kind] || ''}</div><div class="rpg">${b.photos.map(u => `<img src="${esc(u)}" alt="" onerror="this.remove()">`).join('')}</div></div>` : ''}</div></div>`).join('');
   return `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Предложение · План Мечты</title><style>
 :root{--green:#0b5a32;--orange:#f7941d;--ink:#1f1d1a;--muted:#6f6a62;--line:#e6e0d6}
@@ -646,6 +685,8 @@ h2{font-size:18px;margin:2px 0 0;color:var(--green)}.reg{color:var(--muted);font
 dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:10px 0;font-size:14px}dt{color:var(--muted)}dd{margin:0}
 .price{font-size:24px;font-weight:800;color:var(--green)}.price span{font-size:13px;font-weight:400;color:var(--muted)}
 .foot{margin-top:18px;color:var(--muted);font-size:13px;white-space:pre-line}
+.rp{margin-top:10px}.rpl{font-size:12px;color:var(--muted);margin-bottom:4px}
+.rpg{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.rpg img{width:100%;height:110px;object-fit:cover;border-radius:8px;display:block;background:#eee}
 .bar{text-align:center;margin-top:20px}.bar button{border:0;background:var(--green);color:#fff;border-radius:10px;padding:10px 20px;font:inherit;font-weight:600;cursor:pointer}
 .bar button:hover{background:#08452a}
 @media print{body{background:#fff}.bar{display:none}.page{padding:0}.card{border-color:#ccc}}
@@ -732,6 +773,24 @@ const BAYS = [
 ];
 const AIRPORT = [18.3052, 109.4125];
 let hnMap = null, bayMode = null, backBay = null;
+let view = 'welcome', fromHainan = false, hnBay = null;   // что на экране; пришли ли к ценам из блока «Хайнань»
+
+// Экран переживает переход в подборщик туров и обратно (в пределах вкладки)
+function saveView(){
+  try { sessionStorage.setItem('tez_view', JSON.stringify({view, offers, lastQuery, capped:renderResults.capped,
+    fromOverview, backBay, fromHainan, hnBay, sortBy, fMeal:[...fMeal], fNights:[...fNights], t:Date.now()})); } catch(e){}
+}
+function restoreView(){
+  let s = null;
+  try { s = JSON.parse(sessionStorage.getItem('tez_view') || 'null'); } catch(e){}
+  if (s && Date.now() - s.t < 12 * 3600e3 && (s.view === 'hainan' || (s.lastQuery && s.lastQuery.countryId === +$('#country').value))){
+    ({offers, lastQuery, fromOverview, backBay, fromHainan, hnBay, sortBy} = s);
+    fMeal = new Set(s.fMeal || []); fNights = new Set(s.fNights || []);
+    if (s.view === 'results' && offers.length){ renderResults(s.capped); view = 'results'; return; }
+    if (s.view === 'hainan' && isChina()) return showHainan();
+  }
+  if (isChina()) showHainan();   // по умолчанию для Китая — бухты Хайнаня
+}
 
 const isChina = () => +$('#country').value === CHINA;
 function syncHainanBtn(){
@@ -775,8 +834,12 @@ function loadLeaflet(){
 
 async function showHainan(){
   $('#sug').classList.remove('open');
+  view = 'hainan'; saveView();
   $('#results').innerHTML = hainanHtml();
-  $('#results').scrollTop = 0; if (innerWidth <= 1100) $('#results').scrollIntoView();
+  $('#results').scrollTop = 0;
+  const card = hnBay && $('#bay-' + hnBay);
+  if (card){ card.classList.add('hl'); card.scrollIntoView({block:'start'}); }
+  else if (innerWidth <= 1100 && showHainan.byUser) $('#results').scrollIntoView();
   try { await loadLeaflet(); } catch(e){ $('#hnmap').innerHTML = '<div class="hint" style="padding:12px">Карта не загрузилась — проверьте интернет. Описание бухт ниже.</div>'; return; }
   if (!$('#hnmap')) return;   // пока грузилась карта, ушли с экрана
   if (hnMap){ hnMap.remove(); hnMap = null; }
@@ -814,14 +877,16 @@ function hotelById(id, name){
 document.addEventListener('click', async e => {
   if (!e.target.closest('#hotelq, #sug')) $('#sug').classList.remove('open');
   const t = e.target.closest('button'); if (!t) return;
-  if (t.id === 'go') return search();
+  if (t.id === 'go'){ fromHainan = false; return search(); }
+  if (t.id === 'hnopen'){ showHainan.byUser = true; return showHainan(); }
   if (t.dataset.pick) return pickHotel(+t.dataset.pick);
   if (t.dataset.unpick){ picked = picked.filter(p => p.id !== +t.dataset.unpick); bayMode = null; renderPicked(); return; }
-  if (t.id === 'hainanbtn' || t.id === 'hainanbtn2') return showHainan();
+  if (t.id === 'hainanbtn' || t.id === 'hainanbtn2'){ hnBay = null; showHainan.byUser = true; return showHainan(); }
   if (t.id === 'hnback'){ renderResults(); return; }
-  if (t.dataset.bay){ return searchBay(t.dataset.bay); }
+  if (t.dataset.bay){ fromHainan = true; hnBay = t.dataset.bay; return searchBay(t.dataset.bay); }
   if (t.dataset.hprice){
     const id = +t.dataset.hprice, row = BAYS.flatMap(b => b.hotels).find(h => h[1] === id);
+    fromHainan = true; hnBay = (BAYS.find(b => b.hotels.some(h => h[1] === id)) || {}).id || null;
     picked = [hotelById(id, row && row[0])]; bayMode = null; fromOverview = false; renderPicked();
     return search();
   }
@@ -843,7 +908,7 @@ document.addEventListener('click', async e => {
   }
   if (t.dataset.add){
     const k = t.dataset.add, i = basket.findIndex(b => b.key === k);
-    if (i >= 0) basket.splice(i, 1); else { const o = offers.find(x => x.key === k); if (o) basket.push({...o, added:todayRu()}); }
+    if (i >= 0) basket.splice(i, 1); else { const o = offers.find(x => x.key === k); if (o){ basket.push({...o, added:todayRu()}); attachPhotos(k); } }
     saveBasket(); renderResults(); return;
   }
   if (t.dataset.del){ basket.splice(+t.dataset.del, 1); saveBasket(); if (offers.length) renderResults(); return; }
@@ -860,7 +925,8 @@ document.addEventListener('change', e => {
   if (id === 'country'){
     picked = []; offers = []; fromOverview = false; bayMode = backBay = null; syncHainanBtn();
     $('#results').innerHTML = '<div class="welcome">Страна изменена — выберите отели и даты и нажмите «Найти цены».</div>';
-    loadCountry();
+    view = 'welcome'; fromHainan = false; hnBay = null; saveView();
+    loadCountry().then(() => { if (isChina()) showHainan(); });
   }
   if (id === 'city') loadCountry();
   if (id === 'ttype') syncType();

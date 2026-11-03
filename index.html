@@ -509,6 +509,7 @@ function saveHash(){
   if(current) p.set('t', current.key);
   if(current && currentRow) p.set('d', iso(currentRow.start)+'_'+iso(currentRow.end));
   history.replaceState(null, '', '#'+p.toString());
+  store('podbor-lasthash', '#'+p.toString());   // для кнопки «← Подбор тура» на странице «Отели TEZ»
 }
 function readHash(){
   const p = new URLSearchParams(location.hash.slice(1));
