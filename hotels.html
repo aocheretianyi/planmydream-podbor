@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Отели TEZ</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23c2412d'/%3E%3Cpath d='M14 46V22h14v24M28 46V14h22v32M10 46h44' stroke='%23fff' stroke-width='4' fill='none'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#f6f3ee; --panel:#ffffff; --ink:#1f1d1a; --muted:#6f6a62; --line:#e6e0d6;
+  --accent:#c2412d; --accent-soft:#fbe9e5; --ok:#2f7d4f; --ok-soft:#e5f3ea; --warn:#9a6a00; --warn-soft:#fbf1d9;
+  --chip:#f1ece4; --chip-on:#1f1d1a; --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.app{display:grid;grid-template-rows:auto 1fr;height:100vh}
+header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{font-size:15px;margin:0 6px 0 0;white-space:nowrap}
+header h1 span{color:var(--accent)}
+.tgl{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:5px 10px;font-size:13px;white-space:nowrap;text-decoration:none;color:var(--ink)}
+#status{margin-left:auto;color:var(--muted);font-size:12px}
+main{display:grid;grid-template-columns:280px minmax(0,1fr) 330px;min-height:0}
+.col{overflow:auto;min-height:0}
+#form{padding:12px 14px;border-right:1px solid var(--line);background:var(--panel)}
+#results{padding:12px 14px}
+#basket{padding:12px 14px;border-left:1px solid var(--line);background:var(--panel)}
+.fgroup{margin-bottom:11px}
+.fgroup h3{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 4px;font-weight:600}
+.row{display:flex;gap:6px;align-items:center}
+.row > *{flex:1;min-width:0}
+.row .lbl{flex:0 0 22px;color:var(--muted);font-size:12.5px}
+input[type=text],input[type=date],input[type=number],select,textarea{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+textarea{resize:vertical;min-height:54px}
+.chk{display:flex;gap:6px;align-items:center;font-size:13px;margin-top:4px}
+.chk input{margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.chip{border:0;background:var(--chip);border-radius:999px;padding:3px 9px;font-size:12.5px}
+.chip.on{background:var(--chip-on);color:#fff}
+.chip b{margin-left:5px;font-weight:400;opacity:.7}
+.hint{color:var(--muted);font-size:12px;margin-top:4px}
+.btn{border:0;background:var(--accent);color:#fff;border-radius:9px;padding:8px 14px;font-weight:600;white-space:nowrap}
+.btn.ghost{background:var(--chip);color:var(--ink);font-weight:500}
+.btn.done{background:var(--ok)}
+.btn:disabled{opacity:.5;cursor:default}
+.wide{width:100%}
+.rhead{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.rhead b{font-size:15px}
+.rhead select{width:auto}
+.warn{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:6px 10px;font-size:13px;margin-bottom:8px}
+.err{background:var(--accent-soft);color:var(--accent);border-radius:8px;padding:6px 10px;font-size:13px;margin-bottom:8px}
+.welcome{color:var(--muted);max-width:520px;margin:60px auto;text-align:center;line-height:1.6}
+.hotel{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;box-shadow:var(--shadow);overflow:hidden}
+.hhead{display:flex;gap:12px;padding:10px 12px;align-items:center}
+.hhead img{width:96px;height:64px;object-fit:cover;border-radius:8px;background:var(--chip);flex:none}
+.hhead .t{font-weight:700;font-size:14px;line-height:1.3}
+.hhead .m{color:var(--muted);font-size:12px;margin-top:2px}
+.hhead .from{margin-left:auto;text-align:right;white-space:nowrap;font-size:12px;color:var(--muted)}
+.hhead .from b{display:block;font-size:17px;color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;padding:5px 8px;border-top:1px solid var(--line);background:#fbfaf7}
+td{padding:6px 8px;border-top:1px solid var(--line);vertical-align:middle}
+td.num,th.num{text-align:right;white-space:nowrap}
+td small{color:var(--muted)}
+.our{font-weight:700}
+.no{color:var(--accent)}
+.add{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:3px 9px;font-size:12.5px;white-space:nowrap}
+.add.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.morebtn{border:0;background:none;color:var(--accent);font-size:12.5px;padding:6px 12px}
+.item{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:7px;font-size:13px;position:relative}
+.item .t{font-weight:600;padding-right:22px}
+.item .m{color:var(--muted);font-size:12px}
+.item .p{margin-top:3px}
+.item .x{position:absolute;top:5px;right:6px;border:0;background:none;color:var(--muted);font-size:16px;line-height:1}
+.sum{background:var(--ok-soft);color:var(--ok);border-radius:8px;padding:6px 10px;font-size:12.5px;margin:6px 0 10px}
+.actions{display:grid;gap:6px;margin-top:8px}
+@media (max-width:1100px){
+  .app{height:auto;min-height:100vh}
+  main{grid-template-columns:minmax(0,1fr)}
+  .hotel{overflow-x:auto}
+  .col{overflow:visible}
+  #form,#basket{border:0;border-bottom:1px solid var(--line)}
+}
+@media (max-width:560px){
+  .hhead img{width:72px;height:50px}
+  th:nth-child(5),td:nth-child(5){display:none}
+  td,th{padding:6px 5px}
+  .add{padding:4px 10px}
+  .add span{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>План Мечты · <span>отели TEZ</span></h1>
+    <a class="tgl" href="index.html">← Подбор тура</a>
+    <span id="status">Загружаю справочники TEZ…</span>
+  </header>
+  <main>
+    <aside class="col" id="form">
+      <div class="fgroup"><h3>Страна</h3><select id="country"></select></div>
+      <div class="fgroup"><h3>Отели <span style="text-transform:none;letter-spacing:0;font-weight:400">— до 5, пусто = все</span></h3>
+        <input type="text" id="hotelq" list="hotellist" placeholder="Начните вводить название">
+        <datalist id="hotellist"></datalist>
+        <div class="chips" id="hotelchips"></div>
+      </div>
+      <div class="fgroup"><h3>Заезд</h3>
+        <div class="row"><span class="lbl">с</span><input type="date" id="after"></div>
+        <div class="row" style="margin-top:5px"><span class="lbl">по</span><input type="date" id="before"></div>
+        <div class="hint">Без второй даты — заезд ровно в первую. Разброс — не больше 20 дней.</div>
+      </div>
+      <div class="fgroup"><h3>Ночей</h3>
+        <div class="row"><input type="number" id="nmin" min="1" max="30" value="5"><span style="flex:none">—</span><input type="number" id="nmax" min="1" max="30" value="7"></div>
+      </div>
+      <div class="fgroup"><h3>Туристы</h3>
+        <div class="row"><select id="adults"></select><select id="kids"></select></div>
+        <div class="row" id="ages" style="margin-top:6px"></div>
+      </div>
+      <div class="fgroup"><h3>Что входит</h3><select id="ttype"></select></div>
+      <div class="fgroup" id="cityg"><h3>Город вылета</h3><select id="city"></select></div>
+      <div class="fgroup"><h3>Питание не хуже</h3><select id="meal"></select></div>
+      <div class="fgroup"><h3>Звёздность не ниже</h3><select id="hclass"></select></div>
+      <label class="chk"><input type="checkbox" id="stop"> показывать без мест / в стопе</label>
+      <button class="btn wide" id="go" style="margin-top:12px">Найти цены</button>
+    </aside>
+    <section class="col" id="results"><div class="welcome">Выберите страну, отель (или оставьте пустым — найдём все), даты и туристов, затем «Найти цены».<br>Цены TEZ — для туриста, комиссия агентства уже внутри. Справа соберите подборку: наша наценка добавится сама.</div></section>
+    <aside class="col" id="basket"></aside>
+  </main>
+</div>
+<script>
+// Данные — открытый поиск TEZ TOUR (search.tez-tour.com/tariffsearch, без логина, до 50 запросов в минуту).
+// Документация: http://www.tez-tour.com/article.html?id=7015574
+const API = 'https://search.tez-tour.com/tariffsearch/';
+const MOSCOW = 345, CHINA = 140009, USD = 5561, MAX_RESULTS = 100;
+const SERVICES = ['проживание', 'перелёт', 'трансфер', 'страховка'];
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const store = {
+  get(k, d){ try { const v = localStorage.getItem('tez_' + k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem('tez_' + k, JSON.stringify(v)); } catch(e){} }
+};
+
+let REFS = null, HOTELS = [], REGIONS = {}, ACCOMS = [];
+let picked = [];                 // выбранные отели [{id,name,region}]
+let offers = [], lastQuery = null, sortBy = 'price', showAll = new Set();
+let basket = store.get('basket', []);
+let markup = store.get('markup', 10);
+let signature = store.get('signature', '');
+
+async function api(path, params){
+  const u = new URL(API + path);
+  for (const [k, v] of Object.entries(params || {})) (Array.isArray(v) ? v : [v]).forEach(x => u.searchParams.append(k, x));
+  const r = await fetch(u);
+  if (!r.ok) throw new Error('TEZ ответил ' + r.status);
+  return r.json();
+}
+
+// ---------- даты ----------
+const pad = n => String(n).padStart(2, '0');
+const isoToRu = s => s ? s.split('-').reverse().join('.') : '';
+const ruToDate = s => { const [d, m, y] = s.split('.').map(Number); return new Date(y, m - 1, d); };
+const dateToRu = d => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const shortRu = d => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}`;
+const WD = ['вс','пн','вт','ср','чт','пт','сб'];
+const plural = (n, a, b, c) => { const m10 = n % 10, m100 = n % 100; return m10 === 1 && m100 !== 11 ? a : m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20) ? b : c; };
+const nightsTxt = n => `${n} ${plural(n, 'ночь', 'ночи', 'ночей')}`;
+
+// «PEARL RIVER GARDEN HOTEL SANYA 5 *» → «Pearl River Garden Hotel Sanya 5*»
+function niceName(s){
+  return String(s).replace(/\s+\*/g, '*').toLowerCase()
+    .replace(/(^|[\s\-(/&·])([a-zа-яё])/g, (m, p, c) => p + c.toUpperCase())
+    .replace(/\b(Spa|Bbq|Ihg|Hk)\b/g, w => w.toUpperCase());
+}
+const peopleTxt = q => {
+  let s = `${q.adults} ${plural(q.adults, 'взрослый', 'взрослых', 'взрослых')}`;
+  if (q.ages.length) s += ', ' + q.ages.map(a => `ребёнок ${a} ${plural(a, 'год', 'года', 'лет')}`).join(', ');
+  return s;
+};
+const ourPrice = total => Math.ceil(total * (1 + markup / 100) / 5) * 5;   // до 5 $ вверх
+
+// ---------- справочники ----------
+async function init(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d0 = addDays(today, 30);
+  $('#after').value = `${d0.getFullYear()}-${pad(d0.getMonth()+1)}-${pad(d0.getDate())}`;
+  $('#adults').innerHTML = [1,2,3,4,5,6].map(n => `<option value="${n}" ${n===2?'selected':''}>${n} ${plural(n,'взрослый','взрослых','взрослых')}</option>`).join('');
+  $('#kids').innerHTML = [0,1,2,3].map(n => `<option value="${n}">${n ? n + ' ' + plural(n,'ребёнок','ребёнка','детей') : 'без детей'}</option>`).join('');
+  renderAges();
+  try {
+    REFS = await api('refs', {locale:'ru'});
+    const cities = REFS.cities.filter(c => c.countryId === 1102).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    $('#city').innerHTML = cities.map(c => `<option value="${c.cityId}" ${c.cityId===MOSCOW?'selected':''}>${esc(c.name)}</option>`).join('');
+    $('#ttype').innerHTML = REFS.tourTypes.map(t => `<option value="${t.id}" ${t.id===3?'selected':''}>${esc(t.name.replace('+', ' + '))}</option>`).join('');
+    $('#meal').innerHTML = REFS.rAndBs.map(r => `<option value="${r.rAndBId}">${esc(r.name.replace('Размещение без питания', 'любое'))}</option>`).join('');
+    const countries = REFS.countries.filter(c => c.permitted).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    $('#country').innerHTML = countries.map(c => `<option value="${c.countryId}" ${c.countryId===CHINA?'selected':''}>${esc(c.name)}</option>`).join('');
+    syncType();
+    await loadCountry();
+  } catch(e){
+    status('Не удалось загрузить справочники TEZ: ' + e.message + '. Обновите страницу.', true);
+  }
+}
+
+async function loadCountry(){
+  const countryId = +$('#country').value, cityId = +$('#city').value || MOSCOW;
+  status('Загружаю отели страны…');
+  const [h, reg, cls, acc] = await Promise.all([
+    api('hotels', {countryId, cityId, locale:'ru'}),
+    api('regions', {countryId, cityId, locale:'ru'}),
+    api('hotelClasses', {countryId, cityId, locale:'ru'}),
+    api('accommodations', {countryId, cityId, locale:'ru'})
+  ]);
+  REGIONS = {};
+  (reg.tours || []).forEach(t => t.tourId.forEach(id => REGIONS[id] = t.name));
+  HOTELS = (h.hotels || []).map(x => ({id:x.hotelId, name:niceName(x.name), region:REGIONS[x.tourId] || ''}))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  $('#hotellist').innerHTML = HOTELS.map(x => `<option value="${esc(x.name)}${x.region ? ' — ' + esc(x.region) : ''}">`).join('');
+  const classes = (cls.hotelClasses || []).filter(c => c.weight >= 0).sort((a, b) => a.weight - b.weight);
+  $('#hclass').innerHTML = classes.map(c => `<option value="${c.classId}">${esc(c.name.replace(' *', '*'))}</option>`).join('');
+  ACCOMS = acc.accommodations || [];
+  picked = picked.filter(p => HOTELS.some(x => x.id === p.id));
+  renderPicked();
+  status(`${HOTELS.length} ${plural(HOTELS.length,'отель','отеля','отелей')} в продаже`);
+}
+
+function status(t, bad){ const s = $('#status'); s.textContent = t; s.style.color = bad ? 'var(--accent)' : ''; }
+function syncType(){ $('#cityg').style.display = ['1','6'].includes($('#ttype').value) ? '' : 'none'; }
+
+function renderAges(){
+  const n = +$('#kids').value;
+  const old = [...document.querySelectorAll('#ages select')].map(s => s.value);
+  $('#ages').innerHTML = Array.from({length:n}, (_, i) =>
+    `<select title="Возраст ребёнка на дату заезда">${Array.from({length:17}, (_, a) => `<option value="${a}" ${String(a) === (old[i] ?? '7') ? 'selected' : ''}>${a ? a + ' ' + plural(a,'год','года','лет') : 'до 1 года'}</option>`).join('')}</select>`).join('');
+}
+
+function renderPicked(){
+  $('#hotelchips').innerHTML = picked.map(p => `<button class="chip on" data-unpick="${p.id}" title="Убрать">${esc(p.name)}<b>✕</b></button>`).join('');
+}
+
+// ---------- поиск ----------
+function readQuery(){
+  const after = isoToRu($('#after').value), before = isoToRu($('#before').value) || after;
+  if (!after) throw new Error('Укажите дату заезда.');
+  if (ruToDate(before) < ruToDate(after)) throw new Error('Вторая дата заезда раньше первой.');
+  if ((ruToDate(before) - ruToDate(after)) / 864e5 > 20) throw new Error('Разброс дат заезда — не больше 20 дней.');
+  let nmin = +$('#nmin').value || 1, nmax = +$('#nmax').value || nmin;
+  if (nmax < nmin) [nmin, nmax] = [nmax, nmin];
+  if (nmax - nmin > 8) throw new Error('Разброс ночей — не больше 8 (например, 5–13).');
+  const adults = +$('#adults').value, ages = [...document.querySelectorAll('#ages select')].map(s => +s.value);
+  const acc = ACCOMS.find(a => a.adult === adults && a.children === ages.length);
+  if (!acc) throw new Error('TEZ не размещает такой состав в одном номере — попробуйте меньше человек.');
+  const ttype = +$('#ttype').value;
+  return {after, before, nmin, nmax, adults, ages, accommodationId:acc.accommodationId, ttype,
+    countryId:+$('#country').value, cityId:+$('#city').value || MOSCOW, meal:+$('#meal').value,
+    hclass:+$('#hclass').value, stop:$('#stop').checked, hotels:picked.map(p => p.id),
+    city:$('#city').selectedOptions[0]?.text || ''};
+}
+
+async function search(){
+  let q;
+  try { q = readQuery(); } catch(e){ $('#results').innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
+  const p = {
+    locale:'ru', cityId:q.cityId, countryId:q.countryId, after:q.after, before:q.before,
+    nightsMin:q.nmin, nightsMax:q.nmax, accommodationId:q.accommodationId, currency:USD,
+    priceMin:0, priceMax:149999, hotelClassId:q.hclass, hotelClassBetter:true, rAndBId:q.meal, rAndBBetter:true,
+    tourType:q.ttype, hotelInStop:q.stop, noTicketsTo:q.stop, noTicketsFrom:q.stop, promoFlag:true
+  };
+  if (q.hotels.length) p.hotelId = q.hotels;
+  else p.groupByHotel = 2;   // обзор страны: по одной самой дешёвой цене на отель, иначе 100 строк — это 2–4 отеля
+  q.grouped = !q.hotels.length;
+  if (q.ages.length){
+    const d = ruToDate(q.after);
+    p.birthdays = q.ages.map(a => { const b = new Date(d); b.setFullYear(b.getFullYear() - a); b.setDate(b.getDate() - 1); return dateToRu(b); }).join(',');
+  }
+  $('#go').disabled = true; status('Ищу цены в TEZ…');
+  $('#results').innerHTML = '<div class="welcome">Ищу цены в TEZ…</div>';
+  try {
+    const j = await api('getResult', p);
+    if (!j.success) throw new Error(String(j.message || 'ошибка поиска').replace(/^\[|\]$/g, ''));
+    lastQuery = q; showAll.clear();
+    offers = parse(j.data || [], q);
+    renderResults(j.data && j.data.length >= MAX_RESULTS);
+    status(`Найдено вариантов: ${offers.length}`);
+  } catch(e){
+    $('#results').innerHTML = `<div class="err">TEZ: ${esc(e.message)}</div>`;
+    status('Поиск не удался', true);
+  } finally { $('#go').disabled = false; }
+}
+
+function parse(rows, q){
+  const seen = new Set(), out = [];
+  for (const r of rows){
+    const [date, , , nights, , reg, h, meal, room, , price, , seats, , flags] = r;
+    const key = [date, nights, h[3], room[2] || room[1], meal[2]].join('|');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const d = ruToDate(date);
+    const comm = flags && flags.fixComission && flags.fixComission.value ? (flags.fixComission.text || [])[0] : '';
+    out.push({
+      key, date, nights, from:dateToRu(d), to:dateToRu(addDays(d, nights)), wd:WD[d.getDay()],
+      hotelId:h[3], hotel:niceName(h[1]), img:String(h[2] || '').replace('_small', ''), thumb:h[2],
+      region:reg && (reg[0] || reg[8]) || '', meal:meal[1], mealCode:meal[0], room:room[1],
+      total:+price.total, cur:price.currency, services:SERVICES.filter((s, i) => price.priceTypes && price.priceTypes[i]),
+      seats, commission:comm, people:peopleTxt(q), ttype:q.ttype, city:q.city
+    });
+  }
+  return out;
+}
+
+function renderResults(capped){
+  if (!offers.length){
+    $('#results').innerHTML = `<div class="welcome">TEZ ничего не нашёл на эти даты.<br>Попробуйте другие ночи (у многих отелей минимум 5), даты или «показывать без мест».</div>`;
+    return;
+  }
+  const groups = new Map();
+  for (const o of offers){ if (!groups.has(o.hotelId)) groups.set(o.hotelId, []); groups.get(o.hotelId).push(o); }
+  const list = [...groups.values()].map(g => g.sort(sorter));
+  list.sort((a, b) => a[0].total - b[0].total);
+  const inBasket = new Set(basket.map(b => b.key));
+  let html = `<div class="rhead"><b>${list.length} ${plural(list.length,'отель','отеля','отелей')}, ${offers.length} ${plural(offers.length,'вариант','варианта','вариантов')}</b>
+    <select id="sort"><option value="price" ${sortBy==='price'?'selected':''}>сначала дешевле</option><option value="date" ${sortBy==='date'?'selected':''}>по дате заезда</option></select>
+    <span class="hint" style="margin:0">Цена TEZ → наша с наценкой ${markup}%</span></div>`;
+  const missing = [];
+  for (let n = lastQuery.nmin; n <= lastQuery.nmax; n++) if (!offers.some(o => o.nights === n)) missing.push(n);
+  if (lastQuery.grouped) html += `<div class="hint" style="margin:-2px 0 8px">Обзор: у каждого отеля самый дешёвый вариант. «Все варианты» — номера, питание и даты отеля.</div>`;
+  if (missing.length && !capped && !lastQuery.grouped) html += `<div class="warn">На ${missing.join(', ')} ${plural(missing[missing.length - 1], 'ночь', 'ночи', 'ночей')} TEZ вариантов не даёт (часто у отеля минимальный срок). Можно предложить ближайший срок или запросить у менеджера TEZ.</div>`;
+  if (capped) html += `<div class="warn">TEZ отдаёт не больше ${MAX_RESULTS} вариантов за раз — показаны не все. Сузьте поиск: выберите отель, одну дату или меньше ночей.</div>`;
+  for (const g of list){
+    const o = g[0], open = showAll.has(o.hotelId), rows = open ? g : g.slice(0, 8);
+    html += `<div class="hotel"><div class="hhead">${o.thumb ? `<img src="${esc(o.thumb)}" alt="" loading="lazy">` : ''}
+      <div><div class="t">${esc(o.hotel)}</div><div class="m">${esc(o.region)}${o.commission ? ' · комиссия TEZ ' + esc(o.commission) : ''}</div></div>
+      <div class="from">от<b>${ourPrice(o.total)} $</b>TEZ ${o.total} $</div></div>
+      <table><tr><th>Заезд</th><th>Ночей</th><th>Номер</th><th>Питание</th><th class="num">TEZ</th><th class="num">Наша</th><th></th></tr>
+      ${rows.map(x => `<tr><td>${x.date.slice(0,5)} <small>${x.wd}</small></td><td>${x.nights}</td><td>${esc(x.room)}${x.seats !== 'Есть' ? ` <small class="no">мест: ${esc(x.seats || 'нет')}</small>` : ''}</td><td>${esc(x.meal)}</td>
+        <td class="num">${x.total} $</td><td class="num our">${ourPrice(x.total)} $</td>
+        <td class="num"><button class="add ${inBasket.has(x.key)?'on':''}" data-add="${esc(x.key)}" title="${inBasket.has(x.key)?'Убрать из подборки':'Добавить в подборку'}">${inBasket.has(x.key)?'✓<span> в подборке</span>':'+<span> в подборку</span>'}</button></td></tr>`).join('')}
+      </table>${g.length > 8 && !open ? `<button class="morebtn" data-more="${o.hotelId}">Показать все ${g.length}</button>` : ''}${lastQuery.grouped ? `<button class="morebtn" data-only="${o.hotelId}">Все варианты отеля →</button>` : ''}</div>`;
+  }
+  const y = $('#results').scrollTop;
+  $('#results').innerHTML = html;
+  $('#results').scrollTop = y;
+}
+const sorter = (a, b) => sortBy === 'date' ? ruToDate(a.date) - ruToDate(b.date) || a.total - b.total : a.total - b.total || ruToDate(a.date) - ruToDate(b.date);
+
+// ---------- подборка ----------
+function saveBasket(){ store.set('basket', basket); renderBasket(); }
+
+// Поля наценки и подписи рисуются один раз (иначе при наборе сбивается курсор), дальше обновляется только #bitems.
+function renderBasket(){
+  if (!$('#bitems')){
+    $('#basket').innerHTML = `<div class="fgroup"><h3>Наценка, %</h3><input type="number" id="markup" min="0" max="100" step="1" value="${markup}"></div>
+      <div class="fgroup"><h3>Подборка для клиента</h3><div id="bitems"></div></div>
+      <div class="fgroup"><h3>Подпись менеджера</h3><textarea id="sign" placeholder="Имя и телефон — добавятся в конец текста и PDF">${esc(signature)}</textarea></div>
+      <div class="actions">
+        <button class="btn" id="copy">Скопировать текст для мессенджера</button>
+        <button class="btn ghost" id="offer">Открыть предложение (PDF)</button>
+        <button class="btn ghost" id="clear">Очистить подборку</button>
+      </div>`;
+  }
+  let html = '';
+  if (!basket.length) html += `<div class="hint">Пусто. Добавьте варианты кнопкой «+ в подборку» — один или несколько для сравнения.</div>`;
+  basket.forEach((b, i) => {
+    html += `<div class="item"><button class="x" data-del="${i}" title="Убрать">✕</button>
+      <div class="t">${basket.length > 1 ? (i + 1) + '. ' : ''}${esc(b.hotel)}</div>
+      <div class="m">${b.from} — ${b.to}, ${nightsTxt(b.nights)} · ${esc(b.people)}</div>
+      <div class="m">${esc(b.room)} · ${esc(b.meal)}</div>
+      <div class="p">TEZ ${b.total} $ → <b>${ourPrice(b.total)} $</b></div></div>`;
+  });
+  if (basket.length){
+    const earn = basket.map(b => ourPrice(b.total) - b.total);
+    html += `<div class="sum">Наценка: ${earn.map(e => e + ' $').join(' / ')}${basket.some(b => b.commission) ? ' + комиссия TEZ ' + [...new Set(basket.map(b => b.commission).filter(Boolean))].join(', ') : ''}. Видно только вам — в текст и PDF не попадает.</div>`;
+  }
+  $('#bitems').innerHTML = html;
+  ['copy', 'offer', 'clear'].forEach(id => $('#' + id).disabled = !basket.length);
+}
+
+function whatIncluded(b){
+  return b.services.map(s => s === 'перелёт' && b.city ? `перелёт из г. ${b.city} и обратно` : s).join(', ');
+}
+
+function clientText(){
+  const today = dateToRu(new Date());
+  const many = basket.length > 1;
+  const parts = basket.map((b, i) => [
+    many ? `Вариант ${i + 1}` : '',
+    `🏨 ${b.hotel}${b.region ? ', ' + b.region : ''}`,
+    `📅 ${b.from} — ${b.to}, ${nightsTxt(b.nights)}`,
+    `👥 ${b.people}`,
+    `🛏 ${b.room}`,
+    `🍽 ${b.meal}`,
+    `✅ Входит: ${whatIncluded(b)}`,
+    `💰 ${ourPrice(b.total)} $ за всех`
+  ].filter(Boolean).join('\n'));
+  let t = (many ? 'Подобрали для вас варианты:\n\n' : '') + parts.join('\n\n');
+  t += `\n\nЦены на ${today}, наличие мест подтверждаем при бронировании.`;
+  if (signature.trim()) t += '\n\n' + signature.trim();
+  return t;
+}
+
+function openOffer(){
+  const w = window.open('', '_blank');
+  if (!w){ alert('Браузер заблокировал новое окно — разрешите всплывающие окна для этого сайта.'); return; }
+  const logo = new URL('logo.png', location.href).href;
+  const today = dateToRu(new Date());
+  const cards = basket.map((b, i) => `<div class="card">
+      ${b.img ? `<img class="ph" src="${esc(b.img)}" alt="">` : ''}
+      <div class="body">${basket.length > 1 ? `<div class="var">Вариант ${i + 1}</div>` : ''}
+        <h2>${esc(b.hotel)}</h2>${b.region ? `<div class="reg">${esc(b.region)}</div>` : ''}
+        <dl><dt>Даты</dt><dd>${b.from} — ${b.to}, ${nightsTxt(b.nights)}</dd>
+        <dt>Туристы</dt><dd>${esc(b.people)}</dd>
+        <dt>Номер</dt><dd>${esc(b.room)}</dd>
+        <dt>Питание</dt><dd>${esc(b.meal)}</dd>
+        <dt>Входит</dt><dd>${esc(whatIncluded(b))}</dd></dl>
+        <div class="price">${ourPrice(b.total)} $ <span>за всех</span></div></div></div>`).join('');
+  const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Предложение · План Мечты</title><style>
+:root{--green:#0b5a32;--orange:#f7941d;--ink:#1f1d1a;--muted:#6f6a62;--line:#e6e0d6}
+*{box-sizing:border-box}body{margin:0;background:#f6f3ee;color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+.page{max-width:900px;margin:0 auto;padding:24px 16px 40px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:3px solid var(--orange);padding-bottom:12px;margin-bottom:18px}
+.top img{height:64px}.top .d{color:var(--muted);font-size:13px;text-align:right}
+h1{font-size:22px;color:var(--green);margin:0 0 14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;break-inside:avoid}
+.ph{width:100%;height:190px;object-fit:cover;display:block;background:#eee}
+.body{padding:12px 14px 14px}.var{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--orange);font-weight:700}
+h2{font-size:18px;margin:2px 0 0;color:var(--green)}.reg{color:var(--muted);font-size:13px}
+dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:10px 0;font-size:14px}dt{color:var(--muted)}dd{margin:0}
+.price{font-size:24px;font-weight:800;color:var(--green)}.price span{font-size:13px;font-weight:400;color:var(--muted)}
+.foot{margin-top:18px;color:var(--muted);font-size:13px;white-space:pre-line}
+.bar{text-align:center;margin-top:20px}.bar button{border:0;background:var(--green);color:#fff;border-radius:10px;padding:10px 20px;font:inherit;font-weight:600;cursor:pointer}
+@media print{body{background:#fff}.bar{display:none}.page{padding:0}.card{border-color:#ccc}}
+</style></head><body><div class="page">
+<div class="top"><img src="${logo}" alt="План Мечты"><div class="d">planmydream.ru<br>${today}</div></div>
+<h1>${basket.length > 1 ? 'Варианты проживания для вас' : 'Предложение для вас'}</h1>
+<div class="cards">${cards}</div>
+<div class="foot">Цены на ${today}, наличие мест подтверждаем при бронировании.${signature.trim() ? '\n\n' + esc(signature.trim()) : ''}</div>
+<div class="bar"><button onclick="print()">Сохранить в PDF / распечатать</button><div style="color:#6f6a62;font-size:12px;margin-top:6px">В окне печати выберите «Сохранить как PDF»</div></div>
+</div></body></html>`;
+  w.document.open(); w.document.write(html); w.document.close();
+}
+
+// ---------- события ----------
+document.addEventListener('click', async e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.id === 'go') return search();
+  if (t.dataset.unpick){ picked = picked.filter(p => p.id !== +t.dataset.unpick); renderPicked(); return; }
+  if (t.dataset.more){ showAll.add(+t.dataset.more); renderResults(); return; }
+  if (t.dataset.only){
+    const h = HOTELS.find(x => x.id === +t.dataset.only) || {id:+t.dataset.only, name:offers.find(o => o.hotelId === +t.dataset.only)?.hotel || '', region:''};
+    picked = [h]; renderPicked(); $('#results').scrollTop = 0; return search();
+  }
+  if (t.dataset.add){
+    const k = t.dataset.add, i = basket.findIndex(b => b.key === k);
+    if (i >= 0) basket.splice(i, 1); else { const o = offers.find(x => x.key === k); if (o) basket.push(o); }
+    saveBasket(); renderResults(); return;
+  }
+  if (t.dataset.del){ basket.splice(+t.dataset.del, 1); saveBasket(); if (offers.length) renderResults(); return; }
+  if (t.id === 'clear'){ basket = []; saveBasket(); if (offers.length) renderResults(); return; }
+  if (t.id === 'offer') return openOffer();
+  if (t.id === 'copy'){
+    const txt = clientText();
+    try { await navigator.clipboard.writeText(txt); }
+    catch(err){ const a = document.createElement('textarea'); a.value = txt; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); }
+    t.textContent = '✓ Скопировано'; t.classList.add('done');
+    setTimeout(() => { t.textContent = 'Скопировать текст для мессенджера'; t.classList.remove('done'); }, 1800);
+  }
+});
+document.addEventListener('change', e => {
+  const id = e.target.id;
+  if (id === 'country' || id === 'city') loadCountry().catch(err => status('Ошибка TEZ: ' + err.message, true));
+  if (id === 'ttype') syncType();
+  if (id === 'kids') renderAges();
+  if (id === 'sort'){ sortBy = e.target.value; renderResults(); }
+  if (id === 'hotelq'){
+    const v = e.target.value.split(' — ')[0].trim();
+    const h = HOTELS.find(x => x.name === v);
+    if (h && !picked.some(p => p.id === h.id) && picked.length < 5){ picked.push(h); renderPicked(); }
+    if (h) e.target.value = '';
+  }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'markup'){
+    markup = Math.max(0, Math.min(100, +e.target.value || 0)); store.set('markup', markup);
+    renderBasket();
+    if (offers.length) renderResults();
+  }
+  if (e.target.id === 'sign'){ signature = e.target.value; store.set('signature', signature); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.closest('#form') && e.target.id !== 'hotelq') search(); });
+
+renderBasket();
+init();
+</script>
+</body>
+</html>
