@@ -62,6 +62,38 @@ def tour_airports(t):
     return CN_AIR.get(arr), CN_AIR.get(dep)
 
 
+# Часовые пояса городов (UTC+ч) — чтобы показать прилёт по местному времени. Китай — UTC+8.
+TZ = {'MOW': 3, 'LED': 3, 'KZN': 3, 'AER': 3, 'KRR': 3, 'ROV': 3, 'VOG': 3, 'GOJ': 3, 'MRV': 3, 'KUF': 4, 'IJK': 4, 'RTW': 4,
+      'SVX': 5, 'UFA': 5, 'PEE': 5, 'CEK': 5, 'TJM': 5, 'SGC': 5, 'REN': 5, 'NQZ': 5, 'OMS': 6, 'OVB': 7, 'KJA': 7, 'KEJ': 7,
+      'TOF': 7, 'BAX': 7, 'NOZ': 7, 'IKT': 8, 'UUD': 8, 'HTA': 9, 'YKS': 9, 'VVO': 10, 'KHV': 10, 'PKC': 12}
+
+
+def ticket(x, dest):
+    """Короткая запись билета: цена, авиакомпания+рейс, вылет/прилёт местного времени, аэропорты, пересадки, ссылка."""
+    rec = {'p': x['price'], 'a': x.get('airline', ''), 't': x.get('transfers', 0)}
+    mins = x.get('duration_to') or x.get('duration') or 0
+    rec['h'] = round(mins / 60, 1)
+    if x.get('flight_number'):
+        rec['f'] = f"{x.get('airline', '')} {x['flight_number']}".strip()
+    if x.get('origin_airport'):
+        rec['oa'] = x['origin_airport']
+    if x.get('destination_airport'):
+        rec['da'] = x['destination_airport']
+    try:
+        dep = dt.datetime.fromisoformat(x['departure_at'])
+        rec['d'] = dep.strftime('%H:%M')
+        if mins and dep.tzinfo:
+            tz = dt.timezone(dt.timedelta(hours=TZ.get(dest, 8)))   # всё, что не в справочнике России, — Китай (UTC+8)
+            arr = (dep + dt.timedelta(minutes=mins)).astimezone(tz)
+            days = (arr.date() - dep.date()).days
+            rec['r'] = arr.strftime('%H:%M') + (f' +{days}' if days > 0 else '')
+    except Exception:
+        pass
+    if x.get('link'):
+        rec['l'] = x['link']
+    return rec
+
+
 MODE = {'how': 'header'}   # как передавать токен: заголовком X-Access-Token или параметром token
 
 
@@ -107,8 +139,7 @@ def month_prices(token, origin, dest, month, cache):
             for x in data.get('data') or []:
                 day = (x.get('departure_at') or '')[:10]
                 if day and (day not in best or x['price'] < best[day]['p']):
-                    best[day] = {'p': x['price'], 'a': x.get('airline', ''), 't': x.get('transfers', 0),
-                                 'h': round((x.get('duration_to') or x.get('duration') or 0) / 60, 1)}
+                    best[day] = ticket(x, dest)
             break
         except SystemExit:
             raise
