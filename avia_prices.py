@@ -17,12 +17,22 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 OUT = HERE / 'avia_prices.json'
 API = 'https://api.travelpayouts.com/aviasales/v3/prices_for_dates'
-ORIGINS = ['MOW', 'LED', 'KZN', 'SVX', 'OVB', 'VVO']   # Москва, Петербург, Казань, Екатеринбург, Новосибирск, Владивосток
+
+
+def origins_from_page():
+    """Города вылета — те же, что в списке вкладки «✈ Билеты» (RU_AIR в index.html), чтобы списки не расходились."""
+    src = (HERE / 'index.html').read_text(encoding='utf-8')
+    block = src[src.index('const RU_AIR'):src.index('};', src.index('const RU_AIR'))]
+    return re.findall(r"'[^']+':'([A-Z]{3})'", block)
+
+
+ORIGINS = origins_from_page()
 
 # те же справочники, что во вкладке (index.html)
 CN_AIR = {'Пекин': 'BJS', 'Шанхай': 'SHA', 'Гуанчжоу': 'CAN', 'Шэньчжэнь': 'SZX', 'Гонконг': 'HKG', 'Чунцин': 'CKG', 'Чэнду': 'CTU',
@@ -130,17 +140,23 @@ def main():
             for o in ORIGINS:
                 need.setdefault((o, A), set()).update({s, s - dt.timedelta(days=1)})
                 need.setdefault((D, o), set()).add(e)
-    cache, prices, calls = {}, {}, 0
-    for (o, d), dates in sorted(need.items()):
+    cache, prices = {}, {}
+
+    def one(item):
+        (o, d), dates = item
         out = {}
         for month in sorted({x.strftime('%Y-%m') for x in dates}):
             best = month_prices(token, o, d, month, cache)
-            calls += 1
             for x in dates:
                 if x.strftime('%Y-%m') == month and x.isoformat() in best:
                     out[x.isoformat()] = best[x.isoformat()]
-        if out:
-            prices[f'{o}-{d}'] = out
+        return f'{o}-{d}', out
+
+    with ThreadPoolExecutor(max_workers=3) as ex:   # 3 потока: ~45 городов за несколько минут, без перегрузки API
+        for k, out in ex.map(one, sorted(need.items())):
+            if out:
+                prices[k] = out
+    calls = len(cache)
     OUT.write_text(json.dumps({'updated': dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%d %H:%M UTC'),
                                'origins': ORIGINS, 'prices': prices}, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
     print('направлений:', len(need), 'запросов:', calls, 'с ценами:', len(prices), 'дат с ценой:', sum(len(v) for v in prices.values()))

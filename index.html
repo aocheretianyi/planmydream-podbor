@@ -92,6 +92,13 @@ body.no-filters #filters, body.no-results #results{display:none}
 .btn.alink:not(.ghost):hover{background:#a3341f}
 .avleg{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:7px 0;border-top:1px dashed var(--line)}
 .avl{display:flex;gap:6px}
+.rcol{display:flex;flex-direction:column;gap:12px;min-width:0}
+.mfrom{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:6px}
+.mfrom select{font:inherit;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.mrow{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;padding:5px 0;border-top:1px dashed var(--line);font-size:13px}
+.mrow .pr{font-weight:700;color:var(--ok)}
+.mrow .nop{color:var(--muted);font-size:12px}
+.mact{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
 .avleg .pr{font-weight:700;color:var(--ok)}
 .avleg .nop{color:var(--muted);font-size:12px}
 .avl .alink{padding:4px 10px;font-size:12.5px}
@@ -507,13 +514,14 @@ function tourAirports(t){
   return {arr, dep, src};
 }
 let avia = (() => { try { return JSON.parse(localStorage.getItem('podbor-avia')) || {}; } catch(_) { return {}; } })();
-avia = {from:'Москва', back:'', ad:2, ch:0, early:false, ...avia};
+avia = {from:'Москва', back:'', ad:2, ch:0, ...avia};
+if (avia.v !== 2) { avia.early = true; avia.v = 2; }   // по умолчанию вылет туда — за день до начала тура (решение 03.11.2026)
 let aviaOver = {};   // поправленные МОПом города в Китае, по туру: {key:{arr,dep}}
 const TP_MARKER = '706367';   // партнёрский номер Travelpayouts — не секрет, идёт в ссылки Aviasales
 // avia_prices.json — цены из кэша Aviasales (Travelpayouts), собирает avia_prices.py раз в день
 let APRICES = null;
 fetch('avia_prices.json?_=' + Math.floor(Date.now() / 36e5)).then(r => r.ok ? r.json() : null).then(d => {
-  APRICES = d; if (d && current && tab === 'avia' && $('#avlinks')) $('#avlinks').innerHTML = aviaLinks(current, currentRow);
+  APRICES = d; if (d && current && $('#avlinks')) $('#avlinks').innerHTML = aviaLinks(current, currentRow); if (d && current && $('#avmini')) $('#avmini').innerHTML = aviaMini(current, currentRow);
 }).catch(() => {});
 const fmtRub = n => Math.round(n).toLocaleString('ru-RU') + ' ₽';
 function legPrice(o, d, date){
@@ -556,7 +564,7 @@ function aviaLinks(t, r){
     <div class="hint" style="margin:2px 0 8px">${simple ? 'Прилёт и вылет — один город, ищем туда-обратно.' : `Прилёт и вылет в разных городах — «весь маршрут» ищет составной билет; ниже — каждый перелёт отдельно.`}</div>
     ${legs.map(l => `<div class="avleg"><div><b>${l.h}:</b> ${esc(l.txt)}, ${dShow(l.d)}${l.price ? `<br>${l.price}` : ''}</div><div class="avl">${l.links.map(x => btn(x, false)).join('')}</div></div>`).join('')}
     <div class="hint" style="margin-top:6px">Пассажиры: ${ad} ${ad === 1 ? 'взрослый' : 'взрослых'}${ch ? `, детей: ${ch} (возраст детей укажите на сайте поиска)` : ''}.
-      ${APRICES ? `Цены «от» — кэш Aviasales, обновлено ${esc(APRICES.updated.slice(0, 10).split('-').reverse().join('.'))}; есть для ${esc((APRICES.origins || []).map(c => Object.keys(RU_AIR).find(k => RU_AIR[k] === c) || c).join(', '))}. Точная цена и наличие — по ссылке.` : 'Цены — на сайтах, на момент открытия ссылки.'}</div>`;
+      ${APRICES ? `Цены «от» — кэш Aviasales, обновлено ${esc(APRICES.updated.slice(0, 10).split('-').reverse().join('.'))}; есть для ${(APRICES.origins || []).length} городов из списка «Вылет из». Точная цена и наличие — по ссылке.` : 'Цены — на сайтах, на момент открытия ссылки.'}</div>`;
 }
 function aviaHTML(t, r){
   const ap = {...tourAirports(t), ...(aviaOver[t.key] || {})};
@@ -570,12 +578,30 @@ function aviaHTML(t, r){
       <label>Детей<select id="av-ch">${[0,1,2,3].map(n => `<option ${n === +avia.ch ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <label>Прилёт в Китай<select id="av-arr">${cn}</select></label>
       <label>Вылет из Китая<select id="av-dep">${cn2}</select></label>
-      <label class="avchk"><input type="checkbox" id="av-early" ${avia.early ? 'checked' : ''}> прилететь накануне начала тура</label>
+      <label class="avchk"><input type="checkbox" id="av-early" ${avia.early ? 'checked' : ''}> вылет туда — накануне начала тура</label>
       <datalist id="ru-air">${Object.keys(RU_AIR).map(c => `<option value="${c}">`).join('')}</datalist>
     </div>
     <div class="hint" style="margin:4px 0 8px">Города в Китае подставлены ${esc(ap.src)}; можно поменять.${t.flight ? ` Ориентир по перелёту со страницы тура: ${esc(t.flight)}.` : ''}</div>
     <div id="avlinks">${aviaLinks(t, r)}</div>
     ${tips.length ? `<div class="avtips"><h3>Из FAQ тура</h3>${tips.map(o => `<p><b>${esc(o.q)}</b><br>${esc(o.a)}</p>`).join('')}</div>` : ''}`;
+}
+// Короткий блок «✈ Перелёт» под картой маршрута: город вылета, цены туда/обратно, одна кнопка. Настройки — во вкладке «✈ Билеты».
+function aviaMini(t, r){
+  if (!r) return '<div class="hint">Нет открытых дат.</div>';
+  const p = aviaPlan(t, r);
+  const opts = Object.keys(RU_AIR).map(c => `<option ${c === avia.from ? 'selected' : ''}>${esc(c)}</option>`).join('');
+  const custom = RU_AIR[avia.from] ? '' : `<option selected>${esc(avia.from)}</option>`;
+  let body;
+  if (!p.O || !p.B || !p.A || !p.D) body = '<div class="hint">Выберите город вылета во вкладке «✈ Билеты».</div>';
+  else {
+    const ad = Math.max(1, Math.min(9, +avia.ad || 1)), ch = Math.max(0, Math.min(8, +avia.ch || 0)), pax = String(ad) + (ch ? String(ch) : '');
+    const simple = p.O === p.B && p.A === p.D;
+    const url = `https://www.aviasales.ru/search/${simple ? `${p.O}${ddmm(p.out)}${p.A}${ddmm(p.ret)}${pax}` : `${p.O}${ddmm(p.out)}${p.A}-${p.D}${ddmm(p.ret)}${p.B}${pax}`}?marker=${TP_MARKER}`;
+    const row = (lbl, txt, d, o, de) => `<div class="mrow"><span>${lbl} ${esc(txt)}, ${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}</span>${legPrice(o, de, d) || '<span class="nop">цена — по ссылке</span>'}</div>`;
+    body = row('Туда:', `${p.from} → ${p.ap.arr}${avia.early ? ' (накануне тура)' : ''}`, p.out, p.O, p.A) + row('Обратно:', `${p.ap.dep} → ${p.back}`, p.ret, p.D, p.B)
+      + `<div class="mact"><a class="btn alink" href="${esc(url)}" target="_blank" rel="noopener">Найти билеты на Aviasales ↗</a><button class="link" id="avmore">Все варианты и настройки →</button></div>`;
+  }
+  return `<label class="mfrom">Вылет из <select id="av-from-mini">${custom}${opts}</select></label>${body}`;
 }
 function saveAvia(){ try { localStorage.setItem('podbor-avia', JSON.stringify(avia)); } catch(_){} }
 
@@ -630,7 +656,8 @@ function renderDetail(keepScroll){
     </div>
     <div class="grid2">
       <div class="box"><h2>Сценарий презентации</h2>${scriptHTML(t, r)}</div>
-      <div class="box"><h2>Маршрут и переезды${t.isAuto?AUTO_TAG(t):''}</h2>${routeHTML(t, r)}</div>
+      <div class="rcol"><div class="box"><h2>Маршрут и переезды${t.isAuto?AUTO_TAG(t):''}</h2>${routeHTML(t, r)}</div>
+        <div class="box"><h2>✈ Перелёт</h2><div id="avmini">${aviaMini(t, r)}</div></div></div>
     </div>
     <div class="answers">
       <div class="abar"><input id="ask" placeholder="🔍 Найти ответ: виза, еда, перелёт…" value="${esc(ask)}"><div class="tabs" id="tabs"></div></div>
@@ -775,6 +802,7 @@ function setPanel(name, show){
 document.addEventListener('click', e => {
   const chip = e.target.closest('.chip');
   if(chip){ const set = state[chip.dataset.set], k = chip.dataset.k; set.has(k)?set.delete(k):set.add(k); render(); if(current){ const keep = currentRow && currentRow.open && (!state.months.size || [...currentRow.months].some(m=>state.months.has(m))); if(!keep) currentRow = pickRow(current); renderDetail(true); saveHash(); } return; }  // выбранную вручную дату не сбрасываем, если она подходит
+  if(e.target.id==='avmore'){ tab='avia'; ask=''; if($('#ask')) $('#ask').value=''; renderPane(); $('#pane').scrollIntoView({behavior:'smooth', block:'start'}); return; }
   if(e.target.id==='tomap'){ current = null; currentRow = null; renderResults(); saveHash(); renderMapView(); return; }
   if(e.target.id==='moredates'){ showAllDates=!showAllDates; renderDetail(true); return; }
   if(e.target.id==='moresights'){ showAllSights=!showAllSights; renderFilters(); return; }
@@ -801,14 +829,16 @@ document.addEventListener('click', e => {
 function onAvia(e){
   const id = e.target.id; if (!id || !id.startsWith('av-') || !current) return;
   const v = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-  if (id === 'av-from') avia.from = v.trim();
+  if (id === 'av-from' || id === 'av-from-mini') avia.from = v.trim();
   if (id === 'av-back') avia.back = v.trim();
   if (id === 'av-ad') avia.ad = +v;
   if (id === 'av-ch') avia.ch = +v;
   if (id === 'av-early') avia.early = v;
   if (id === 'av-arr' || id === 'av-dep'){ const o = aviaOver[current.key] = aviaOver[current.key] || {}; o[id === 'av-arr' ? 'arr' : 'dep'] = v; }
   saveAvia();
-  $('#avlinks').innerHTML = aviaLinks(current, currentRow);
+  if ($('#avlinks')) $('#avlinks').innerHTML = aviaLinks(current, currentRow);
+  if (id === 'av-from-mini' && $('#av-from')) $('#av-from').value = avia.from;
+  if ($('#avmini') && (e.type === 'change' || id !== 'av-from')) $('#avmini').innerHTML = aviaMini(current, currentRow);   // поле вкладки — по change, чтобы не дёргать блок на каждую букву
 }
 document.addEventListener('input', onAvia);
 document.addEventListener('change', onAvia);
