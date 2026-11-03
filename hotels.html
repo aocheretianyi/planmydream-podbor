@@ -122,6 +122,37 @@ details.pv{margin-top:6px;font-size:12.5px}
 details.pv summary{cursor:pointer;color:var(--accent)}
 details.pv summary:hover{text-decoration:underline}
 details.pv pre{white-space:pre-wrap;font:12.5px/1.45 inherit;font-family:inherit;background:var(--bg);border-radius:8px;padding:8px 10px;margin:6px 0 0}
+/* Хайнань */
+#hainanbtn{display:none}
+.hn h2{font-size:17px;margin:0 0 4px}
+.hn .lead{color:var(--muted);font-size:12.5px;margin-bottom:10px}
+.hn .info{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-bottom:10px}
+.hn .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13px}
+.hn .box h3{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 5px}
+.hn .box ul{margin:0;padding-left:18px}
+.hn .box li{margin:2px 0}
+#hnmap{height:340px;border-radius:12px;border:1px solid var(--line);margin-bottom:10px;background:#e8eef0}
+.hn .bays{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.bay{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow);font-size:13px;scroll-margin-top:10px}
+.bay.hl{outline:2px solid var(--accent)}
+.bay .bh{display:flex;align-items:center;gap:8px}
+.bay .num{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none}
+.bay .bh b{font-size:14.5px}
+.bay .bh button{margin-left:auto}
+.bay .road{color:var(--muted);font-size:12px;margin:3px 0 5px}
+.bay ul{margin:0 0 6px;padding-left:18px}
+.bay ul li{margin:1px 0}
+.bay ul li.add2{color:var(--muted)}
+.bay .hl2{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:6px 0 3px}
+.bay .h{display:flex;align-items:center;gap:6px;padding:4px 0;border-top:1px dashed var(--line)}
+.bay .h span{flex:1;min-width:0}
+.bay .h small{color:var(--muted)}
+.bay .h a{font-size:12px;text-decoration:none;white-space:nowrap}
+.bay .h a:hover{text-decoration:underline}
+.bay .h .na{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.bay .tgl.price{padding:3px 9px;font-size:12px}
+.mk{background:var(--accent);color:#fff;border:2px solid #fff;border-radius:50%;width:26px!important;height:26px!important;display:flex!important;align-items:center;justify-content:center;font:700 12px/1 -apple-system,Arial,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.35);cursor:pointer}
+.mk.air{background:#1f1d1a;font-size:13px}
 .actions{display:grid;gap:6px;padding:10px 14px;border-top:1px solid var(--line);background:var(--panel);position:sticky;bottom:0}
 @media (max-width:1380px){
   main{grid-template-columns:260px minmax(0,1fr) 300px}
@@ -154,6 +185,7 @@ details.pv pre{white-space:pre-wrap;font:12.5px/1.45 inherit;font-family:inherit
   <header>
     <h1>План Мечты · <span>отели TEZ</span></h1>
     <a class="tgl" href="index.html" title="Вернуться в подборщик туров">← Подбор тура</a>
+    <button class="tgl" id="hainanbtn" title="Бухты Хайнаня, карта и наша подборка отелей">🏝 Хайнань: бухты и отели</button>
     <button class="tgl" id="tobasket" title="Перейти к подборке">Подборка: 0</button>
     <span id="status">Загружаю справочники TEZ…</span>
   </header>
@@ -171,7 +203,8 @@ details.pv pre{white-space:pre-wrap;font:12.5px/1.45 inherit;font-family:inherit
         <div class="hint">«По» — если турист гибок по датам (до 20 дней). Пусто — заезд ровно в первую дату.</div>
       </div>
       <div class="fgroup"><h3>Ночей</h3>
-        <div class="row"><input type="number" id="nmin" min="1" max="30" value="5" title="От"><span style="flex:none">—</span><input type="number" id="nmax" min="1" max="30" value="7" title="До"></div>
+        <div class="row"><span class="lbl">от</span><select id="nmin" title="От"></select><span class="lbl" style="text-align:center">до</span><select id="nmax" title="До"></select></div>
+        <div class="hint">Разброс — до 8 ночей. У многих отелей минимум 5.</div>
       </div>
       <div class="fgroup"><h3>Туристы</h3>
         <div class="row"><select id="adults"></select><select id="kids"></select></div>
@@ -190,7 +223,8 @@ details.pv pre{white-space:pre-wrap;font:12.5px/1.45 inherit;font-family:inherit
       <ol><li>Слева — страна, отель (или пусто для обзора всех), даты, туристы → «Найти цены».</li>
       <li>В таблице «+ в подборку» у нужных вариантов — можно несколько для сравнения.</li>
       <li>Справа — наценка, затем «Скопировать текст» или «Открыть предложение» (PDF).</li></ol>
-      <div class="hint" style="margin-top:12px">Цены TEZ — для туриста, комиссия агентства уже внутри.</div></div></section>
+      <div class="hint" style="margin-top:12px">Цены TEZ — для туриста, комиссия агентства уже внутри.</div>
+      <button class="btn ghost" id="hainanbtn2" style="margin-top:14px">🏝 Хайнань: бухты, карта и наша подборка отелей</button></div></section>
     <aside class="col" id="basket">
       <div id="bscroll">
         <div class="fgroup"><h3>Наценка, %</h3><input type="number" id="markup" min="0" max="100" step="1"></div>
@@ -278,7 +312,10 @@ async function init(){
   const saved = f.after && ruToDate(isoToRu(f.after)) >= tomorrow;
   $('#after').value = saved ? f.after : dateToIso(addDays(new Date(), 30));
   $('#before').value = saved && f.before ? f.before : '';
-  $('#nmin').value = f.nmin || 5; $('#nmax').value = f.nmax || 7;
+  const nopts = Array.from({length:30}, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
+  $('#nmin').innerHTML = $('#nmax').innerHTML = nopts;
+  $('#nmin').value = Math.min(30, Math.max(1, +f.nmin || 5)); $('#nmax').value = Math.min(30, Math.max(1, +f.nmax || 7));
+  syncNights('nmin');
   $('#stop').checked = !!f.stop;
   $('#markup').value = markup;
   $('#sign').value = signature;
@@ -327,11 +364,20 @@ async function loadCountry(f){
     renderPicked();
     status(HOTELS.length ? `${HOTELS.length} ${plural(HOTELS.length,'отель','отеля','отелей')} в продаже` : 'TEZ сейчас не продаёт отели этой страны', !HOTELS.length);
     $('#go').disabled = !HOTELS.length;
+    syncHainanBtn();
   } catch(e){
     status('Не загрузились отели: ' + e.message, true);
   } finally {
     $('#country').disabled = $('#hotelq').disabled = false;
   }
+}
+
+// Ночи — списки 1–30; несовместимое значение второго поля поправляем сами (до ≥ от, разброс ≤ 8 — лимит TEZ)
+function syncNights(changed){
+  let a = +$('#nmin').value, b = +$('#nmax').value;
+  if (changed === 'nmax'){ if (a > b) a = b; if (b - a > 8) a = b - 8; }
+  else { if (b < a) b = a; if (b - a > 8) b = a + 8; }
+  $('#nmin').value = a; $('#nmax').value = b;
 }
 
 function syncType(){ $('#cityg').style.display = ['1','6'].includes($('#ttype').value) ? '' : 'none'; }
@@ -367,7 +413,7 @@ function renderSug(){
 }
 function pickHotel(id){
   const h = HOTELS.find(x => x.id === id);
-  if (h && picked.length < 5 && !picked.some(p => p.id === id)) picked.push(h);
+  if (h && picked.length < 5 && !picked.some(p => p.id === id)){ picked.push(h); bayMode = null; }
   $('#hotelq').value = ''; sugIdx = -1; renderSug(); renderPicked(); $('#hotelq').focus();
 }
 
@@ -382,11 +428,8 @@ function readQuery(){
   if (ruToDate(after) < tomorrow) fail('#after', 'Дата заезда уже прошла или сегодня — TEZ продаёт заезды с завтрашнего дня.');
   if (ruToDate(before) < ruToDate(after)) fail('#before', 'Дата «по» раньше даты «с».');
   if ((ruToDate(before) - ruToDate(after)) / 864e5 > 20) fail('#before', 'Разброс дат заезда — не больше 20 дней.');
-  let nmin = Math.round(+$('#nmin').value), nmax = Math.round(+$('#nmax').value) || nmin;
-  if (!nmin || nmin < 1) fail('#nmin', 'Укажите число ночей — от 1.');
-  if (nmax > 30 || nmin > 30) fail('#nmax', 'Не больше 30 ночей.');
-  if (nmax < nmin){ [nmin, nmax] = [nmax, nmin]; $('#nmin').value = nmin; $('#nmax').value = nmax; }
-  if (nmax - nmin > 8) fail('#nmax', 'Разброс ночей — не больше 8 (например, 5–13).');
+  syncNights('nmin');
+  const nmin = +$('#nmin').value, nmax = +$('#nmax').value;
   const adults = +$('#adults').value, ages = [...document.querySelectorAll('#ages select')].map(s => +s.value);
   const acc = ACCOMS.find(a => a.adult === adults && a.children === ages.length);
   if (!acc) fail(null, 'TEZ не размещает такой состав в одном номере — уменьшите число туристов или ищите два номера отдельно.');
@@ -417,8 +460,10 @@ async function search(){
     tourType:q.ttype, hotelInStop:q.stop, noTicketsTo:q.stop, noTicketsFrom:q.stop, promoFlag:true
   };
   if (q.hotels.length) p.hotelId = q.hotels;
-  else p.groupByHotel = 2;   // обзор страны: по одной самой дешёвой цене на отель, иначе 100 строк — это 2–4 отеля
-  q.grouped = !q.hotels.length;
+  // обзор страны или бухты: по одной самой дешёвой цене на отель, иначе 100 строк — это 2–4 отеля
+  q.bay = q.hotels.length ? bayMode : null;
+  q.grouped = !q.hotels.length || !!q.bay;
+  if (q.grouped) p.groupByHotel = 2;
   if (q.ages.length){
     const d = ruToDate(q.after);
     p.birthdays = q.ages.map(a => { const b = new Date(d); b.setFullYear(b.getFullYear() - a); b.setDate(b.getDate() - 1); return dateToRu(b); }).join(',');
@@ -484,12 +529,20 @@ function renderResults(capped){
   const inBasket = new Set(basket.map(b => b.key));
   let html = `<div class="rhead"><b>${list.length} ${plural(list.length,'отель','отеля','отелей')}, ${shown.length} ${plural(shown.length,'вариант','варианта','вариантов')}</b>
     ${lastQuery.grouped ? '' : `<select id="sort" title="Порядок строк в таблице"><option value="price" ${sortBy==='price'?'selected':''}>сначала дешевле</option><option value="date" ${sortBy==='date'?'selected':''}>по дате заезда</option></select>`}
-    ${fromOverview ? '<button class="tgl" id="back" title="Вернуться к обзору всех отелей">← Все отели страны</button>' : ''}
+    ${fromOverview ? `<button class="tgl" id="back" title="Вернуться к обзору">← Все отели ${backBay ? 'бухты' : 'страны'}</button>` : ''}
+    ${lastQuery.bay ? `<span class="hint" style="margin:0">Бухта: <b>${esc(BAYS.find(b => b.id === lastQuery.bay).name)}</b></span>` : ''}
     <span class="hint" style="margin:0">Цена за всех туристов: TEZ → наша с наценкой ${markup}%</span></div>`;
   if (!lastQuery.grouped && (meals.length > 1 || nightsL.length > 1)){
     html += `<div class="filters">${meals.length > 1 ? `Питание: <span class="chips">${meals.map(m => `<button class="chip ${fMeal.has(m)?'on':''}" data-fmeal="${esc(m)}">${esc(m)}</button>`).join('')}</span>` : ''}
       ${nightsL.length > 1 ? `Ночей: <span class="chips">${nightsL.map(n => `<button class="chip ${fNights.has(n)?'on':''}" data-fnights="${n}">${n}</button>`).join('')}</span>` : ''}
       ${fMeal.size || fNights.size ? '<button class="morebtn" id="freset" style="padding:3px 6px">сбросить</button>' : ''}</div>`;
+  }
+  if (lastQuery.bay){
+    const b = BAYS.find(x => x.id === lastQuery.bay);
+    const none = b.hotels.filter(h => h[1] && !offers.some(o => o.hotelId === h[1])).map(h => h[0]);
+    const notTez = b.hotels.filter(h => !h[1]).map(h => h[0]);
+    if (none.length) html += `<div class="hint" style="margin:-2px 0 6px">Нет цен TEZ на эти даты и условия: ${esc(none.join(', '))}.</div>`;
+    if (notTez.length) html += `<div class="hint" style="margin:-2px 0 6px">Не продаются в TEZ: ${esc(notTez.join(', '))}.</div>`;
   }
   if (lastQuery.grouped) html += `<div class="hint" style="margin:-2px 0 8px">Обзор: у каждого отеля самый дешёвый вариант. «Все варианты отеля» — номера, питание и даты.</div>`;
   const missing = [];
@@ -624,13 +677,154 @@ async function copyText(btn){
   setTimeout(() => { btn.textContent = 'Скопировать текст для мессенджера'; btn.classList.remove('done'); }, 2200);
 }
 
+// ---------- Хайнань: бухты и наша подборка отелей ----------
+// Источник — «План Мечты — База знаний FAQ», лист «Отели» (Google Таблица 1YjsKtRhl3pkSXozdldaw8m08qt00hp8uNIa9nmiPTQM).
+// add — дополнено нами (время до аэропорта и т. п.), в интерфейсе серым. tez — hotelId в TEZ (null — TEZ не продаёт).
+const HAINAN_INFO = {
+  flights: ['Прямых рейсов нет — со стыковкой 2–7 ч', 'Из Москвы — через Пекин, Гуанчжоу, Ухань или Шанхай', 'Из Санкт-Петербурга — через Пекин или Шанхай', 'Из Казани — через Шанхай', 'Аэропорт — Санья Феникс (SYX)'],
+  transfers: ['У TEZ входят групповые трансферы до отеля', 'Индивидуальный трансфер — при бронировании от 5 ночей (отели бухт Дадунхай, Сяодунхай, Ялонг, Санья)'],
+  booking: ['Доп. кровать на ребёнка в стоимость не входит (завтрак входит); кровати широкие, TWIN — от 120 см. Нужна доп. кровать — написать куратору TEZ при бронировании', 'Ввозить любые продукты питания категорически запрещено']
+};
+const BAYS = [
+  {id:'sanyabay', name:'Санья Бей (Sanya Bay)', ll:[18.279, 109.465], road:'≈ 10–15 мин от аэропорта',
+    facts:['Пляж 22 км, мелкий плотный песок', 'Вид на остров Феникс', 'Самая близкая к аэропорту'],
+    add:['Городская набережная, красивые закаты'],
+    hotels:[['Pullman Oceanview Sanya Bay Resort & Spa', 208914, 'https://www.trip.com/w/1n09g788sW2'],
+      ['Crowne Plaza Resort Sanya Bay by IHG', 237849, 'https://www.trip.com/w/L5xSzw5ktW2'],
+      ['Holiday Inn Resort Sanya Bay by IHG', 209691, 'https://www.trip.com/w/gsQHSK38sW2']]},
+  {id:'dadonghai', name:'Дадунхай (Dadonghai)', ll:[18.2186, 109.5176], road:'≈ 25–30 мин от аэропорта',
+    facts:['Самая популярная бухта, «на слуху»', 'Недалеко от аэропорта', 'Много медцентров', 'Активная ночная жизнь и тусовки'],
+    add:['В черте города: рестораны и магазины в шаговой доступности'],
+    hotels:[['Pearl River Garden Hotel Sanya', 210304, 'https://www.trip.com/w/ZN411MJ8sW2'],
+      ['Sanya Junji Seaview Hotel', 10224058, 'https://www.trip.com/w/zkV7sWM8sW2'],
+      ['Ascott Dadonghai Bay Sanya', 945006, 'https://www.trip.com/w/rF7TxwR8sW2'],
+      ['Dong Rong Guest International Hotel', 10604778, 'https://www.trip.com/w/swX4usW8sW2'],
+      ['voco Sanya Dadonghai by IHG', 10591027, 'https://www.trip.com/w/jJrumrygtW2'],
+      ['Sunshine Resort Intime Sanya', 208826, 'https://www.trip.com/w/fvwvB48AbW2']]},
+  {id:'xiaodonghai', name:'Сяодунхай (Xiaodonghai)', ll:[18.2062, 109.4999], road:'≈ 25 мин от аэропорта',
+    facts:['Входит в зону индивидуального трансфера TEZ (от 5 ночей)'],
+    add:['Небольшая тихая бухта рядом с Дадунхаем', 'Кораллы — хорошее место для снорклинга'],
+    hotels:[]},
+  {id:'yalong', name:'Ялонг Бей (Yalong Bay)', ll:[18.2244, 109.6242], road:'≈ 35–40 мин от аэропорта',
+    facts:['Пляж 8 км', 'Отели премиум-класса', 'Меньше сильных волн', 'Нет автотрафика'],
+    add:['Самая прозрачная вода среди бухт Саньи — снорклинг и дайвинг'],
+    hotels:[['Sanya Marriott Yalong Bay Resort & Spa', 318703, 'https://www.trip.com/w/0AYtrOehtW2'],
+      ['Sheraton Sanya Yalong Bay Resort', 210487, 'https://www.trip.com/w/OS54QSmhtW2'],
+      ['HUALUXE Sanya Yalong Bay Resort', 10042424, 'https://www.trip.com/w/HHbMWo7htW2'],
+      ['Holiday Inn & Suites Sanya Yalong Bay by IHG', 10133900, 'https://www.trip.com/w/aT0NEhFhtW2'],
+      ['Ocean View Resort Yalong Bay', 312687, 'https://www.trip.com/w/z56IK4KhtW2'],
+      ['Golden Palm Resort Sanya Yalong Bay', 212454, 'https://www.trip.com/w/xqsB9bRhtW2'],
+      ['Palace Resort Yalong Bay Sanya', 326180, 'https://www.trip.com/w/oDvfjGZhtW2']]},
+  {id:'haitang', name:'Хайтанг Бей (Haitang Bay)', ll:[18.335, 109.735], road:'≈ 45–50 мин от аэропорта',
+    facts:['30 км от Саньи (≈ 50 мин на трансфере)', 'Самый протяжённый пляж — 25 км', 'Роскошные отели', 'Магазин беспошлинной торговли (duty free)', 'Инфраструктура менее развита'],
+    add:['Тише, чем в Санье; Atlantis — океанариум и аквапарк'],
+    hotels:[['The Westin Sanya Haitang Bay Resort', 313069, 'https://www.trip.com/w/BtASnbOitW2JW'],
+      ['Marriott Sanya Haitang Bay Resort & Spa', null, 'https://www.trip.com/w/ahfVheEitW2'],
+      ['Sheraton Sanya Haitang Bay Resort', null, 'https://www.trip.com/w/djMSlfJitW2'],
+      ['Crowne Plaza Sanya Haitang Bay Resort by IHG (для детей)', 10050316, 'https://www.trip.com/w/nyNYKsVitW2'],
+      ['Atlantis Sanya (океанариум + аквапарк)', 417959, 'https://www.trip.com/w/CFfM3qZitW2']]},
+  {id:'clearwater', name:'Бухта Чистой Воды (Циншуйвань)', ll:[18.392, 109.878], road:'≈ 1 ч 10 мин от аэропорта',
+    facts:['Пляж 12 км, широкая пляжная полоса', 'Отели премиум-класса', '«Поющий» песок, изумрудная вода'],
+    add:['Уезд Линшуй, вдали от города — для спокойного отдыха'],
+    hotels:[['Raffles Hainan Clear Water Bay', 312518, 'https://www.trip.com/w/jWIj8nphtW2'],
+      ['Hotel Indigo Hainan Clear Water Bay by IHG', 10609065, 'https://www.trip.com/w/vX1ZSI3itW2'],
+      ['Kimpton AQEOS Hainan by IHG', 10609192, 'https://www.trip.com/w/AjL99z6itW2']]}
+];
+const AIRPORT = [18.3052, 109.4125];
+let hnMap = null, bayMode = null, backBay = null;
+
+const isChina = () => +$('#country').value === CHINA;
+function syncHainanBtn(){
+  $('#hainanbtn').style.display = isChina() ? 'inline-block' : 'none';
+  const b2 = $('#hainanbtn2'); if (b2) b2.style.display = isChina() ? '' : 'none';
+}
+
+function hainanHtml(){
+  const li = a => a.map(x => `<li>${esc(x)}</li>`).join('');
+  return `<div class="hn">
+    ${offers.length ? '<button class="tgl" id="hnback" style="margin-bottom:8px">← К результатам поиска</button>' : ''}
+    <h2>🏝 Хайнань: бухты и наша подборка отелей</h2>
+    <div class="lead">Отели — из нашей базы знаний (лист «Отели»), по рейтингу внутри бухты. «Цены» — поиск у TEZ на даты и туристов из формы слева. Серым — дополнено нами.</div>
+    <div class="info"><div class="box"><h3>Перелёт</h3><ul>${li(HAINAN_INFO.flights)}</ul></div>
+    <div class="box"><h3>Трансфер</h3><ul>${li(HAINAN_INFO.transfers)}</ul></div>
+    <div class="box" style="border-color:#e8b9ae"><h3>Важно при бронировании</h3><ul>${li(HAINAN_INFO.booking)}</ul></div></div>
+    <div id="hnmap" role="region" aria-label="Карта бухт Хайнаня"></div>
+    <div class="bays">${BAYS.map((b, i) => {
+      const tez = b.hotels.filter(h => h[1]);
+      return `<div class="bay" id="bay-${b.id}">
+        <div class="bh"><span class="num">${i + 1}</span><b>${esc(b.name)}</b>${tez.length ? `<button class="tgl price" data-bay="${b.id}" title="Самая дешёвая цена TEZ в каждом отеле бухты">Цены по бухте</button>` : ''}</div>
+        <div class="road">${esc(b.road)}</div>
+        <ul>${b.facts.map(f => `<li>${esc(f)}</li>`).join('')}${b.add.map(f => `<li class="add2">${esc(f)}</li>`).join('')}</ul>
+        ${b.hotels.length ? `<div class="hl2">Наши отели</div>` + b.hotels.map(([n, id, url]) => `<div class="h"><span>${esc(n)}</span>
+          <a href="${esc(url)}" target="_blank" rel="noopener" title="Отель на trip.com">trip.com ↗</a>
+          ${id ? `<button class="tgl price" data-hprice="${id}" title="Все варианты TEZ в этом отеле">Цены</button>` : '<span class="na" title="Отель не продаётся в TEZ">нет у TEZ</span>'}</div>`).join('')
+          : '<div class="hint">Отелей из нашей подборки здесь нет — ищите по названию в поле «Отели».</div>'}
+      </div>`; }).join('')}</div></div>`;
+}
+
+function loadLeaflet(){
+  if (window.L) return Promise.resolve();
+  if (loadLeaflet.p) return loadLeaflet.p;
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+  document.head.appendChild(css);
+  return loadLeaflet.p = new Promise((ok, bad) => {
+    const s = document.createElement('script'); s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    s.onload = ok; s.onerror = () => { loadLeaflet.p = null; bad(); }; document.head.appendChild(s);
+  });
+}
+
+async function showHainan(){
+  $('#sug').classList.remove('open');
+  $('#results').innerHTML = hainanHtml();
+  $('#results').scrollTop = 0; if (innerWidth <= 1100) $('#results').scrollIntoView();
+  try { await loadLeaflet(); } catch(e){ $('#hnmap').innerHTML = '<div class="hint" style="padding:12px">Карта не загрузилась — проверьте интернет. Описание бухт ниже.</div>'; return; }
+  if (!$('#hnmap')) return;   // пока грузилась карта, ушли с экрана
+  if (hnMap){ hnMap.remove(); hnMap = null; }
+  hnMap = L.map('hnmap', {scrollWheelZoom:false}).setView([18.29, 109.64], 10);
+  // Подложка Esri — без ключа (CARTO с 2026 требует ключ, OSM блокирует сторонние сайты)
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom:18, attribution:'Tiles &copy; Esri — Esri, HERE, Garmin, &copy; OpenStreetMap contributors'
+  }).addTo(hnMap);
+  const icon = (t, cls) => L.divIcon({className:'', html:`<div class="mk ${cls || ''}">${t}</div>`, iconSize:[26, 26], iconAnchor:[13, 13]});
+  L.marker(AIRPORT, {icon:icon('✈', 'air'), title:'Аэропорт Санья Феникс (SYX)'}).addTo(hnMap).bindTooltip('Аэропорт Санья Феникс (SYX)');
+  BAYS.forEach((b, i) => {
+    L.marker(b.ll, {icon:icon(i + 1), title:b.name}).addTo(hnMap)
+      .bindTooltip(`${b.name} · ${b.road}`)
+      .on('click', () => {
+        const el = $('#bay-' + b.id); if (!el) return;
+        document.querySelectorAll('.bay.hl').forEach(x => x.classList.remove('hl'));
+        el.classList.add('hl'); el.scrollIntoView({behavior:'smooth', block:'nearest'});
+      });
+  });
+  hnMap.fitBounds(L.latLngBounds([AIRPORT, ...BAYS.map(b => b.ll)]).pad(0.12));
+}
+
+function searchBay(id){
+  const b = BAYS.find(x => x.id === id); if (!b) return;
+  picked = b.hotels.filter(h => h[1]).map(h => hotelById(h[1], h[0]));
+  bayMode = id; fromOverview = false; renderPicked();
+  return search();
+}
+
+function hotelById(id, name){
+  return HOTELS.find(x => x.id === id) || {id, name:niceName(name || ''), region:'Хайнань'};
+}
+
 // ---------- события ----------
 document.addEventListener('click', async e => {
   if (!e.target.closest('#hotelq, #sug')) $('#sug').classList.remove('open');
   const t = e.target.closest('button'); if (!t) return;
   if (t.id === 'go') return search();
   if (t.dataset.pick) return pickHotel(+t.dataset.pick);
-  if (t.dataset.unpick){ picked = picked.filter(p => p.id !== +t.dataset.unpick); renderPicked(); return; }
+  if (t.dataset.unpick){ picked = picked.filter(p => p.id !== +t.dataset.unpick); bayMode = null; renderPicked(); return; }
+  if (t.id === 'hainanbtn' || t.id === 'hainanbtn2') return showHainan();
+  if (t.id === 'hnback'){ renderResults(); return; }
+  if (t.dataset.bay){ return searchBay(t.dataset.bay); }
+  if (t.dataset.hprice){
+    const id = +t.dataset.hprice, row = BAYS.flatMap(b => b.hotels).find(h => h[1] === id);
+    picked = [hotelById(id, row && row[0])]; bayMode = null; fromOverview = false; renderPicked();
+    return search();
+  }
   if (t.dataset.more){ showAll.add(+t.dataset.more); renderResults(); return; }
   if (t.dataset.fmeal){ const m = t.dataset.fmeal; fMeal.has(m) ? fMeal.delete(m) : fMeal.add(m); renderResults(); return; }
   if (t.dataset.fnights){ const n = +t.dataset.fnights; fNights.has(n) ? fNights.delete(n) : fNights.add(n); renderResults(); return; }
@@ -638,10 +832,15 @@ document.addEventListener('click', async e => {
   if (t.dataset.only){
     const id = +t.dataset.only;
     const h = HOTELS.find(x => x.id === id) || {id, name:offers.find(o => o.hotelId === id)?.hotel || '', region:''};
+    backBay = lastQuery.bay; bayMode = null;
     picked = [h]; renderPicked(); fromOverview = true;
     await search(); fromOverview = true; renderResults(); return;
   }
-  if (t.id === 'back'){ picked = []; renderPicked(); fromOverview = false; return search(); }
+  if (t.id === 'back'){
+    fromOverview = false;
+    if (backBay) return searchBay(backBay);
+    picked = []; bayMode = null; renderPicked(); return search();
+  }
   if (t.dataset.add){
     const k = t.dataset.add, i = basket.findIndex(b => b.key === k);
     if (i >= 0) basket.splice(i, 1); else { const o = offers.find(x => x.key === k); if (o) basket.push({...o, added:todayRu()}); }
@@ -659,12 +858,13 @@ document.addEventListener('click', async e => {
 document.addEventListener('change', e => {
   const id = e.target.id;
   if (id === 'country'){
-    picked = []; offers = []; fromOverview = false;
+    picked = []; offers = []; fromOverview = false; bayMode = backBay = null; syncHainanBtn();
     $('#results').innerHTML = '<div class="welcome">Страна изменена — выберите отели и даты и нажмите «Найти цены».</div>';
     loadCountry();
   }
   if (id === 'city') loadCountry();
   if (id === 'ttype') syncType();
+  if (id === 'nmin' || id === 'nmax') syncNights(id);
   if (id === 'kids') renderAges();
   if (id === 'sort'){ sortBy = e.target.value; renderResults(); }
   if (id === 'markup'){ $('#markup').value = markup; }
