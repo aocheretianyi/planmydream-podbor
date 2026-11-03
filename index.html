@@ -21,6 +21,7 @@ header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(
 header h1{font-size:15px;margin:0 6px 0 0;white-space:nowrap}
 header h1 span{color:var(--accent)}
 .tgl{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:5px 10px;font-size:13px;white-space:nowrap}
+a.tgl:hover{background:var(--chip)}
 .tgl[aria-pressed="true"]{background:var(--chip-on);color:#fff;border-color:var(--chip-on)}
 #search{flex:1;max-width:360px;padding:6px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font:inherit}
 #status{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
@@ -145,12 +146,12 @@ mark{background:#fff0b3;border-radius:3px}
 <div class="app">
   <header>
     <h1>План Мечты · <span>подбор тура</span></h1>
+    <a class="tgl" href="hotels.html" title="Цены отелей TEZ TOUR и предложение клиенту" style="text-decoration:none">🏨 Отели TEZ →</a>
     <button class="tgl" id="tgl-filters" aria-pressed="true" title="Показать / скрыть фильтры">☰ Фильтры</button>
     <button class="tgl" id="tgl-results" aria-pressed="true" title="Показать / скрыть список туров">▤ Подборка</button>
     <input id="search" placeholder="Поиск тура: название, город, организатор">
     <span id="status">Загружаю…</span>
     <button class="tgl" id="reload" title="Перечитать данные (собираются с сайта раз в 4 часа)">Обновить</button>
-    <a class="tgl" href="hotels.html" title="Цены отелей TEZ TOUR и предложение клиенту" style="text-decoration:none">🏨 Отели TEZ</a>
   </header>
   <main>
     <aside class="col" id="filters"></aside>
