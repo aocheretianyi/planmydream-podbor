@@ -153,6 +153,22 @@ details.pv pre{white-space:pre-wrap;font:12.5px/1.45 inherit;font-family:inherit
 .bay .h a:hover{text-decoration:underline}
 .bay .h .na{font-size:11.5px;color:var(--muted);white-space:nowrap}
 .bay .tgl.price{padding:3px 9px;font-size:12px}
+.ii{border:1px solid var(--line);background:var(--panel);color:var(--muted);width:20px;height:20px;border-radius:50%;font:italic 700 12px/1 Georgia,serif;display:inline-flex;align-items:center;justify-content:center;padding:0;flex:none;vertical-align:middle}
+.ii:hover,.ii.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+#pop{position:fixed;z-index:20;width:380px;max-width:calc(100vw - 20px);max-height:min(70vh,560px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.18);padding:12px 14px;font-size:13px;display:none}
+#pop.open{display:block}
+#pop h4{margin:0 26px 4px 0;font-size:14.5px}
+#pop .x{position:absolute;top:6px;right:6px;border:0;background:none;font-size:15px;color:var(--muted);padding:4px 7px;border-radius:6px}
+#pop .x:hover{background:var(--chip)}
+#pop .sec{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:9px 0 3px;font-weight:600}
+#pop ul{margin:0;padding-left:18px}
+#pop li{margin:2px 0}
+#pop .pro li::marker{content:"+ ";color:var(--ok)}
+#pop .con li::marker{content:"− ";color:var(--accent)}
+#pop .src{color:var(--muted);font-size:11px;margin-top:9px}
+.flt{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+.flt td{padding:3px 4px;border-top:1px dashed var(--line);vertical-align:top}
+.flt td:first-child{font-weight:600;white-space:nowrap}
 .mk{background:var(--accent);color:#fff;border:2px solid #fff;border-radius:50%;width:26px!important;height:26px!important;display:flex!important;align-items:center;justify-content:center;font:700 12px/1 -apple-system,Arial,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.35);cursor:pointer}
 .mk.air{background:#1f1d1a;font-size:13px}
 .actions{display:grid;gap:6px;padding:10px 14px;border-top:1px solid var(--line);background:var(--panel);position:sticky;bottom:0}
@@ -227,6 +243,7 @@ details.pv pre{white-space:pre-wrap;font:12.5px/1.45 inherit;font-family:inherit
       <li>Справа — наценка, затем «Скопировать текст» или «Открыть предложение» (PDF).</li></ol>
       <div class="hint" style="margin-top:12px">Цены TEZ — для туриста, комиссия агентства уже внутри.</div>
       <button class="btn ghost" id="hainanbtn2" style="margin-top:14px">🏝 Хайнань: бухты, карта и наша подборка отелей</button></div></section>
+    <div id="pop" role="dialog" aria-label="Об отеле"></div>
     <aside class="col" id="basket">
       <div id="bscroll">
         <div class="fgroup"><h3>Наценка, %</h3><input type="number" id="markup" min="0" max="100" step="1"></div>
@@ -323,6 +340,7 @@ async function init(){
   $('#sign').value = signature;
   renderBasket();
   basket.filter(b => b.photos === undefined).forEach(b => attachPhotos(b.key));   // подборка из прошлых версий страницы
+  loadHData().then(() => { if (view === 'results' && offers.length) renderResults(); });   // иконки «i» в результатах
   // «← Подбор тура» — к тем же фильтрам и туру, что были открыты в подборщике
   try { const h = localStorage.getItem('podbor-lasthash'); if (h) $('a.tgl[href="index.html"]').href = 'index.html' + h; } catch(e){}
   try {
@@ -562,7 +580,7 @@ function renderResults(capped){
   for (const g of list){
     const o = g[0], open = showAll.has(o.hotelId), rows = open ? g : g.slice(0, 8);
     html += `<div class="hotel"><div class="hhead">${o.thumb ? `<img src="${esc(o.thumb)}" alt="">` : ''}
-      <div><div class="t">${esc(o.hotel)}</div><div class="m">${esc(o.region)}${o.commission ? ' · комиссия TEZ ' + esc(o.commission) : ''}${o.link ? ` · <a href="${esc(o.link)}" target="_blank" rel="noopener" title="Описание отеля на сайте TEZ — для вас, клиенту не отправляйте">описание ↗</a>` : ''}</div></div>
+      <div><div class="t">${esc(o.hotel)} ${infoBtn(o.hotelId)}</div><div class="m">${esc(o.region)}${o.commission ? ' · комиссия TEZ ' + esc(o.commission) : ''}${o.link ? ` · <a href="${esc(o.link)}" target="_blank" rel="noopener" title="Описание отеля на сайте TEZ — для вас, клиенту не отправляйте">описание ↗</a>` : ''}</div></div>
       <div class="from">от<b>${ourPrice(o.total)} $</b>TEZ ${o.total} $</div></div>
       <table><thead><tr><th>Даты</th><th>Ночей</th><th>Номер</th><th>Питание</th><th class="num">TEZ</th><th class="num">Наша</th><th></th></tr></thead><tbody>
       ${rows.map(x => { const on = inBasket.has(x.key); return `<tr class="${on?'inb':''}"><td class="dt">${x.from.slice(0,5)} <small>${x.wd}</small> – ${x.to.slice(0,5)}</td><td>${x.nights}</td><td>${esc(x.room)}${x.seats !== 'Есть' ? ` <small class="no">мест: ${esc(x.seats || 'нет')}</small>` : ''}</td><td>${esc(x.meal)}</td>
@@ -594,10 +612,10 @@ async function roomPhotos(o){
     .filter(w => w.length > 2 && !['room', 'rom', 'the', 'and', 'with', 'view'].includes(w));
   const want = words(o.room);
   const scored = all.map(x => { const t = words(x.description); const hit = want.filter(w => t.includes(w)).length;
-    return {x, s: want.length ? hit / want.length : 0, isRoom: /room|suite|villa|bedroom/i.test(x.description)}; });
-  const exact = scored.filter(s => s.s >= 0.6).sort((a, b) => b.s - a.s).map(s => url(s.x));
+    return {x, hit, s: want.length ? hit / want.length : 0, isRoom: /room|suite|villa|bedroom/i.test(x.description)}; });
+  const exact = scored.filter(s => s.s >= 0.6 || (s.hit >= 2 && s.s >= 0.5)).sort((a, b) => b.s - a.s).map(s => url(s.x));
   if (exact.length) return {photos:[...new Set(exact)].slice(0, 4), kind:'room'};
-  const rooms = scored.filter(s => s.isRoom).map(s => url(s.x));
+  const rooms = scored.filter(s => s.isRoom).sort((a, b) => b.s - a.s).map(s => url(s.x));
   if (rooms.length) return {photos:rooms.slice(0, 4), kind:'rooms'};
   return {photos:all.slice(0, 4).map(url), kind:'hotel'};
 }
@@ -804,7 +822,7 @@ function hainanHtml(){
     ${offers.length ? '<button class="tgl" id="hnback" style="margin-bottom:8px">← К результатам поиска</button>' : ''}
     <h2>🏝 Хайнань: бухты и наша подборка отелей</h2>
     <div class="lead">Отели — из нашей базы знаний (лист «Отели»), по рейтингу внутри бухты. «Цены» — поиск у TEZ на даты и туристов из формы слева. Серым — дополнено нами.</div>
-    <div class="info"><div class="box"><h3>Перелёт</h3><ul>${li(HAINAN_INFO.flights)}</ul></div>
+    <div class="info"><div class="box"><h3>Перелёт</h3><ul>${li(HAINAN_INFO.flights)}</ul>${flightsHtml()}</div>
     <div class="box"><h3>Трансфер</h3><ul>${li(HAINAN_INFO.transfers)}</ul></div>
     <div class="box" style="border-color:#e8b9ae"><h3>Важно при бронировании</h3><ul>${li(HAINAN_INFO.booking)}</ul></div></div>
     <div id="hnmap" role="region" aria-label="Карта бухт Хайнаня"></div>
@@ -814,7 +832,7 @@ function hainanHtml(){
         <div class="bh"><span class="num">${i + 1}</span><b>${esc(b.name)}</b>${tez.length ? `<button class="tgl price" data-bay="${b.id}" title="Самая дешёвая цена TEZ в каждом отеле бухты">Цены по бухте</button>` : ''}</div>
         <div class="road">${esc(b.road)}</div>
         <ul>${b.facts.map(f => `<li>${esc(f)}</li>`).join('')}${b.add.map(f => `<li class="add2">${esc(f)}</li>`).join('')}</ul>
-        ${b.hotels.length ? `<div class="hl2">Наши отели</div>` + b.hotels.map(([n, id, url]) => `<div class="h"><span>${esc(n)}</span>
+        ${b.hotels.length ? `<div class="hl2">Наши отели</div>` + b.hotels.map(([n, id, url]) => `<div class="h">${id ? infoBtn(id) : ''}<span>${esc(n)}</span>
           <a href="${esc(url)}" target="_blank" rel="noopener" title="Отель на trip.com">trip.com ↗</a>
           ${id ? `<button class="tgl price" data-hprice="${id}" title="Все варианты TEZ в этом отеле">Цены</button>` : '<span class="na" title="Отель не продаётся в TEZ">нет у TEZ</span>'}</div>`).join('')
           : '<div class="hint">Отелей из нашей подборки здесь нет — ищите по названию в поле «Отели».</div>'}
@@ -835,6 +853,9 @@ function loadLeaflet(){
 async function showHainan(){
   $('#sug').classList.remove('open');
   view = 'hainan'; saveView();
+  closePop();
+  await loadHData();
+  if (view !== 'hainan') return;   // пока грузились данные, ушли на другой экран
   $('#results').innerHTML = hainanHtml();
   $('#results').scrollTop = 0;
   const card = hnBay && $('#bay-' + hnBay);
@@ -873,10 +894,83 @@ function hotelById(id, name){
   return HOTELS.find(x => x.id === id) || {id, name:niceName(name || ''), region:'Хайнань'};
 }
 
+// ---------- hainan.json: факты TEZ по отелям и перелёты (обновляется раз в неделю, hainan_update.py) ----------
+let HDATA = null;
+function loadHData(){
+  if (loadHData.p) return loadHData.p;
+  return loadHData.p = fetch('hainan.json?_=' + Math.floor(Date.now() / 36e5)).then(r => r.ok ? r.json() : null)
+    .then(d => HDATA = d).catch(() => null);
+}
+
+function flightsHtml(){
+  const fl = HDATA && HDATA.flights || [];
+  if (!fl.length) return '';
+  const span = m => m.length ? (m.length > 1 ? `${m[0]} – ${m[m.length - 1]}` : m[0]) : '—';
+  return `<div class="sec" style="margin-top:8px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600">Вылеты с TEZ · обновлено ${esc(HDATA.updated.slice(0, 10).split('-').reverse().join('.'))}</div>
+    <table class="flt">${fl.map(f => `<tr><td>${esc(f.city)}</td><td>${esc(f.arrivals.join(', '))}${f.flightFrom ? `<br><small>перелёт от ${f.flightFrom} $/чел. туда-обратно · ${esc(span(f.months))}</small>` : ''}</td></tr>`).join('')}</table>`;
+}
+
+// Плюсы/минусы — составлено по базе знаний и описанию отеля на сайте TEZ (см. hotelInfo: подпись источника)
+const HOTEL_NOTES = {};
+
+const NOTE_KEYS = /миним|депозит|обязател|трансфер|доп\.?\s*кроват|бесплатно|возраст/i;
+function hotelInfo(id){
+  const row = BAYS.flatMap(b => b.hotels.map(h => [h, b])).find(([h]) => h[1] === id);
+  const n = HOTEL_NOTES[id] || {};
+  const t = HDATA && HDATA.hotels && HDATA.hotels[id];
+  const name = row ? row[0][0] : (HOTELS.find(x => x.id === id) || {}).name || 'Отель';
+  const li = a => a.map(x => `<li>${esc(x)}</li>`).join('');
+  let h = `<button class="x" data-popclose title="Закрыть">✕</button><h4>${esc(name)}</h4>`;
+  if (row) h += `<div class="hint" style="margin:0">${esc(row[1].name)} · ${esc(row[1].road)}</div>`;
+  if (n.about) h += `<p style="margin:8px 0 0">${esc(n.about)}</p>`;
+  if (n.pros && n.pros.length) h += `<div class="sec">Плюсы</div><ul class="pro">${li(n.pros)}</ul>`;
+  if (n.cons && n.cons.length) h += `<div class="sec">Минусы</div><ul class="con">${li(n.cons)}</ul>`;
+  if (t){
+    const f = t.facts || {};
+    const facts = ['Расположение', 'Отель', 'Пляж'].filter(k => f[k]).map(k => `${k}: ${f[k].split('\n')[0]}`);
+    if (facts.length) h += `<div class="sec">По данным TEZ</div><ul>${li(facts)}</ul>`;
+    const notes = (t.notes || []).filter(x => NOTE_KEYS.test(x)).map(x => x.split('\n')[0].slice(0, 220)).slice(0, 5);
+    if (notes.length) h += `<div class="sec">Условия TEZ — важно при бронировании</div><ul>${li(notes)}</ul>`;
+    h += `<div class="src"><a href="${esc(t.url)}" target="_blank" rel="noopener">Полное описание на TEZ ↗</a></div>`;
+  }
+  if (!n.about && !t) h += '<div class="hint">Описания пока нет.</div>';
+  h += `<div class="src">Факты и условия — сайт TEZ${HDATA ? ', обновлено ' + esc(HDATA.updated.slice(0, 10).split('-').reverse().join('.')) : ''}. Описание, плюсы и минусы — по нашей базе знаний и описанию TEZ, составлено ИИ: перед отправкой клиенту сверьте.</div>`;
+  return h;
+}
+
+let popFor = null, popPinned = false;
+function openPop(btn, pin){
+  const id = +btn.dataset.info, pop = $('#pop');
+  pop.innerHTML = hotelInfo(id); pop.classList.add('open'); popFor = btn; popPinned = !!pin;
+  document.querySelectorAll('.ii.on').forEach(x => x.classList.remove('on')); btn.classList.add('on');
+  const r = btn.getBoundingClientRect(), w = pop.offsetWidth, hgt = pop.offsetHeight;
+  let x = r.right + 8, y = r.top - 10;
+  if (x + w > innerWidth - 10) x = Math.max(10, r.left - w - 8);
+  if (x < 10 || innerWidth < 700) x = Math.max(10, (innerWidth - w) / 2);
+  y = Math.max(10, Math.min(y, innerHeight - hgt - 10));
+  pop.style.left = x + 'px'; pop.style.top = y + 'px';
+}
+function closePop(){ $('#pop').classList.remove('open'); popFor = null; popPinned = false; document.querySelectorAll('.ii.on').forEach(x => x.classList.remove('on')); }
+const infoBtn = id => (HOTEL_NOTES[id] || (HDATA && HDATA.hotels && HDATA.hotels[id])) ? `<button class="ii" data-info="${id}" title="Об отеле: плюсы, минусы, условия" aria-label="Об отеле">i</button>` : '';
+document.addEventListener('mouseover', e => {
+  const b = e.target.closest('[data-info]');
+  if (b && !popPinned && matchMedia('(hover:hover)').matches) openPop(b, false);
+});
+document.addEventListener('mouseout', e => {
+  const b = e.target.closest('[data-info]');
+  if (b && !popPinned && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('#pop'))) closePop();
+});
+$('#pop').addEventListener('mouseleave', () => { if (!popPinned) closePop(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePop(); });
+addEventListener('scroll', () => { if (!popPinned) closePop(); }, true);
+
 // ---------- события ----------
 document.addEventListener('click', async e => {
   if (!e.target.closest('#hotelq, #sug')) $('#sug').classList.remove('open');
+  if (!e.target.closest('#pop, [data-info]') && $('#pop').classList.contains('open')) closePop();
   const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.info){ (popFor === t && popPinned) ? closePop() : openPop(t, true); return; }
+  if (t.hasAttribute('data-popclose')){ closePop(); return; }
   if (t.id === 'go'){ fromHainan = false; return search(); }
   if (t.id === 'hnopen'){ showHainan.byUser = true; return showHainan(); }
   if (t.dataset.pick) return pickHotel(+t.dataset.pick);
