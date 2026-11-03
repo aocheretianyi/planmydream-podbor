@@ -174,7 +174,7 @@ details.pv pre{white-space:pre-wrap;font:12.5px/1.45 inherit;font-family:inherit
 .actions{display:grid;gap:6px;padding:10px 14px;border-top:1px solid var(--line);background:var(--panel);position:sticky;bottom:0}
 @media (max-width:1380px){
   main{grid-template-columns:260px minmax(0,1fr) 300px}
-  th:nth-child(2),td:nth-child(2){display:none}
+  .hotel th:nth-child(2),.hotel td:nth-child(2){display:none}
   td.dt{white-space:normal}
   .hotel{overflow-x:auto}
 }
@@ -189,9 +189,9 @@ details.pv pre{white-space:pre-wrap;font:12.5px/1.45 inherit;font-family:inherit
 }
 @media (max-width:560px){
   .hhead img{width:72px;height:50px}
-  th:nth-child(2),td:nth-child(2),th:nth-child(5),td:nth-child(5){display:none}
+  .hotel th:nth-child(2),.hotel td:nth-child(2),.hotel th:nth-child(5),.hotel td:nth-child(5){display:none}
   td.dt{white-space:normal}
-  td,th{padding:6px 5px}
+  .hotel td,.hotel th{padding:6px 5px}
   .add{padding:4px 10px}
   .add span{display:none}
   #status{margin-left:0;width:100%}
@@ -704,7 +704,7 @@ dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:10px 0;font-s
 .price{font-size:24px;font-weight:800;color:var(--green)}.price span{font-size:13px;font-weight:400;color:var(--muted)}
 .foot{margin-top:18px;color:var(--muted);font-size:13px;white-space:pre-line}
 .rp{margin-top:10px}.rpl{font-size:12px;color:var(--muted);margin-bottom:4px}
-.rpg{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.rpg img{width:100%;height:110px;object-fit:cover;border-radius:8px;display:block;background:#eee}
+.rpg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}.rpg img{width:100%;height:110px;object-fit:cover;border-radius:8px;display:block;background:#eee}
 .bar{text-align:center;margin-top:20px}.bar button{border:0;background:var(--green);color:#fff;border-radius:10px;padding:10px 20px;font:inherit;font-weight:600;cursor:pointer}
 .bar button:hover{background:#08452a}
 @media print{body{background:#fff}.bar{display:none}.page{padding:0}.card{border-color:#ccc}}
@@ -822,9 +822,10 @@ function hainanHtml(){
     ${offers.length ? '<button class="tgl" id="hnback" style="margin-bottom:8px">← К результатам поиска</button>' : ''}
     <h2>🏝 Хайнань: бухты и наша подборка отелей</h2>
     <div class="lead">Отели — из нашей базы знаний (лист «Отели»), по рейтингу внутри бухты. «Цены» — поиск у TEZ на даты и туристов из формы слева. Серым — дополнено нами.</div>
-    <div class="info"><div class="box"><h3>Перелёт</h3><ul>${li(HAINAN_INFO.flights)}</ul>${flightsHtml()}</div>
+    <div class="info"><div class="box"><h3>Перелёт</h3><ul>${li(HAINAN_INFO.flights)}</ul></div>
     <div class="box"><h3>Трансфер</h3><ul>${li(HAINAN_INFO.transfers)}</ul></div>
     <div class="box" style="border-color:#e8b9ae"><h3>Важно при бронировании</h3><ul>${li(HAINAN_INFO.booking)}</ul></div></div>
+    ${flightsHtml()}
     <div id="hnmap" role="region" aria-label="Карта бухт Хайнаня"></div>
     <div class="bays">${BAYS.map((b, i) => {
       const tez = b.hotels.filter(h => h[1]);
@@ -864,7 +865,7 @@ async function showHainan(){
   try { await loadLeaflet(); } catch(e){ $('#hnmap').innerHTML = '<div class="hint" style="padding:12px">Карта не загрузилась — проверьте интернет. Описание бухт ниже.</div>'; return; }
   if (!$('#hnmap')) return;   // пока грузилась карта, ушли с экрана
   if (hnMap){ hnMap.remove(); hnMap = null; }
-  hnMap = L.map('hnmap', {scrollWheelZoom:false}).setView([18.29, 109.64], 10);
+  hnMap = L.map('hnmap', {scrollWheelZoom:false, zoomSnap:0.25}).setView([18.29, 109.64], 10);   // дробный масштаб — все метки влезают и на телефоне
   // Подложка Esri — без ключа (CARTO с 2026 требует ключ, OSM блокирует сторонние сайты)
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
     maxZoom:18, attribution:'Tiles &copy; Esri — Esri, HERE, Garmin, &copy; OpenStreetMap contributors'
@@ -880,8 +881,10 @@ async function showHainan(){
         el.classList.add('hl'); el.scrollIntoView({behavior:'smooth', block:'nearest'});
       });
   });
-  hnMap.fitBounds(L.latLngBounds([AIRPORT, ...BAYS.map(b => b.ll)]).pad(0.12));
+  hnMap.fitBounds(L.latLngBounds([AIRPORT, ...BAYS.map(b => b.ll)]).pad(0.12), {animate:false});
 }
+// окно поменяло ширину (поворот телефона, ресайз) — карта перерисовывает плитки
+addEventListener('resize', () => { clearTimeout(hnMap && hnMap._rt); if (hnMap && $('#hnmap')) hnMap._rt = setTimeout(() => { hnMap.invalidateSize(); hnMap.fitBounds(L.latLngBounds([AIRPORT, ...BAYS.map(b => b.ll)]).pad(0.12), {animate:false}); }, 200); });
 
 function searchBay(id){
   const b = BAYS.find(x => x.id === id); if (!b) return;
@@ -906,8 +909,12 @@ function flightsHtml(){
   const fl = HDATA && HDATA.flights || [];
   if (!fl.length) return '';
   const span = m => m.length ? (m.length > 1 ? `${m[0]} – ${m[m.length - 1]}` : m[0]) : '—';
-  return `<div class="sec" style="margin-top:8px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600">Вылеты с TEZ · обновлено ${esc(HDATA.updated.slice(0, 10).split('-').reverse().join('.'))}</div>
-    <table class="flt">${fl.map(f => `<tr><td>${esc(f.city)}</td><td>${esc(f.arrivals.join(', '))}${f.flightFrom ? `<br><small>перелёт от ${f.flightFrom} $/чел. туда-обратно · ${esc(span(f.months))}</small>` : ''}</td></tr>`).join('')}</table>`;
+  const arr = [...new Set(fl.flatMap(f => f.arrivals))];
+  const same = arr.length === 1;
+  return `<div class="box" style="margin-bottom:10px"><h3>Вылеты с TEZ на Хайнань · обновляется по понедельникам, последнее — ${esc(HDATA.updated.slice(0, 10).split('-').reverse().join('.'))}</h3>
+    ${same ? `<div class="hint" style="margin:0 0 4px">Все города: ${esc(arr[0])}. Цена перелёта — на человека туда-обратно, в пакетном туре TEZ.</div>` : ''}
+    <table class="flt"><tr><td style="font-weight:400;color:var(--muted)">Город</td><td style="color:var(--muted)">Перелёт от</td><td style="color:var(--muted)">Есть вылеты</td>${same ? '' : '<td style="color:var(--muted)">Прилёт</td>'}</tr>
+    ${fl.map(f => `<tr><td>${esc(f.city)}</td><td>${f.flightFrom ? f.flightFrom + ' $' : '—'}</td><td>${esc(span(f.months))}</td>${same ? '' : `<td>${esc(f.arrivals.join(', '))}</td>`}</tr>`).join('')}</table></div>`;
 }
 
 // Плюсы/минусы — составлено по базе знаний и описанию отеля на сайте TEZ (см. hotelInfo: подпись источника)
