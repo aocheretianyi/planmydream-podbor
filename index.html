@@ -101,6 +101,8 @@ body.no-filters #filters, body.no-results #results{display:none}
 .mrow .nop{color:var(--muted);font-size:12px}
 .tline{display:block;width:100%;color:var(--muted);font-size:12px;margin-top:2px}
 .tline a{color:var(--accent)}
+.bag{display:inline-block;background:var(--ok-soft);color:var(--ok);border-radius:6px;padding:0 6px;font-size:11.5px}
+.bag.no{background:var(--warn-soft);color:var(--warn)}
 .mact{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
 .avleg .pr{font-weight:700;color:var(--ok)}
 .avleg .nop{color:var(--muted);font-size:12px}
@@ -541,9 +543,30 @@ function legPrice(o, d, date){
   const hrs = x.h ? `${Math.floor(x.h)} ч${Math.round((x.h % 1) * 60) ? ' ' + Math.round((x.h % 1) * 60) + ' мин' : ''} в пути` : '';
   const tr = x.t ? x.t + ' ' + (x.t === 1 ? 'пересадка' : 'пересадки') : 'без пересадок';
   const times = x.d ? `вылет ${x.d}${x.oa ? ' ' + esc(x.oa) : ''}${x.r ? ` → прилёт ${esc(x.r)}${x.da ? ' ' + esc(x.da) : ''}` : ''} (местное время)` : '';
+  // багаж — из ключа тарифа в ссылке Aviasales (static_fare_key): L0 — не включён, L1_<мест>_<кг> — включён; H1/H0 — ручная кладь
+  const fk = decodeURIComponent((String(x.l || '').match(/static_fare_key=([^&]+)/) || [])[1] || '');
+  const L = (fk.match(/(?:^|\|)L([^|]*)/) || [])[1], H = (fk.match(/(?:^|\|)H([^|]*)/) || [])[1];
+  let bag = '';
+  if (L !== undefined){
+    const [inc, n, kg] = L.split('_');
+    bag = inc === '1' ? `багаж включён${n ? ': ' + n + ' ' + (+n === 1 ? 'место' : 'места') : ''}${kg && kg !== '0' ? ' до ' + (+n > 1 ? Math.round(+kg / +n) : kg) + ' кг' : ''}` : 'без багажа';
+    if (H !== undefined) bag += H === '1' ? ', ручная кладь есть' : ', без ручной клади';
+  }
+  // пересадки — из кода маршрута в ссылке (…SVOIKAPEK_… = Шереметьево → Тегеран → Пекин)
+  const AP = {OVB:'Новосибирск',PEK:'Пекин',PKX:'Пекин',IKT:'Иркутск',SVO:'Москва',DME:'Москва',VKO:'Москва',ZIA:'Москва',URC:'Урумчи',TAS:'Ташкент',
+    VVO:'Владивосток',PVG:'Шанхай',SHA:'Шанхай',BAH:'Бахрейн',CIT:'Шымкент',SVX:'Екатеринбург',DXB:'Дубай',KJA:'Красноярск',HGH:'Ханчжоу',
+    TFU:'Чэнду',CTU:'Чэнду',HRB:'Харбин',CKG:'Чунцин',XIY:'Сиань',CAN:'Гуанчжоу',AUH:'Абу-Даби',IST:'Стамбул',SAW:'Стамбул',GYD:'Баку',WUH:'Ухань',
+    BAX:'Барнаул',ALA:'Алматы',NQZ:'Астана',TBS:'Тбилиси',HAK:'Хайкоу',YIN:'Инин',KUL:'Куала-Лумпур',EVN:'Ереван',KHV:'Хабаровск',IKA:'Тегеран',
+    DEL:'Дели',DOH:'Доха',FRU:'Бишкек',LED:'Санкт-Петербург',KZN:'Казань',UFA:'Уфа',HKG:'Гонконг',SZX:'Шэньчжэнь',KMG:'Куньмин',UUD:'Улан-Удэ',HTA:'Чита'};
+  const rt = (String(x.l || '').match(/[?&]t=[A-Z0-9]{2}\d+([A-Z]{6,})_/) || [])[1];
+  const via = rt ? rt.match(/.{3}/g).slice(1, -1) : [];
+  const viaTxt = via.length ? 'пересадка: ' + via.map(c => AP[c] ? `${AP[c]} (${c})` : c).join(', ') : '';
+  const bagHtml = bag ? `<span class="bag ${L === '0' ? 'no' : ''}">${bag}</span>` : '';
   const link = x.l ? ` · <a href="https://www.aviasales.ru${esc(x.l)}${x.l.includes('?') ? '&' : '?'}marker=${TP_MARKER}" target="_blank" rel="noopener" title="Открыть этот билет на Aviasales: тарифы с багажом и без, точная цена">этот билет ↗</a>` : '';
   return `<span class="pr">от ${fmtRub(x.p)}</span> <span class="nop">на 1 чел. · ${tr}${x.f ? ' · рейс ' + esc(x.f) + (x.t ? ' (первый)' : '') : x.a ? ' · ' + esc(x.a) : ''}</span>`
-    + (times || hrs ? `<span class="tline">${[times, hrs].filter(Boolean).join(' · ')}${link}</span>` : link ? `<span class="tline">${link}</span>` : '');
+    + (times || hrs ? `<span class="tline">${[times, hrs].filter(Boolean).join(' · ')}</span>` : '')
+    + (viaTxt ? `<span class="tline">${esc(viaTxt)}</span>` : '')
+    + `<span class="tline">${bagHtml}${link}</span>`;
 }
 const ddmm = d => String(d.getDate()).padStart(2, '0') + String(d.getMonth() + 1).padStart(2, '0');
 const isoD = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -582,7 +605,7 @@ function aviaLinks(t, r){
     <div class="hint" style="margin:2px 0 8px">${simple ? 'Прилёт и вылет — один город, ищем туда-обратно.' : `Прилёт и вылет в разных городах — «весь маршрут» ищет составной билет; ниже — каждый перелёт отдельно.`}</div>
     ${legs.map(l => `<div class="avleg"><div><b>${l.h}:</b> ${esc(l.txt)}, ${dShow(l.d)}${l.price ? `<br>${l.price}` : ''}</div><div class="avl">${l.links.map(x => btn(x, false)).join('')}</div></div>`).join('')}
     <div class="hint" style="margin-top:6px">Пассажиры: ${ad} ${ad === 1 ? 'взрослый' : 'взрослых'}${ch ? `, детей: ${ch} (возраст детей укажите на сайте поиска)` : ''}.
-      ${APRICES ? `Цены «от» — кэш Aviasales, обновлено ${esc(APRICES.updated.slice(0, 10).split('-').reverse().join('.'))}; есть для ${(APRICES.origins || []).length} городов из списка «Вылет из». Багаж в кэше не указан — тарифы с багажом и без смотрите по ссылке «этот билет». Точная цена и наличие — по ссылке.` : 'Цены — на сайтах, на момент открытия ссылки.'}</div>`;
+      ${APRICES ? `Цены «от» — кэш Aviasales, обновлено ${esc(APRICES.updated.slice(0, 10).split('-').reverse().join('.'))}; есть для ${(APRICES.origins || []).length} городов из списка «Вылет из». Багаж — по тарифу найденного билета (цена «от» обычно без багажа); тариф с багажом — по ссылке «этот билет». Точная цена и наличие — по ссылке.` : 'Цены — на сайтах, на момент открытия ссылки.'}</div>`;
 }
 function aviaHTML(t, r){
   const ap = {...tourAirports(t), ...(aviaOver[t.key] || {})};
