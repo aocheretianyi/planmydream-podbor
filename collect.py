@@ -186,6 +186,7 @@ def scripts_from_sheet():
     ci, cm, cp = col('Продающий скрипт'), col('Сообщение для клиента'), col('Расписание по дням')
     ch = col('Отели')
     cs, ce = col('Дата начала'), col('Дата окончания')
+    ct = col('Всего мест')
     iso = lambda v: '-'.join(reversed(v.strip().split('.'))) if re.match(r'\d{2}\.\d{2}\.\d{4}$', v.strip()) else ''
     out = {}
     for r in rows[1:]:
@@ -193,7 +194,7 @@ def scripts_from_sheet():
         m = re.search(r'planmydream\.ru/([\w\-]+)', r[cm])
         if not m:
             continue
-        o = out.setdefault(m.group(1), {'script': '', 'booklet': '', 'contract': [], 'hotels': []})
+        o = out.setdefault(m.group(1), {'script': '', 'booklet': '', 'contract': [], 'hotels': [], 'totals': {}})
         if r[ci].strip() and not o['script']:
             o['script'] = r[ci].strip()
         b = re.search(r'https://\S*bookflip\S*', r[cm])
@@ -201,6 +202,8 @@ def scripts_from_sheet():
             o['booklet'] = b.group(0)
         if r[cp].strip():  # даты в расписании — от этого заезда; страница подставит даты выбранного
             o['contract'].append({'start': iso(r[cs]), 'end': iso(r[ce]), 'text': r[cp].strip()})
+        if num(r[ct]):  # всего мест в группе на заезд (на сайте только «осталось»)
+            o['totals'][iso(r[cs]) + '_' + iso(r[ce])] = num(r[ct])
         if r[ch].strip():  # отели на сайте не названы — список с ссылками ведём в таблице
             o['hotels'].append({'start': iso(r[cs]), 'end': iso(r[ce]), 'text': r[ch].strip()})
     return out
@@ -261,6 +264,10 @@ def main():
             else:
                 d['priceOld'] = t['priceOld'] if (t['priceOld'] or 0) > (t['price'] or 0) else None
             d['message'] = message(t, d)
+            # всего мест: из таблицы для этого заезда, иначе размер группы из FAQ сайта («до N человек»)
+            d['total'] = scripts.get(slug, {}).get('totals', {}).get(d['start'] + '_' + d['end']) or num(t.get('group'))
+            if d['total'] and d['seats'] is not None and d['seats'] > d['total']:
+                d['total'] = d['seats']  # в таблице устарело — мест не может остаться больше, чем всего
         for need, label in [('included', 'Что включено'), ('payment', 'Порядок оплаты'), ('days', 'программа по дням')]:
             if not t[need]:
                 warnings.append(f'{slug}: на странице не найдено «{label}»')
