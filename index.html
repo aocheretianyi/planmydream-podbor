@@ -384,6 +384,8 @@ function renderFilters(){
     <div class="fgroup"><h3>6 · Формат <span class="draft">черновик</span></h3><div class="chips">${chips('formats', Object.entries(FORMATS))}</div></div>`;
 }
 
+// «мест: 3 из 10» — свободно из всего в группе (всего — из таблицы или FAQ сайта)
+const seatsTxt = (x, long) => x.total ? `${long ? 'свободно' : 'мест'}: ${x.seats ?? '?'} из ${x.total}` : `мест: ${x.seats ?? '?'}`;
 const priceTxt = p => p && isFinite(p) ? '$'+p : 'цена не указана';
 function renderResults(){
   const list = scored();
@@ -456,7 +458,7 @@ function scriptHTML(t, r){
     ['Как вам тур?', 'Как вам в целом тур? Устраивают такие условия?'],
     ['Стоимость', r ? `Стоимость — <b>$${r.price}</b> на человека при двухместном размещении${r.priceOld?` (полная цена $${r.priceOld})`:''}.${t.single?` Одноместный номер — доплата ${esc(t.single)}.`:''}` : 'Ближайших заездов нет.'],
     ['Схема оплаты', pays.length ? `<ul>${pays.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>` : 'Порядок оплаты на странице тура не найден — уточните.'],
-    ['Закрывающий вопрос', r ? `${others.length?`Вам удобнее ${fmtLong(r.start)} или ${fmtLong(others[0].start)}? `:''}На ${fmtLong(r.start)} осталось мест: ${r.seats ?? '?'}. Давайте закреплю место за вами?${prepay?` Для брони заключаем договор и вносите ${prepay} от стоимости.`:''}` : ''],
+    ['Закрывающий вопрос', r ? `${others.length?`Вам удобнее ${fmtLong(r.start)} или ${fmtLong(others[0].start)}? `:''}На ${fmtLong(r.start)} ${r.total ? `осталось ${r.seats ?? '?'} ${plural(r.seats ?? 0,'место','места','мест')} из ${r.total}` : `осталось мест: ${r.seats ?? '?'}`}. Давайте закреплю место за вами?${prepay?` Для брони заключаем договор и вносите ${prepay} от стоимости.`:''}` : ''],
   ];
   return steps.map(([h, say], i) => `<div class="step ${i===3||i===6?'close':''}"><span class="n">${i+1}</span><span class="h">${h}</span><div class="say">${say}</div></div>`).join('')
     + `<div class="src">Шаг 2 — по программе тура на сайте, остальное — с сайта.</div>`;
@@ -467,7 +469,7 @@ function ctx(t, r){
   return {
     has: re => re.test(t.included), inc: bullets(t.included).slice(0,5).map(l=>lc(short(l,50,false))).join(', '),
     exc: bullets(t.excluded).slice(0,4).map(l=>lc(short(l,40,false))).join(', '),
-    prepay: prepay ? prepay+' от стоимости' : 'предоплата', seats: r ? r.seats : null, group: t.group || '15',
+    prepay: prepay ? prepay+' от стоимости' : 'предоплата', seats: r ? r.seats : null, group: (r && r.total) || t.group || '15',
     flight: t.flight, single: t.single, roommate: t.roommate,
     scheme: payLines(t).slice(1).map(l=>lc(short(l,220,true,/\s\(|;/))).join('; ') || '',  // первый платёж уже назван
     refund: lc(short(bullets(t.payment).find(l=>REFUND.test(l))||'', 220, true, /;/).replace(/^Условия возврата — /,'')),
@@ -694,10 +696,10 @@ function renderDetail(keepScroll){
       <div class="price"><b>${r?priceTxt(r.price):priceTxt(t.price)}</b>${r&&r.priceOld?`<s>$${r.priceOld}</s>`:''}<div>${t.single?'одноместный +'+esc(t.single):t.roommate?'подселим в пару':'сингл — уточнить'}</div></div>
     </div>
     ${t.extra.note?`<div class="note">⚠︎ ${esc(t.extra.note)}</div>`:''}
-    <div class="dates">${visibleDates(t, r).map(x=>`<button class="date ${x===r?'on':''} ${!x.open?'full':''} ${state.months.size&&[...x.months].some(m=>state.months.has(m))?'match':''}" data-i="${t.rows.indexOf(x)}" ${!x.open?'disabled':''} title="${x.days} дн. · $${x.price}">${fmtD(x.start)}–${fmtD(x.end)}<small>${new Set(t.rows.map(y=>y.days)).size>1?x.days+' дн. · ':''}мест: ${x.seats??'?'}</small></button>`).join('') || '<span class="hint">Ближайших заездов на сайте нет</span>'}${hiddenDates(t, r)?`<button class="more" id="moredates">${showAllDates?'Свернуть даты':'ещё '+hiddenDates(t, r)+' дат'}</button>`:''}</div>
+    <div class="dates">${visibleDates(t, r).map(x=>`<button class="date ${x===r?'on':''} ${!x.open?'full':''} ${state.months.size&&[...x.months].some(m=>state.months.has(m))?'match':''}" data-i="${t.rows.indexOf(x)}" ${!x.open?'disabled':''} title="${x.days} дн. · $${x.price}">${fmtD(x.start)}–${fmtD(x.end)}<small>${new Set(t.rows.map(y=>y.days)).size>1?x.days+' дн. · ':''}${seatsTxt(x)}</small></button>`).join('') || '<span class="hint">Ближайших заездов на сайте нет</span>'}${hiddenDates(t, r)?`<button class="more" id="moredates">${showAllDates?'Свернуть даты':'ещё '+hiddenDates(t, r)+' дат'}</button>`:''}</div>
     <div class="cheat">
       <div class="cell"><i>Цена</i><b>${r?priceTxt(r.price):'—'}</b> на чел.${t.single?`<br>сингл +${esc(t.single)}`:''}</div>
-      <div class="cell"><i>Даты</i>${r?`${fmtD(r.start)}–${fmtD(r.end)}, ${dayWord(r.days)}<br>мест: ${r.seats??'?'}`:'—'}</div>
+      <div class="cell"><i>Даты</i>${r?`${fmtD(r.start)}–${fmtD(r.end)}, ${dayWord(r.days)}<br>${seatsTxt(r, true)}`:'—'}</div>
       <div class="cell"><i>Включено</i>${esc(exclShort(t)||'см. вкладку «Включено»')}</div>
       <div class="cell"><i>Оплата</i>${pc.length?esc(pc.join(' → ')):'см. вкладку'}${t.flight?`<br>перелёт ≈ ${esc(t.flight)}`:''}</div>
     </div>
