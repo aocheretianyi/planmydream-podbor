@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-03T19:33:32+00:00",
+ "generatedAt": "2026-11-04T00:40:28+00:00",
  "source": "planmydream.ru (каталог + страницы туров)",
  "tours": [
   {
@@ -1669,15 +1669,6 @@
    "duration": "9–11 дней",
    "image": "https://static.tildacdn.one/stor6464-3161-4035-b231-366333353665/8c2b978ec1afa6f2cb8b0044d5c13aa1.png",
    "departures": [
-    {
-     "start": "2026-11-03",
-     "end": "2026-11-11",
-     "priceFull": 2260,
-     "seats": 7,
-     "price": 2160,
-     "priceOld": 2380,
-     "message": "\"КИТАЙ: ПУТЬ ОТ НЕОНОВОГО ШАНХАЯ ДО ПАРЯЩИХ ГОР АВАТАРА\"\n📅 Даты: 3–11 ноября 2026\n🗺 Маршрут: Шанхай — Чжанцзяцзе — Горы Аватара — Фуронг — Чунцин\n⏱️ Длительность: 9 дней (8 ночей)\n💰 Стоимость: $2160 (без скидки $2380)\n🔗 Ссылка: https://planmydream.ru/august-shanghai-avatar-8-dney\n📖 Буклет: https://read.bookflip.ru/v/019f7f3e-78fb-79cd-9121-e0b0aebfd10a"
-    },
     {
      "start": "2027-03-21",
      "end": "2027-03-29",
