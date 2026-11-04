@@ -200,7 +200,7 @@ def scripts_from_sheet():
         b = re.search(r'https://\S*bookflip\S*', r[cm])
         if b and not o['booklet']:
             o['booklet'] = b.group(0)
-        if r[cp].strip():  # даты в расписании — от этого заезда; страница подставит даты выбранного
+        if re.search(r'(?:День|Дни)\s*\d', r[cp]):  # только настоящее расписание (не случайный мусор в ячейке); даты подставит страница
             o['contract'].append({'start': iso(r[cs]), 'end': iso(r[ce]), 'text': r[cp].strip()})
         if num(r[ct]):  # всего мест в группе на заезд (на сайте только «осталось»)
             o['totals'][iso(r[cs]) + '_' + iso(r[ce])] = num(r[ct])
@@ -252,6 +252,11 @@ def main():
         if not t['booklet']:  # ссылки на флипбук на страницах нет — берём из таблицы
             t['booklet'] = scripts.get(slug, {}).get('booklet', '')
         t['contract'] = scripts.get(slug, {}).get('contract', [])
+        start_city = t['route'].split('—')[0].strip()[:5]
+        if t['contract'] and start_city and not any(start_city in c['text'] for c in t['contract']):
+            # расписание в таблице не начинается с первого города маршрута сайта — значит, оно от старой программы
+            warnings.append(f"{slug}: «Расписание как в договоре» в таблице устарело (нет «{t['route'].split('—')[0].strip()}») — показана программа с сайта")
+            t['contract'] = []
         t['hotelsSheet'] = scripts.get(slug, {}).get('hotels', [])
         t.update(facts(t))
         # У большинства туров цена одна (цена товара со скидкой, в заезде — полная).
