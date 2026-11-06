@@ -209,6 +209,33 @@ def scripts_from_sheet():
     return out
 
 
+CBR = 'https://www.cbr-xml-daily.ru/daily_json.js'  # зеркало официальных курсов ЦБ РФ
+TBANK = 'https://api.tbank.ru/v1/currency_rates?from=USD&to=RUB'
+TBANK_CA = Path(__file__).with_name('certs') / 'russian_trusted_ca.pem'  # корневой сертификат Минцифры (gu-st.ru) — им подписан сайт ТБанка
+
+
+def rates(prev, warnings):
+    """Курс доллара на сегодня: ЦБ РФ (для всех туров) и ТБанк — продажа долларов по переводам (для туров Влада, +2%).
+    Не удалось скачать — оставляем вчерашний из прошлого data.json и пишем предупреждение."""
+    out = dict(prev or {})
+    try:
+        d = json.loads(fetch(CBR))
+        out['cbr'] = {'value': round(d['Valute']['USD']['Value'], 4), 'date': d['Date'][:10]}
+    except Exception as e:
+        warnings.append(f'курс ЦБ не обновился ({e}) — показан прошлый')
+    try:
+        import ssl, urllib.request
+        ctx = ssl.create_default_context(cafile=str(TBANK_CA))
+        req = urllib.request.Request(TBANK, headers={'User-Agent': 'Mozilla/5.0 (podbor)'})
+        p = json.load(urllib.request.urlopen(req, context=ctx, timeout=30)).get('payload', {})
+        r = next(x for x in p['rates'] if x['category'] == 'DebitCardsTransfers'
+                 and x['fromCurrency']['name'] == 'USD' and x['toCurrency']['name'] == 'RUB')
+        out['tbank'] = {'sell': r['sell'], 'at': datetime.now(timezone.utc).isoformat(timespec='minutes')}
+    except Exception as e:
+        warnings.append(f'курс ТБанка не обновился ({e}) — показан прошлый')
+    return out
+
+
 def num(v):
     try:
         return int(float(v))
@@ -287,8 +314,10 @@ def main():
     autofill(tours, warnings)
     for t in tours:
         t.pop('_now', None)
+    prev = json.loads(OUT.read_text(encoding='utf-8')).get('rates') if OUT.exists() else None
     data = {'generatedAt': datetime.now(timezone.utc).isoformat(timespec='seconds'),
-            'source': 'planmydream.ru (каталог + страницы туров)', 'tours': tours, 'warnings': warnings}
+            'source': 'planmydream.ru (каталог + страницы туров)', 'tours': tours, 'warnings': warnings,
+            'rates': rates(prev, warnings)}
     OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding='utf-8')
     print(f'Готово: {len(tours)} туров → {OUT}')
     for w in warnings:
