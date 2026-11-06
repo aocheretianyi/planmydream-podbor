@@ -166,6 +166,7 @@ body.no-filters #filters, body.no-results #results{display:none}
 .more{border:0;background:none;color:var(--accent);font-size:12px;padding:3px 2px}
 .cheat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
 .cell{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.35}
+.cell .muted{color:var(--muted);font-size:11.5px}
 .cell i{display:block;font-style:normal;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
 .grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;margin-top:10px;align-items:start}
 .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 14px}
@@ -259,7 +260,7 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;
 const today = new Date(); today.setHours(0,0,0,0);
 const SOON = 14; // заезды ближе 14 дней по умолчанию не предлагаем — новый клиент не успеет
 
-let TOURS = [], DURS = [], GENERATED = null;
+let TOURS = [], DURS = [], GENERATED = null, RATES = null;
 const SETS = ['group','months','dur','sights','pace','formats'];
 const state = {months:new Set(), dur:new Set(), sights:new Set(), group:new Set(), formats:new Set(), pace:new Set(), q:''};
 let current = null, currentRow = null, tab = 'obj', ask = '', showAllSights = false, showAllDates = false;
@@ -289,6 +290,38 @@ function short(line, max = 64, withDetail = true, cut = /\s\(|;|\. /){
 const lc = s => s ? s[0].toLowerCase()+s.slice(1) : s;
 const REFUND = /возврат|отмен|удерж|невыезд/i;  // условия возврата — не схема оплаты
 const payLines = t => bullets(t.payment).filter(l=>/%/.test(l) && !REFUND.test(l));
+// --- рубли: курс ЦБ на сегодня; у туров Влада — продажа $ в ТБанке + 2% (решение пользователя 06.11.2026) ---
+const CASH = /наличн|в долларах|на месте|при встрече|по прибыти|в аэропорту|в день начала/i;
+const num2 = n => n.toLocaleString('ru-RU', {maximumFractionDigits: 2});
+const rubTxt = n => Math.round(n).toLocaleString('ru-RU') + ' ₽';
+const usdTxt = n => '$' + num2(Math.round(n * 100) / 100);
+function rateFor(t){
+  if(!RATES) return null;
+  if(/^Влад/i.test(t.org) && RATES.tbank){ const v = RATES.tbank.sell * 1.02; return {v, label: `курс ТБанка ${num2(RATES.tbank.sell)} + 2% = ${num2(Math.round(v*100)/100)} ₽`}; }
+  if(RATES.cbr){ const d = RATES.cbr.date.split('-'); return {v: RATES.cbr.value, label: `курс ЦБ ${num2(RATES.cbr.value)} ₽ на ${d[2]}.${d[1]}`}; }
+  return null;
+}
+// Платежи по строкам «Порядка оплаты»: в одной строке может быть несколько процентов («35% … оставшиеся 50% наличными»)
+function payPlan(t, r){
+  if(!r || !r.price) return [];
+  const out = [], allRub = /все платежи[^.\n]*рубл/i.test(t.payment);  // Влад: «все платежи конвертируются в рубли»
+  payLines(t).forEach(line => {
+    const ms = [...line.matchAll(/(\d+)\s*%/g)];
+    ms.forEach((m, i) => {
+      const seg = line.slice(m.index, i+1 < ms.length ? ms[i+1].index : undefined);
+      const pct = +m[1], usd = r.price * pct / 100, cash = !allRub && CASH.test(seg) && !/рубл/i.test(seg);
+      if(out.reduce((a, p) => a + p.pct, 0) + pct <= 100) out.push({pct, usd, cash, rate: rateFor(t)});  // «+2% к курсу» — не платёж
+    });
+  });
+  const sum = out.reduce((a, p) => a + p.pct, 0);
+  if(out.length && sum < 100){  // на сайте назван только первый платёж — остаток считаем сами
+    const line = bullets(t.payment).find(l => /оставш|окончательн/i.test(l) && !/%/.test(l)) || '';
+    const pct = 100 - sum;
+    out.push({pct, usd: r.price * pct / 100, cash: !allRub && CASH.test(line) && !/рубл/i.test(line), rate: rateFor(t), rest: true});
+  }
+  return out;
+}
+const payAmt = p => p.cash ? `${usdTxt(p.usd)} наличными на месте` : p.rate ? `${rubTxt(p.usd * p.rate.v)} (${usdTxt(p.usd)})` : usdTxt(p.usd);
 const percents = t => [...new Set((payLines(t).join(' ').match(/\d+\s*%/g)||[]).map(x=>x.replace(/\s/,'')))];
 const exclShort = t => { const m = (t.intro||'').match(/Вс[её] включено[^\n.]*/); return m ? m[0].trim() : (bullets(t.excluded).length ? 'Не входит: '+bullets(t.excluded).slice(0,3).map(l=>lc(short(l,40,false))).join(', ') : ''); };
 
@@ -306,6 +339,7 @@ function withAuto(t){
 
 function build(data){
   GENERATED = new Date(data.generatedAt);
+  RATES = data.rates || null;
   TOURS = data.tours.map(t => {
     const rows = t.departures.map(d => {
       const start = pdate(d.start), end = pdate(d.end), months = new Set();
@@ -446,6 +480,7 @@ function scriptHTML(t, r){
   const see = (t.seeList||[]).filter(([c]) => !/вариант\S*\s*\d/.test(c) || !r || (c.match(/\d+/g)||[]).map(Number).includes(r.days));
   const ben = benefits(t);
   const inc = bullets(t.included).slice(0,4).map(l=>short(l,58)), exc = bullets(t.excluded).slice(0,4).map(l=>short(l,48,false));
+  const plan = payPlan(t, r);
   const pays = bullets(t.payment).filter(l=>/%|валют|рубл|доллар/i.test(l) && !REFUND.test(l)).slice(0,4).map(l=>short(l,150,true,/\s\(|;/).replace(/^Предоплата \(бронирование\) — Для подтверждения брони требуется предоплата в размере/,'Бронь — предоплата'));
   const prepay = percents(t)[0] || '';
   const near = t.open.filter(x=>x!==r && (!r || +x.start!==+r.start) && Math.abs(x.start-(r?r.start:today))<50*864e5);
@@ -456,9 +491,9 @@ function scriptHTML(t, r){
       : `Увидите: ${esc(t.sights.slice(0,5).join(', '))}.`],
     ['Что включено / не включено', `В стоимость уже входит:<ul>${inc.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>${exc.length?`<div class="sub">Отдельно оплачиваются: ${esc(exc.map(lc).join('; '))}.</div>`:''}`],
     ['Как вам тур?', 'Как вам в целом тур? Устраивают такие условия?'],
-    ['Стоимость', r ? `Стоимость — <b>$${r.price}</b> на человека при двухместном размещении${r.priceOld?` (полная цена $${r.priceOld})`:''}.${t.single?` Одноместный номер — доплата ${esc(t.single)}.`:''}` : 'Ближайших заездов нет.'],
-    ['Схема оплаты', pays.length ? `<ul>${pays.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>` : 'Порядок оплаты на странице тура не найден — уточните.'],
-    ['Закрывающий вопрос', r ? `${others.length?`Вам удобнее ${fmtLong(r.start)} или ${fmtLong(others[0].start)}? `:''}На ${fmtLong(r.start)} ${r.total ? `осталось ${r.seats ?? '?'} ${plural(r.seats ?? 0,'место','места','мест')} из ${r.total}` : `осталось мест: ${r.seats ?? '?'}`}. Давайте закреплю место за вами?${prepay?` Для брони заключаем договор и вносите ${prepay} от стоимости.`:''}` : ''],
+    ['Стоимость', r ? `Стоимость — <b>$${r.price}</b> на человека при двухместном размещении${r.priceOld?` (полная цена $${r.priceOld})`:''}${rateFor(t)?` — это <b>${rubTxt(r.price*rateFor(t).v)}</b> по сегодняшнему курсу`:''}.${rateFor(t)?`<div class="sub">${esc(rateFor(t).label)}</div>`:''}${t.single?` Одноместный номер — доплата ${esc(t.single)}.`:''}` : 'Ближайших заездов нет.'],
+    ['Схема оплаты', plan.length ? `<ul>${plan.map((p,i)=>`<li><b>${p.pct}%</b>${i===0?' — бронь':p.rest?' — остаток':''}: <b>${payAmt(p)}</b></li>`).join('')}</ul><div class="sub">${pays.map(esc).join('<br>')}</div>` : pays.length ? `<ul>${pays.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>` : 'Порядок оплаты на странице тура не найден — уточните.'],
+    ['Закрывающий вопрос', r ? `${others.length?`Вам удобнее ${fmtLong(r.start)} или ${fmtLong(others[0].start)}? `:''}На ${fmtLong(r.start)} ${r.total ? `осталось ${r.seats ?? '?'} ${plural(r.seats ?? 0,'место','места','мест')} из ${r.total}` : `осталось мест: ${r.seats ?? '?'}`}. Давайте закреплю место за вами?${prepay?` Для брони заключаем договор и вносите ${prepay} от стоимости${plan[0]&&!plan[0].cash?` — это ${payAmt(plan[0])}`:''}.`:''}` : ''],
   ];
   return steps.map(([h, say], i) => `<div class="step ${i===3||i===6?'close':''}"><span class="n">${i+1}</span><span class="h">${h}</span><div class="say">${say}</div></div>`).join('')
     + `<div class="src">Шаг 2 — по программе тура на сайте, остальное — с сайта.</div>`;
@@ -469,7 +504,7 @@ function ctx(t, r){
   return {
     has: re => re.test(t.included), inc: bullets(t.included).slice(0,5).map(l=>lc(short(l,50,false))).join(', '),
     exc: bullets(t.excluded).slice(0,4).map(l=>lc(short(l,40,false))).join(', '),
-    prepay: prepay ? prepay+' от стоимости' : 'предоплата', seats: r ? r.seats : null, group: (r && r.total) || t.group || '15',
+    prepay: prepay ? prepay+' от стоимости'+((p0 => p0 && !p0.cash && p0.rate ? ` (${rubTxt(p0.usd*p0.rate.v)})` : '')(payPlan(t, r)[0])) : 'предоплата', seats: r ? r.seats : null, group: (r && r.total) || t.group || '15',
     flight: t.flight, single: t.single, roommate: t.roommate,
     scheme: payLines(t).slice(1).map(l=>lc(short(l,220,true,/\s\(|;/))).join('; ') || '',  // первый платёж уже назван
     refund: lc(short(bullets(t.payment).find(l=>REFUND.test(l))||'', 220, true, /;/).replace(/^Условия возврата — /,'')),
@@ -504,7 +539,11 @@ function copyable(k, t, r){
   const tight = x => (x||'').replace(/\n\s*\n+/g, '\n');  // без пустых строк между пунктами
   if(k==='inc') return {text:tight(t.included), note:'Что включено — со страницы тура'};
   if(k==='exc') return {text:tight(t.excluded), note:'Что не включено — со страницы тура'};
-  if(k==='pay') return {text:tight(t.payment)+(t.extras?'\n\nДополнительные услуги:\n'+tight(t.extras):''), note:'Порядок оплаты — со страницы тура'};
+  if(k==='pay'){
+    const plan = payPlan(t, r), rt = rateFor(t);
+    const calc = plan.length ? `Расчёт на 1 человека${r?` (${fmtD(r.start)}–${fmtD(r.end)}, $${r.price}${rt?` = ${rubTxt(r.price*rt.v)}`:''})`:''}:\n` + plan.map((p,i)=>`• ${p.pct}%${i===0?' (бронь)':p.rest?' (остаток)':''} — ${payAmt(p)}`).join('\n') + (rt?`\n${rt.label[0].toUpperCase()+rt.label.slice(1)}; в день оплаты сумма пересчитывается по курсу этого дня.`:'') + '\n\n' : '';
+    return {text: calc + tight(t.payment)+(t.extras?'\n\nДополнительные услуги:\n'+tight(t.extras):''), note:'Суммы — по сегодняшнему курсу; порядок оплаты — со страницы тура'};
+  }
   if(k==='prog'){ const c = contractText(t, r); return {text:c.text, note: c.contract ? 'Как в договоре (из таблицы)'+(c.redated?', даты пересчитаны под выбранный заезд':'') : 'В таблице нет расписания «как в договоре» — программа с сайта'}; }
   if(k==='msg') return r ? {text:r.message, note:`Для заезда ${fmtD(r.start)}–${fmtD(r.end)}, данные — с сайта`} : {text:'', note:'Нет открытых дат'};
   if(k==='hotels'){
@@ -701,7 +740,7 @@ function renderDetail(keepScroll){
       <div class="cell"><i>Цена</i><b>${r?priceTxt(r.price):'—'}</b> на чел.${t.single?`<br>сингл +${esc(t.single)}`:''}</div>
       <div class="cell"><i>Даты</i>${r?`${fmtD(r.start)}–${fmtD(r.end)}, ${dayWord(r.days)}<br>${seatsTxt(r, true)}`:'—'}</div>
       <div class="cell"><i>Включено</i>${esc(exclShort(t)||'см. вкладку «Включено»')}</div>
-      <div class="cell"><i>Оплата</i>${pc.length?esc(pc.join(' → ')):'см. вкладку'}${t.flight?`<br>перелёт ≈ ${esc(t.flight)}`:''}</div>
+      <div class="cell"><i>Оплата</i>${(pl => pl.length ? `Бронь ${pl[0].pct}% — <b>${payAmt(pl[0])}</b><br>${pl.map(p=>p.pct+'%').join(' → ')}` : (pc.length?esc(pc.join(' → ')):'см. вкладку'))(payPlan(t, r))}${r&&rateFor(t)?`<br>весь тур ≈ ${rubTxt(r.price*rateFor(t).v)}<br><small class="muted">${esc(rateFor(t).label)}</small>`:''}${t.flight?`<br>перелёт ≈ ${esc(t.flight)}`:''}</div>
     </div>
     <div class="grid2">
       <div class="box"><h2>Сценарий презентации</h2>${scriptHTML(t, r)}</div>
