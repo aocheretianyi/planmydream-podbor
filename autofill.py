@@ -27,6 +27,7 @@ SCHEMA = {
                            'transport': {'type': 'string', 'enum': ['plane', 'train', 'bus', 'night', 'move']},
                            'time': {'type': 'string'}},
             'required': ['day', 'from', 'to', 'transport', 'time'], 'additionalProperties': False}},
+        'talk': {'type': 'string'},
         'arrive': {'type': 'string'},
         'depart': {'type': 'string'},
         'format': {'type': 'array', 'items': {'type': 'string', 'enum': ['classic', 'nature', 'city', 'practice', 'holiday', 'beach']}},
@@ -34,7 +35,7 @@ SCHEMA = {
         'adultsOnly': {'type': 'boolean'},
         'note': {'type': 'string'},
     },
-    'required': ['see', 'legs', 'arrive', 'depart', 'format', 'pace', 'adultsOnly', 'note'],
+    'required': ['see', 'talk', 'legs', 'arrive', 'depart', 'format', 'pace', 'adultsOnly', 'note'],
     'additionalProperties': False,
 }
 
@@ -44,6 +45,8 @@ SYSTEM = """Ты помогаешь менеджеру турагентства 
 see — «Что вас ждёт»: по одной строке на КАЖДЫЙ город или локацию маршрута, в порядке маршрута.
   city — название; what — главные места и впечатления через запятую (коротко, 5–12 слов);
   benefit — чем это ценно туристу, 3–8 слов, без восклицаний.
+talk — то же самое разговорным текстом для звонка: 35–50 слов, 3–4 предложения, города встроены в речь по порядку маршрута
+  («Начинаем в …, потом …, а в финале …»), без списков и перечислений через двоеточие.
 legs — все переезды внутри Китая между городами, по дням: и перелёты, и поезда, и автобусы, и поездки на день туда-обратно.
   Смотри и программу по дням, и «Что включено» (там часто перечислены перелёты и поезда).
   transport: plane | train | bus | night (ночной поезд) | move (транспорт не указан).

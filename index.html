@@ -310,30 +310,32 @@ function payPlan(t, r){
     ms.forEach((m, i) => {
       const seg = line.slice(m.index, i+1 < ms.length ? ms[i+1].index : undefined);
       const pct = +m[1], usd = r.price * pct / 100, cash = !allRub && CASH.test(seg) && !/рубл/i.test(seg);
-      if(out.reduce((a, p) => a + p.pct, 0) + pct <= 100) out.push({pct, usd, cash, rate: rateFor(t)});  // «+2% к курсу» — не платёж
+      if(out.reduce((a, p) => a + p.pct, 0) + pct <= 100) out.push({pct, usd, cash, rate: rateFor(t), src: line});  // «+2% к курсу» — не платёж
     });
   });
   const sum = out.reduce((a, p) => a + p.pct, 0);
   if(out.length && sum < 100){  // на сайте назван только первый платёж — остаток считаем сами
     const line = bullets(t.payment).find(l => /оставш|окончательн/i.test(l) && !/%/.test(l)) || '';
     const pct = 100 - sum;
-    out.push({pct, usd: r.price * pct / 100, cash: !allRub && CASH.test(line) && !/рубл/i.test(line), rate: rateFor(t), rest: true});
+    out.push({pct, usd: r.price * pct / 100, cash: !allRub && CASH.test(line) && !/рубл/i.test(line), rate: rateFor(t), rest: true, src: line});
   }
   return out;
 }
 const payAmt = p => p.cash ? `${usdTxt(p.usd)} наличными на месте` : p.rate ? `${rubTxt(p.usd * p.rate.v)} (${usdTxt(p.usd)})` : usdTxt(p.usd);
+// сумма в скобках к строке порядка оплаты: «$340,5 ≈ 27 851 ₽», наличные — только в $
+const payNote = p => p.cash ? `${usdTxt(p.usd)} наличными` : p.rate ? `${usdTxt(p.usd)} ≈ ${rubTxt(p.usd * p.rate.v)}` : usdTxt(p.usd);
 const percents = t => [...new Set((payLines(t).join(' ').match(/\d+\s*%/g)||[]).map(x=>x.replace(/\s/,'')))];
 const exclShort = t => { const m = (t.intro||'').match(/Вс[её] включено[^\n.]*/); return m ? m[0].trim() : (bullets(t.excluded).length ? 'Не входит: '+bullets(t.excluded).slice(0,3).map(l=>lc(short(l,40,false))).join(', ') : ''); };
 
 // Ручные данные (extra.js) или — для нового тура / изменившейся программы — автодописанные Claude (data.json → auto)
 function withAuto(t){
   const manual = (window.TOUR_EXTRA||{})[t.slug] || {}, a = t.auto;
-  if(!a) return {extra: manual, seeList: (window.TOUR_SEE||{})[t.slug] || [], isAuto: false};
+  if(!a) return {extra: manual, seeList: (window.TOUR_SEE||{})[t.slug] || [], talk: (window.TOUR_TALK||{})[t.slug] || '', isAuto: false};
   const {map, ...rest} = manual;  // старая карта может не совпадать с новой программой
   return {
     extra: {...rest, format: a.format, pace: a.pace, adultsOnly: a.adultsOnly, note: a.note || rest.note, arrive: a.arrive, depart: a.depart,
       legs: a.legs.map(l => [l.day, l.from, l.to, l.transport, l.time])},
-    seeList: a.see.map(x => [x.city, x.what, x.benefit]), isAuto: true, autoReason: a.reason,
+    seeList: a.see.map(x => [x.city, x.what, x.benefit]), talk: a.talk || '', isAuto: true, autoReason: a.reason,
   };
 }
 
@@ -481,18 +483,27 @@ function scriptHTML(t, r){
   const ben = benefits(t);
   const inc = bullets(t.included).slice(0,4).map(l=>short(l,58)), exc = bullets(t.excluded).slice(0,4).map(l=>short(l,48,false));
   const plan = payPlan(t, r);
-  const pays = bullets(t.payment).filter(l=>/%|валют|рубл|доллар/i.test(l) && !REFUND.test(l)).slice(0,4).map(l=>short(l,150,true,/\s\(|;/).replace(/^Предоплата \(бронирование\) — Для подтверждения брони требуется предоплата в размере/,'Бронь — предоплата'));
+  // строка без процентов — только до конца первого предложения
+  const payText = l => short(l,150,true,/%/.test(l) ? /\s\(|;/ : /\s\(|;|\. /).replace(/^Предоплата \(бронирование\) — Для подтверждения брони требуется предоплата в размере/,'Бронь — предоплата');
+  const srcLines = bullets(t.payment).filter(l=>(/%|валют|рубл|доллар/i.test(l) || plan.some(p=>p.src===l)) && !REFUND.test(l));
+  const pays = srcLines.slice(0,5).map(l => {
+    const items = plan.filter(p => p.src === l);
+    const note = items.length === 1 ? payNote(items[0]) : items.map(p => `${p.pct}% — ${payNote(p)}`).join('; ');
+    return payText(l) + (note ? ` (${note})` : '');
+  });
+  const lost = plan.filter(p => p.rest && !p.src);  // остаток, которого нет в тексте сайта
+  lost.forEach(p => pays.push(`Остаток ${p.pct}% — сроки в договоре (${payNote(p)})`));
   const prepay = percents(t)[0] || '';
   const near = t.open.filter(x=>x!==r && (!r || +x.start!==+r.start) && Math.abs(x.start-(r?r.start:today))<50*864e5);
   const others = [...near.filter(x=>r&&x.start>r.start), ...near].slice(0,1); // сначала следующий заезд, потом предыдущий
   const steps = [
     ['Предложение', `Под ваши пожелания могу предложить тур «${esc(t.title)}»${r?` — ${dayWord(r.days)}, с ${fmtLong(r.start)} по ${fmtLong(r.end)}`:''}. Маршрут: ${esc(t.route)}.${tagline?`<div class="sub">${esc(tagline)}</div>`:''}`],
-    ['Что вас ждёт'+(t.isAuto?AUTO_TAG(t):''), see.length ? `<ul>${see.map(([c,w,g])=>`<li><b>${esc(c)}:</b> ${esc(w)}${g?` → <span class="g">${esc(g)}</span>`:''}</li>`).join('')}</ul>` : ben.length ? `<ul>${ben.map(([p,g])=>`<li>${esc(p)}${g?` → <span class="g">${esc(g)}</span>`:''}</li>`).join('')}</ul>`
+    ['Что вас ждёт'+(t.isAuto?AUTO_TAG(t):''), t.talk ? esc(t.talk) : see.length ? `<ul>${see.map(([c,w,g])=>`<li><b>${esc(c)}:</b> ${esc(w)}${g?` → <span class="g">${esc(g)}</span>`:''}</li>`).join('')}</ul>` : ben.length ? `<ul>${ben.map(([p,g])=>`<li>${esc(p)}${g?` → <span class="g">${esc(g)}</span>`:''}</li>`).join('')}</ul>`
       : `Увидите: ${esc(t.sights.slice(0,5).join(', '))}.`],
     ['Что включено / не включено', `В стоимость уже входит:<ul>${inc.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>${exc.length?`<div class="sub">Отдельно оплачиваются: ${esc(exc.map(lc).join('; '))}.</div>`:''}`],
     ['Как вам тур?', 'Как вам в целом тур? Устраивают такие условия?'],
     ['Стоимость', r ? `Стоимость — <b>$${r.price}</b> на человека при двухместном размещении${r.priceOld?` (полная цена $${r.priceOld})`:''}${rateFor(t)?` — это <b>${rubTxt(r.price*rateFor(t).v)}</b> по сегодняшнему курсу`:''}.${rateFor(t)?`<div class="sub">${esc(rateFor(t).label)}</div>`:''}${t.single?` Одноместный номер — доплата ${esc(t.single)}.`:''}` : 'Ближайших заездов нет.'],
-    ['Схема оплаты', plan.length ? `<ul>${plan.map((p,i)=>`<li><b>${p.pct}%</b>${i===0?' — бронь':p.rest?' — остаток':''}: <b>${payAmt(p)}</b></li>`).join('')}</ul><div class="sub">${pays.map(esc).join('<br>')}</div>` : pays.length ? `<ul>${pays.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>` : 'Порядок оплаты на странице тура не найден — уточните.'],
+    ['Схема оплаты', pays.length ? `<ul>${pays.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>` : 'Порядок оплаты на странице тура не найден — уточните.'],
     ['Закрывающий вопрос', r ? `${others.length?`Вам удобнее ${fmtLong(r.start)} или ${fmtLong(others[0].start)}? `:''}На ${fmtLong(r.start)} ${r.total ? `осталось ${r.seats ?? '?'} ${plural(r.seats ?? 0,'место','места','мест')} из ${r.total}` : `осталось мест: ${r.seats ?? '?'}`}. Давайте закреплю место за вами?${prepay?` Для брони заключаем договор и вносите ${prepay} от стоимости${plan[0]&&!plan[0].cash?` — это ${payAmt(plan[0])}`:''}.`:''}` : ''],
   ];
   return steps.map(([h, say], i) => `<div class="step ${i===3||i===6?'close':''}"><span class="n">${i+1}</span><span class="h">${h}</span><div class="say">${say}</div></div>`).join('')
