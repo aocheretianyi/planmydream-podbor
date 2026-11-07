@@ -23,6 +23,8 @@ STORE = ('https://store.tildaapi.one/api/getproductslist/?storepartuid=853517125
 SHEET = ('https://docs.google.com/spreadsheets/d/1my6kd5FyYn_jJghSNghPToV2esLx8eFlUUokhLwtFNI/gviz/tq'
          '?tqx=out:csv&sheet=%D0%A2%D1%83%D1%80%D1%8B')
 OUT = Path(__file__).with_name('data.json')
+# Организаторы-компании: в каталоге Tilda — настоящее имя (для связи туров), наружу (подборщик публичный) — только турлидер.
+HIDDEN_ORG = {'Моменты': 'Турлидер Марина'}
 MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа',
           'сентября', 'октября', 'ноября', 'декабря']
 
@@ -262,7 +264,7 @@ def main():
         deps.sort(key=lambda d: d['start'])
         t = {
             'slug': slug, 'url': url, 'title': pr['title'].strip(),
-            'org': (ch.get('Организатор') or [''])[0],
+            'org': HIDDEN_ORG.get((ch.get('Организатор') or [''])[0], (ch.get('Организатор') or [''])[0]),
             'price': num(pr.get('price')) or (deps[0]['priceFull'] if deps else None),
             'priceOld': num(pr.get('priceold')),
             'route': (ch.get('Маршрут') or [''])[0],
