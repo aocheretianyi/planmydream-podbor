@@ -163,6 +163,9 @@ body.no-filters #filters, body.no-results #results{display:none}
 .date.on{background:var(--chip-on);color:#fff;border-color:var(--chip-on)}
 .date.on small{color:#ddd}
 .date.full{opacity:.45;text-decoration:line-through;cursor:default}
+.who{display:flex;flex-wrap:wrap;align-items:center;gap:5px 6px;margin-top:8px;font-size:12.5px}
+.who i{font-style:normal;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.who span{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
 .more{border:0;background:none;color:var(--accent);font-size:12px;padding:3px 2px}
 .cheat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
 .cell{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.35}
@@ -260,7 +263,7 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;
 const today = new Date(); today.setHours(0,0,0,0);
 const SOON = 14; // заезды ближе 14 дней по умолчанию не предлагаем — новый клиент не успеет
 
-let TOURS = [], DURS = [], GENERATED = null, RATES = null;
+let TOURS = [], DURS = [], GENERATED = null, RATES = null, GUESTS = {};
 const SETS = ['group','months','dur','sights','pace','formats'];
 const state = {months:new Set(), dur:new Set(), sights:new Set(), group:new Set(), formats:new Set(), pace:new Set(), q:''};
 let current = null, currentRow = null, tab = 'obj', ask = '', showAllSights = false, showAllDates = false;
@@ -347,6 +350,7 @@ function withAuto(t){
 function build(data){
   GENERATED = new Date(data.generatedAt);
   RATES = data.rates || null;
+  GUESTS = (data.guests && data.guests.groups) || {};
   TOURS = data.tours.map(t => {
     const rows = t.departures.map(d => {
       const start = pdate(d.start), end = pdate(d.end), months = new Set();
@@ -427,6 +431,21 @@ function renderFilters(){
 
 // «мест: 3 из 10» — свободно из всего в группе (всего — из таблицы или FAQ сайта)
 const seatsTxt = (x, long) => x.total ? `${long ? 'свободно' : 'мест'}: ${x.seats ?? '?'} из ${x.total}` : `мест: ${x.seats ?? '?'}`;
+// «Кто уже едет» — оплаченные группы из amoCRM, обезличенно: пол и возраст на дату тура (guests.py)
+function whoHTML(t, r){
+  if(!r) return '';
+  const groups = GUESTS[t.slug+'|'+iso(r.start)] || [];
+  if(!groups.length) return '';
+  const one = p => p.age!=null && p.age<18 ? 'ребёнок '+p.age : [p.g==='?'?'':p.g, p.age!=null?p.age:''].join(' ').trim() || 'турист';
+  const parts = groups.map(g => {
+    const ppl = g.people.map(one), n = ppl.length + g.unknown;
+    const tail = g.unknown ? `${ppl.length?'+':''}${g.unknown} без данных` : '';
+    const body = [...ppl, tail].filter(Boolean).join(', ');
+    return n > 1 ? `${n===2?'вдвоём':'вместе '+n}: ${body}` : body;
+  });
+  const total = groups.reduce((a,g)=>a+g.people.length+g.unknown,0);
+  return `<div class="who"><i>Уже едут — ${total} ${plural(total,'человек','человека','человек')}</i>${parts.map(x=>`<span>${esc(x)}</span>`).join('')}</div>`;
+}
 const priceTxt = p => p && isFinite(p) ? '$'+p : 'цена не указана';
 function renderResults(){
   const list = scored();
@@ -752,6 +771,7 @@ function renderDetail(keepScroll){
     </div>
     ${t.extra.note?`<div class="note">⚠︎ ${esc(t.extra.note)}</div>`:''}
     <div class="dates">${visibleDates(t, r).map(x=>`<button class="date ${x===r?'on':''} ${!x.open?'full':''} ${state.months.size&&[...x.months].some(m=>state.months.has(m))?'match':''}" data-i="${t.rows.indexOf(x)}" ${!x.open?'disabled':''} title="${x.days} дн. · $${x.price}">${fmtD(x.start)}–${fmtD(x.end)}<small>${new Set(t.rows.map(y=>y.days)).size>1?x.days+' дн. · ':''}${seatsTxt(x)}</small></button>`).join('') || '<span class="hint">Ближайших заездов на сайте нет</span>'}${hiddenDates(t, r)?`<button class="more" id="moredates">${showAllDates?'Свернуть даты':'ещё '+hiddenDates(t, r)+' дат'}</button>`:''}</div>
+    ${whoHTML(t, r)}
     <div class="cheat">
       <div class="cell"><i>Цена</i><b>${r?priceTxt(r.price):'—'}</b> на чел.${t.single?`<br>сингл +${esc(t.single)}`:''}</div>
       <div class="cell"><i>Даты</i>${r?`${fmtD(r.start)}–${fmtD(r.end)}, ${dayWord(r.days)}<br>${seatsTxt(r, true)}`:'—'}</div>

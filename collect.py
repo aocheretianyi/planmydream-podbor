@@ -17,6 +17,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 from autofill import autofill
+import guests
 
 STORE = ('https://store.tildaapi.one/api/getproductslist/?storepartuid=853517125224&recid=4248233303'
          '&getparts=true&getoptions=true&slice=1&size=200&flag_root=withroot')
@@ -316,10 +317,11 @@ def main():
     autofill(tours, warnings)
     for t in tours:
         t.pop('_now', None)
-    prev = json.loads(OUT.read_text(encoding='utf-8')).get('rates') if OUT.exists() else None
+    old = json.loads(OUT.read_text(encoding='utf-8')) if OUT.exists() else {}
+    prev = old.get('rates')
     data = {'generatedAt': datetime.now(timezone.utc).isoformat(timespec='seconds'),
             'source': 'planmydream.ru (каталог + страницы туров)', 'tours': tours, 'warnings': warnings,
-            'rates': rates(prev, warnings)}
+            'rates': rates(prev, warnings), 'guests': guests.collect(old.get('guests'), warnings)}
     OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding='utf-8')
     print(f'Готово: {len(tours)} туров → {OUT}')
     for w in warnings:

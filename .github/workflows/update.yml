@@ -30,6 +30,7 @@ jobs:
       - name: Собрать данные с сайта (новые туры дописывает Claude)
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AMO_TOKEN: ${{ secrets.AMO_TOKEN }}
         run: python3 collect.py
       - name: Сохранить data.json и auto.json, если изменились
         run: |
