@@ -279,13 +279,18 @@ const load_ = k => { try{ return localStorage.getItem(k); }catch(_){ return null
 
 // --- разбор текстов сайта -------------------------------------------------
 const bullets = txt => (txt||'').split('\n').map(l=>l.replace(/^•\s*/,'').trim()).filter(l=>l && !/^(Следующие|Также можно)/.test(l));
-function short(line, max = 64, withDetail = true, cut = /\s\(|;|\. /){
+function short(line, max = 64, withDetail = true, cut = /\s\(|;|\. |: /){
   let s = line.replace(/\s+/g,' ').trim();
   const c = s.indexOf(':');
   if(c>0 && c<45){ const head = s.slice(0,c).trim(), tail = s.slice(c+1).trim().split(cut)[0]; s = withDetail && tail ? head+' — '+tail : head; }
   else s = s.split(cut)[0];
-  if(s.length>max){ s = s.slice(0,max); s = s.slice(0, Math.max(s.lastIndexOf(' '), max-15)).replace(/[,—\-\s]+$/,'')+'…'; }
-  return s.replace(/\.$/,'');
+  if(s.length > max) s = s.replace(/\s+[^\s,]+\s*→.*$/, '');  // длинный маршрут «Москва → Шанхай → …» в коротком пункте не нужен
+  if(s.length>max){  // режем по целой фразе (запятая, тире, «и»), без многоточия
+    const part = s.slice(0, max), at = Math.max(part.lastIndexOf(', '), part.lastIndexOf(' — '), part.lastIndexOf(' и '));
+    s = at > max * 0.4 ? part.slice(0, at) : part.slice(0, part.lastIndexOf(' '));
+    s = s.replace(/(\s+(в|на|с|со|и|по|для|до|из|от|к|у|о|об|за|при))+$/i, '').replace(/[,—\-:\s]+$/, '');
+  }
+  return s.replace(/\s+(на протяжении\s+)?(всего|всей|всех|весь)$/i, '').replace(/[:,—\-\s]+$/, '').replace(/\.$/,'');
 }
 const lc = s => s ? s[0].toLowerCase()+s.slice(1) : s;
 const REFUND = /возврат|отмен|удерж|невыезд/i;  // условия возврата — не схема оплаты
@@ -481,7 +486,7 @@ function scriptHTML(t, r){
   const tagline = ((t.script||'').match(/«([^»]+)»/)||[])[1];
   const see = (t.seeList||[]).filter(([c]) => !/вариант\S*\s*\d/.test(c) || !r || (c.match(/\d+/g)||[]).map(Number).includes(r.days));
   const ben = benefits(t);
-  const inc = bullets(t.included).slice(0,4).map(l=>short(l,58)), exc = bullets(t.excluded).slice(0,4).map(l=>short(l,48,false));
+  const inc = bullets(t.included).slice(0,4).map(l=>short(l,85)), exc = bullets(t.excluded).slice(0,4).map(l=>short(l,75,false));
   const plan = payPlan(t, r);
   // строка без процентов — только до конца первого предложения
   const payText = l => short(l,150,true,/%/.test(l) ? /\s\(|;/ : /\s\(|;|\. /).replace(/^Предоплата \(бронирование\) — Для подтверждения брони требуется предоплата в размере/,'Бронь — предоплата');
