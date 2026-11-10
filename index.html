@@ -163,9 +163,15 @@ body.no-filters #filters, body.no-results #results{display:none}
 .date.on{background:var(--chip-on);color:#fff;border-color:var(--chip-on)}
 .date.on small{color:#ddd}
 .date.full{opacity:.45;text-decoration:line-through;cursor:default}
-.who{display:flex;flex-wrap:wrap;align-items:center;gap:5px 6px;margin-top:8px;font-size:12.5px}
-.who i{font-style:normal;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px}
-.who span{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+.cell{position:relative}
+.who summary{display:inline-block;cursor:pointer;color:var(--accent);list-style:none;margin-top:1px}
+.who summary::-webkit-details-marker{display:none}
+.who summary::after{content:' ▾';font-size:10px}
+.who[open] summary::after{content:' ▴'}
+.who-pop{position:absolute;left:-1px;top:calc(100% + 4px);z-index:30;min-width:100%;width:max-content;max-width:min(360px,90vw);display:flex;flex-direction:column;gap:5px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.who-pop i{font-style:normal;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.who-pop span{font-size:12.5px}
+@media (max-width:1200px){.who-pop{left:auto;right:-1px}} /* «Даты» — правая колонка в раскладке 2×2 */
 .more{border:0;background:none;color:var(--accent);font-size:12px;padding:3px 2px}
 .cheat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
 .cell{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.35}
@@ -432,6 +438,7 @@ function renderFilters(){
 // «мест: 3 из 10» — свободно из всего в группе (всего — из таблицы или FAQ сайта)
 const seatsTxt = (x, long) => x.total ? `${long ? 'свободно' : 'мест'}: ${x.seats ?? '?'} из ${x.total}` : `мест: ${x.seats ?? '?'}`;
 // «Кто уже едет» — оплаченные группы из amoCRM, обезличенно: пол и возраст на дату тура (guests.py)
+document.addEventListener('click', e => { document.querySelectorAll('details.who[open]').forEach(d => { if(!d.contains(e.target)) d.open = false; }); });
 function whoHTML(t, r){
   if(!r) return '';
   const groups = GUESTS[t.slug+'|'+iso(r.start)] || [];
@@ -444,7 +451,7 @@ function whoHTML(t, r){
     return n > 1 ? `${n===2?'вдвоём':'вместе '+n}: ${body}` : body;
   });
   const total = groups.reduce((a,g)=>a+g.people.length+g.unknown,0);
-  return `<div class="who"><i>Уже едут — ${total} ${plural(total,'человек','человека','человек')}</i>${parts.map(x=>`<span>${esc(x)}</span>`).join('')}</div>`;
+  return `<details class="who"><summary>уже едут: ${total} ${plural(total,'человек','человека','человек')}</summary><div class="who-pop"><i>Оплатили этот заезд</i>${parts.map(x=>`<span>${esc(x)}</span>`).join('')}</div></details>`;
 }
 const priceTxt = p => p && isFinite(p) ? '$'+p : 'цена не указана';
 function renderResults(){
@@ -771,10 +778,9 @@ function renderDetail(keepScroll){
     </div>
     ${t.extra.note?`<div class="note">⚠︎ ${esc(t.extra.note)}</div>`:''}
     <div class="dates">${visibleDates(t, r).map(x=>`<button class="date ${x===r?'on':''} ${!x.open?'full':''} ${state.months.size&&[...x.months].some(m=>state.months.has(m))?'match':''}" data-i="${t.rows.indexOf(x)}" ${!x.open?'disabled':''} title="${x.days} дн. · $${x.price}">${fmtD(x.start)}–${fmtD(x.end)}<small>${new Set(t.rows.map(y=>y.days)).size>1?x.days+' дн. · ':''}${seatsTxt(x)}</small></button>`).join('') || '<span class="hint">Ближайших заездов на сайте нет</span>'}${hiddenDates(t, r)?`<button class="more" id="moredates">${showAllDates?'Свернуть даты':'ещё '+hiddenDates(t, r)+' дат'}</button>`:''}</div>
-    ${whoHTML(t, r)}
     <div class="cheat">
       <div class="cell"><i>Цена</i><b>${r?priceTxt(r.price):'—'}</b> на чел.${t.single?`<br>сингл +${esc(t.single)}`:''}</div>
-      <div class="cell"><i>Даты</i>${r?`${fmtD(r.start)}–${fmtD(r.end)}, ${dayWord(r.days)}<br>${seatsTxt(r, true)}`:'—'}</div>
+      <div class="cell"><i>Даты</i>${r?`${fmtD(r.start)}–${fmtD(r.end)}, ${dayWord(r.days)}<br>${seatsTxt(r, true)}${whoHTML(t, r)}`:'—'}</div>
       <div class="cell"><i>Включено</i>${esc(exclShort(t)||'см. вкладку «Включено»')}</div>
       <div class="cell"><i>Оплата</i>${(pl => pl.length ? `Бронь ${pl[0].pct}% — <b>${payAmt(pl[0])}</b><br>${pl.map(p=>p.pct+'%').join(' → ')}` : (pc.length?esc(pc.join(' → ')):'см. вкладку'))(payPlan(t, r))}${r&&rateFor(t)?`<br>весь тур ≈ ${rubTxt(r.price*rateFor(t).v)}<br><small class="muted">${esc(rateFor(t).label)}</small>`:''}${t.flight?`<br>перелёт ≈ ${esc(t.flight)}`:''}</div>
     </div>
