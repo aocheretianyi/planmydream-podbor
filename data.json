@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-10T05:54:28+00:00",
+ "generatedAt": "2026-11-10T07:22:29+00:00",
  "source": "planmydream.ru (каталог + страницы туров)",
  "tours": [
   {
@@ -2912,8 +2912,7 @@
  ],
  "warnings": [
   "august-shanghai-avatar-8-dney: новый тур или изменилась программа — нет ключа ANTHROPIC_API_KEY, автодописывание пропущено",
-  "shanghai-hangzhou-huangshan: новый тур или изменилась программа — нет ключа ANTHROPIC_API_KEY, автодописывание пропущено",
-  "«Кто уже едет»: нет токена AMO_TOKEN — показаны прошлые данные"
+  "shanghai-hangzhou-huangshan: новый тур или изменилась программа — нет ключа ANTHROPIC_API_KEY, автодописывание пропущено"
  ],
  "rates": {
   "cbr": {
@@ -2921,9 +2920,111 @@
    "date": "2026-11-10"
   },
   "tbank": {
-   "sell": 88.35,
-   "at": "2026-11-10T05:54+00:00"
+   "sell": 86.7,
+   "at": "2026-11-10T07:22+00:00"
   }
  },
- "guests": null
+ "guests": {
+  "at": "2026-11-10T07:22:35+00:00",
+  "groups": {
+   "august-shanghai-avatar-8-dney|2027-04-12": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 50
+      }
+     ],
+     "unknown": 1
+    }
+   ],
+   "shenchzhen-avatar-furong-shanghai|2027-05-01": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 58
+      },
+      {
+       "g": "Ж",
+       "age": 58
+      }
+     ],
+     "unknown": 0
+    },
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 57
+      }
+     ],
+     "unknown": 1
+    }
+   ],
+   "pekin-avatar-shanghai-8-dney|2026-11-16": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 15
+      }
+     ],
+     "unknown": 3
+    }
+   ],
+   "guanchgou-yansho-chuntsin-avatar-fenhuan-furong|2026-11-24": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 48
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "pekin-avatar-5-dney|2027-04-26": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 70
+      },
+      {
+       "g": "Ж",
+       "age": 73
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "novyj-god-v-kitae|2026-12-30": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 33
+      },
+      {
+       "g": "Ж",
+       "age": null
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "111|2027-03-15": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 49
+      }
+     ],
+     "unknown": 1
+    }
+   ]
+  }
+ }
 }
