@@ -171,6 +171,7 @@ body.no-filters #filters, body.no-results #results{display:none}
 .who-pop{position:absolute;left:-1px;top:calc(100% + 4px);z-index:30;min-width:100%;width:max-content;max-width:min(360px,90vw);display:flex;flex-direction:column;gap:5px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;box-shadow:0 6px 20px rgba(0,0,0,.12)}
 .who-pop i{font-style:normal;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .who-pop span{font-size:12.5px}
+.who-warn{font-weight:500;font-size:12px;color:#b3261e;max-width:300px}
 @media (max-width:1200px){.who-pop{left:auto;right:-1px}} /* «Даты» — правая колонка в раскладке 2×2 */
 .more{border:0;background:none;color:var(--accent);font-size:12px;padding:3px 2px}
 .cheat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
@@ -451,7 +452,8 @@ function whoHTML(t, r){
     return n > 1 ? `${n===2?'вдвоём':'вместе '+n}: ${body}` : body;
   });
   const total = groups.reduce((a,g)=>a+g.people.length+g.unknown,0);
-  return `<details class="who"><summary>уже едут: ${total} ${plural(total,'человек','человека','человек')}</summary><div class="who-pop"><i>Оплатили этот заезд</i>${parts.map(x=>`<span>${esc(x)}</span>`).join('')}</div></details>`;
+  const taken = r.total && r.seats != null ? r.total - r.seats : null, stale = taken != null && total > taken;
+  return `<details class="who"><summary>${stale?'⚠︎ ':''}уже едут: ${total} ${plural(total,'человек','человека','человек')}</summary><div class="who-pop"><i>Оплатили этот заезд</i>${parts.map(x=>`<span>${esc(x)}</span>`).join('')}${stale?`<b class="who-warn">На сайте занято ${taken} из ${r.total} — после оплат не уменьшили свободные места</b>`:''}</div></details>`;
 }
 const priceTxt = p => p && isFinite(p) ? '$'+p : 'цена не указана';
 function renderResults(){

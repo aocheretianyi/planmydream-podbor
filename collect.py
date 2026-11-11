@@ -322,6 +322,12 @@ def main():
     data = {'generatedAt': datetime.now(timezone.utc).isoformat(timespec='seconds'),
             'source': 'planmydream.ru (каталог + страницы туров)', 'tours': tours, 'warnings': warnings,
             'rates': rates(prev, warnings), 'guests': guests.collect(old.get('guests'), warnings)}
+    # оплатили у нас больше, чем занято мест на сайте — места после оплаты не уменьшили
+    for t in tours:
+        for d in t['departures']:
+            paid = sum(len(g['people']) + g['unknown'] for g in ((data['guests'] or {}).get('groups') or {}).get(f"{t['slug']}|{d['start']}", []))
+            if paid and d['total'] and d['seats'] is not None and paid > d['total'] - d['seats']:
+                warnings.append(f"{t['slug']} {d['start']}: оплатили {paid}, а на сайте занято {d['total'] - d['seats']} — уменьшить свободные места")
     OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding='utf-8')
     print(f'Готово: {len(tours)} туров → {OUT}')
     for w in warnings:
