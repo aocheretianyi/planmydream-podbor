@@ -488,7 +488,7 @@ function routeHTML(t, r){
     const sum = Object.entries(cnt).map(([k,n])=>`${n} ${n>1?TRANSPORT[k][2]:TRANSPORT[k][1]}`).join(', ');
     return `<ul class="legs">
       ${ex.arrive?`<li><span class="ic">🛬</span><span><b>Прилёт:</b> ${esc(ex.arrive)} <small>(международный перелёт — отдельно)</small></span></li>`:''}
-      ${legs.map(([d,f,to,tr,time])=>`<li><span class="ic">${TRANSPORT[tr][0]}</span><span><b>День ${d}:</b> ${esc(f)} → ${esc(to)}<br><small>${TRANSPORT[tr][1]} · ${esc(time.replace(/\s*—?\s*вариант \d+ дней/,'') || 'время уточнить')}</small></span></li>`).join('')}
+      ${legs.map(([d,f,to,tr,time])=>`<li><span class="ic">${TRANSPORT[tr][0]}</span><span><b>День ${d}:</b> ${esc(f)} → ${esc(to)}<br><small>${[TRANSPORT[tr][1], esc(time.replace(/\s*—?\s*вариант \d+ дней/,''))].filter(Boolean).join(' · ')}</small></span></li>`).join('')}
       ${ex.depart?`<li><span class="ic">🛫</span><span><b>Вылет домой:</b> ${esc(ex.depart)}</span></li>`:''}
     </ul>
     <div class="legsum">Переездов внутри Китая: <b>${legs.length}</b> (${sum}) — по «Что включено» и программе на сайте</div>
