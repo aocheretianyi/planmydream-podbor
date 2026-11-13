@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-13T12:19:25+00:00",
+ "generatedAt": "2026-11-13T22:01:06+00:00",
  "source": "planmydream.ru (каталог + страницы туров)",
  "tours": [
   {
@@ -2906,20 +2906,21 @@
   "august-shanghai-avatar-8-dney: новый тур или изменилась программа — нет ключа ANTHROPIC_API_KEY, автодописывание пропущено",
   "shanghai-hangzhou-huangshan: новый тур или изменилась программа — нет ключа ANTHROPIC_API_KEY, автодописывание пропущено",
   "pekin-avatar-shanghai-8-dney 2027-05-10: оплатили 2, а на сайте занято 0 — уменьшить свободные места",
+  "august-shanghai-avatar-8-dney 2027-04-12: оплатили 4, а на сайте занято 2 — уменьшить свободные места",
   "shenchzhen-avatar-furong-shanghai 2027-03-27: оплатили 4, а на сайте занято 0 — уменьшить свободные места"
  ],
  "rates": {
   "cbr": {
-   "value": 82.9803,
-   "date": "2026-11-13"
+   "value": 82.1516,
+   "date": "2026-11-14"
   },
   "tbank": {
-   "sell": 86.3,
-   "at": "2026-11-13T12:19+00:00"
+   "sell": 87.95,
+   "at": "2026-11-13T22:01+00:00"
   }
  },
  "guests": {
-  "at": "2026-11-13T12:19:31+00:00",
+  "at": "2026-11-13T22:01:15+00:00",
   "groups": {
    "august-shanghai-avatar-8-dney|2027-04-12": [
     {
@@ -2927,6 +2928,15 @@
       {
        "g": "Ж",
        "age": 50
+      }
+     ],
+     "unknown": 1
+    },
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 35
       }
      ],
      "unknown": 1
@@ -2966,17 +2976,6 @@
       {
        "g": "Ж",
        "age": 73
-      }
-     ],
-     "unknown": 0
-    }
-   ],
-   "guanchgou-yansho-chuntsin-avatar-fenhuan-furong|2026-11-24": [
-    {
-     "people": [
-      {
-       "g": "Ж",
-       "age": 48
       }
      ],
      "unknown": 0
@@ -3043,6 +3042,17 @@
       }
      ],
      "unknown": 1
+    }
+   ],
+   "guanchgou-yansho-chuntsin-avatar-fenhuan-furong|2026-11-24": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 48
+      }
+     ],
+     "unknown": 0
     }
    ],
    "111|2027-03-15": [
