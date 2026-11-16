@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-16T06:43:29+00:00",
+ "generatedAt": "2026-11-16T10:53:04+00:00",
  "source": "planmydream.ru (каталог + страницы туров)",
  "tours": [
   {
@@ -2908,6 +2908,7 @@
   "shanghai-hangzhou-huangshan: новый тур или изменилась программа — нет ключа ANTHROPIC_API_KEY, автодописывание пропущено",
   "pekin-avatar-shanghai-8-dney 2027-05-10: оплатили 2, а на сайте занято 0 — уменьшить свободные места",
   "august-shanghai-avatar-8-dney 2027-04-12: оплатили 4, а на сайте занято 2 — уменьшить свободные места",
+  "south-china-chendu-chuntsin-yansho-guanchgou 2027-03-21: оплатили 1, а на сайте занято 0 — уменьшить свободные места",
   "shenchzhen-avatar-furong-shanghai 2027-03-27: оплатили 4, а на сайте занято 0 — уменьшить свободные места"
  ],
  "rates": {
@@ -2916,12 +2917,12 @@
    "date": "2026-11-14"
   },
   "tbank": {
-   "sell": 88.05,
-   "at": "2026-11-16T06:43+00:00"
+   "sell": 86.6,
+   "at": "2026-11-16T10:53+00:00"
   }
  },
  "guests": {
-  "at": "2026-11-16T06:43:37+00:00",
+  "at": "2026-11-16T10:53:13+00:00",
   "groups": {
    "august-shanghai-avatar-8-dney|2027-04-12": [
     {
@@ -3004,28 +3005,6 @@
      "unknown": 1
     }
    ],
-   "guanchgou-yansho-chuntsin-avatar-fenhuan-furong|2026-11-24": [
-    {
-     "people": [
-      {
-       "g": "Ж",
-       "age": 48
-      }
-     ],
-     "unknown": 0
-    }
-   ],
-   "pekin-avatar-shanghai-8-dney|2026-11-16": [
-    {
-     "people": [
-      {
-       "g": "Ж",
-       "age": 15
-      }
-     ],
-     "unknown": 3
-    }
-   ],
    "novyj-god-v-kitae|2026-12-30": [
     {
      "people": [
@@ -3054,6 +3033,54 @@
       }
      ],
      "unknown": 2
+    }
+   ],
+   "guanchgou-yansho-chuntsin-avatar-fenhuan-furong|2026-11-24": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 48
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "pekin-avatar-shanghai-8-dney|2026-11-16": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 15
+      }
+     ],
+     "unknown": 3
+    }
+   ],
+   "south-china-chendu-chuntsin-yansho-guanchgou|2027-03-21": [
+    {
+     "people": [
+      {
+       "g": "М",
+       "age": 45
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "pekin-avatar-shanghai-8-dney|2027-05-15": [
+    {
+     "people": [
+      {
+       "g": "М",
+       "age": 57
+      },
+      {
+       "g": "Ж",
+       "age": 49
+      }
+     ],
+     "unknown": 0
     }
    ],
    "111|2027-03-15": [
