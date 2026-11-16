@@ -495,6 +495,8 @@ function syncUrl(){
   const h = '#' + urlState();
   if (location.hash !== h) try { history.replaceState(null, '', h); } catch(e){}
 }
+// вставили другую ссылку в адресную строку этой же вкладки — открываем её вариант
+addEventListener('hashchange', () => { if (readUrl()) location.reload(); });
 function readUrl(){
   const p = new URLSearchParams(location.hash.slice(1));
   if (!p.has('a') && !p.has('v')) return null;
@@ -595,7 +597,8 @@ function renderResults(capped){
     ${fromHainan && isChina() ? '<button class="tgl" id="hnopen" title="Вернуться к бухтам и отелям Хайнаня">← Бухты Хайнаня</button>' : ''}
     ${fromOverview ? `<button class="tgl" id="back" title="Вернуться к обзору">← Все отели ${backBay ? 'бухты' : 'страны'}</button>` : ''}
     ${lastQuery.bay ? `<span class="hint" style="margin:0">Бухта: <b>${esc(BAYS.find(b => b.id === lastQuery.bay).name)}</b></span>` : ''}
-    <span class="hint" style="margin:0">Цена за всех туристов: TEZ → наша с наценкой ${markup}%</span></div>`;
+    <span class="hint" style="margin:0">Цена за всех туристов: TEZ → наша с наценкой ${markup}%</span>
+    <button class="tgl" id="copylink" title="Ссылка на этот поиск: коллега откроет те же даты, туристов и цены">🔗 Ссылка на поиск</button></div>`;
   if (!lastQuery.grouped && (meals.length > 1 || nightsL.length > 1)){
     html += `<div class="filters">${meals.length > 1 ? `Питание: <span class="chips">${meals.map(m => `<button class="chip ${fMeal.has(m)?'on':''}" data-fmeal="${esc(m)}">${esc(m)}</button>`).join('')}</span>` : ''}
       ${nightsL.length > 1 ? `Ночей: <span class="chips">${nightsL.map(n => `<button class="chip ${fNights.has(n)?'on':''}" data-fnights="${n}">${n}</button>`).join('')}</span>` : ''}
@@ -1095,6 +1098,18 @@ document.addEventListener('click', async e => {
   if (t.dataset.unpick){ picked = picked.filter(p => p.id !== +t.dataset.unpick); bayMode = null; renderPicked(); return; }
   if (t.id === 'hainanbtn' || t.id === 'hainanbtn2'){ hnBay = null; showHainan.byUser = true; return showHainan(); }
   if (t.id === 'hnback'){ renderResults(); return; }
+  if (t.id === 'copylink'){
+    syncUrl();
+    let ok = false;
+    try { await navigator.clipboard.writeText(location.href); ok = true; }
+    catch(err){
+      const a = document.createElement('textarea'); a.value = location.href; a.style.position = 'fixed'; a.style.opacity = '0';
+      document.body.appendChild(a); a.select(); try { ok = document.execCommand('copy'); } catch(e){} a.remove();
+    }
+    t.textContent = ok ? '✓ Ссылка скопирована' : 'Не скопировалась — возьмите из адресной строки';
+    setTimeout(() => { if (t.isConnected) t.textContent = '🔗 Ссылка на поиск'; }, 2200);
+    return;
+  }
   if (t.dataset.bay){ fromHainan = true; hnBay = t.dataset.bay; return searchBay(t.dataset.bay); }
   if (t.dataset.hprice){
     const id = +t.dataset.hprice, row = BAYS.flatMap(b => b.hotels).find(h => h[1] === id);
