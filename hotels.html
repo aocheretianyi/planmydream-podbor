@@ -320,7 +320,8 @@ function status(t, bad){ const s = $('#status'); s.textContent = t; s.classList.
 
 // ---------- справочники ----------
 async function init(){
-  const f = store.get('form', {});
+  const u = readUrl();
+  const f = {...store.get('form', {}), ...(u ? u.form : {})};
   $('#adults').innerHTML = [1,2,3,4,5,6].map(n => `<option value="${n}">${n} ${plural(n,'взрослый','взрослых','взрослых')}</option>`).join('');
   $('#kids').innerHTML = [0,1,2,3].map(n => `<option value="${n}">${n ? n + ' ' + plural(n,'ребёнок','ребёнка','детей') : 'без детей'}</option>`).join('');
   $('#adults').value = f.adults || 2;
@@ -331,6 +332,7 @@ async function init(){
   const saved = f.after && ruToDate(isoToRu(f.after)) >= tomorrow;
   $('#after').value = saved ? f.after : dateToIso(addDays(new Date(), 30));
   $('#before').value = saved && f.before ? f.before : '';
+  if ($('#after').value) $('#before').min = $('#after').value;
   const nopts = Array.from({length:30}, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
   $('#nmin').innerHTML = $('#nmax').innerHTML = nopts;
   $('#nmin').value = Math.min(30, Math.max(1, +f.nmin || 5)); $('#nmax').value = Math.min(30, Math.max(1, +f.nmax || 7));
@@ -358,7 +360,10 @@ async function init(){
     if (!$('#country').value) $('#country').value = CHINA;
     syncType();
     await loadCountry(f);
-    restoreView();
+    if (u && u.v === 'r'){ fromHainan = !!u.bay; hnBay = u.bay; urlReady = true; u.bay ? await searchBay(u.bay) : await search(); }
+    else if (u && u.v === 'hn'){ hnBay = u.bay; urlReady = true; await showHainan(); }
+    else restoreView();
+    urlReady = true; syncUrl();
   } catch(e){
     status('Не загрузились справочники TEZ: ' + e.message + '. Обновите страницу.', true);
   }
@@ -469,6 +474,40 @@ function saveForm(){
     nmin:+$('#nmin').value, nmax:+$('#nmax').value, adults:+$('#adults').value, kids:+$('#kids').value,
     ages:[...document.querySelectorAll('#ages select')].map(s => s.value), ttype:+$('#ttype').value,
     meal:+$('#meal').value, hclass:+$('#hclass').value, stop:$('#stop').checked, picked:picked.map(p => ({id:p.id}))});
+  syncUrl();
+}
+
+// ---------- вариант в адресе страницы: ссылкой можно поделиться, обновление открывает тот же поиск ----------
+let urlReady = false;
+function urlState(){
+  const p = new URLSearchParams();
+  p.set('c', $('#country').value); if ($('#city').value) p.set('city', $('#city').value);
+  p.set('a', $('#after').value); if ($('#before').value && $('#before').value !== $('#after').value) p.set('b', $('#before').value);
+  p.set('n', $('#nmin').value + '-' + $('#nmax').value); p.set('ad', $('#adults').value);
+  const ages = [...document.querySelectorAll('#ages select')].map(x => x.value); if (ages.length) p.set('k', ages.join(','));
+  p.set('t', $('#ttype').value); p.set('m', $('#meal').value); p.set('cl', $('#hclass').value); if ($('#stop').checked) p.set('s', '1');
+  if (view === 'results' && lastQuery){ p.set('v', 'r'); if (lastQuery.bay) p.set('bay', lastQuery.bay); else if (lastQuery.hotels.length) p.set('h', lastQuery.hotels.join(',')); }
+  else if (view === 'hainan'){ p.set('v', 'hn'); if (hnBay) p.set('bay', hnBay); }
+  return p.toString();
+}
+function syncUrl(){
+  if (!urlReady) return;
+  const h = '#' + urlState();
+  if (location.hash !== h) try { history.replaceState(null, '', h); } catch(e){}
+}
+function readUrl(){
+  const p = new URLSearchParams(location.hash.slice(1));
+  if (!p.has('a') && !p.has('v')) return null;
+  const num = k => p.has(k) && p.get(k) !== '' ? +p.get(k) : undefined, form = {};
+  [['c','country'],['city','city'],['ad','adults'],['t','ttype'],['m','meal'],['cl','hclass']].forEach(([k, f]) => { const v = num(k); if (v != null && !isNaN(v)) form[f] = v; });
+  if (/^\d{4}-\d{2}-\d{2}$/.test(p.get('a') || '')) form.after = p.get('a');
+  form.before = /^\d{4}-\d{2}-\d{2}$/.test(p.get('b') || '') ? p.get('b') : '';
+  const n = (p.get('n') || '').match(/^(\d+)-(\d+)$/); if (n){ form.nmin = +n[1]; form.nmax = +n[2]; }
+  const ages = (p.get('k') || '').split(',').filter(x => /^\d+$/.test(x)); form.ages = ages; form.kids = ages.length;
+  form.stop = p.get('s') === '1';
+  const bay = p.get('bay') || null;
+  form.picked = bay ? [] : (p.get('h') || '').split(',').filter(x => /^\d+$/.test(x)).map(id => ({id:+id}));
+  return {form, v:p.get('v'), bay};
 }
 
 async function search(){
@@ -797,6 +836,7 @@ let view = 'welcome', fromHainan = false, hnBay = null;   // что на экр�
 function saveView(){
   try { sessionStorage.setItem('tez_view', JSON.stringify({view, offers, lastQuery, capped:renderResults.capped,
     fromOverview, backBay, fromHainan, hnBay, sortBy, fMeal:[...fMeal], fNights:[...fNights], t:Date.now()})); } catch(e){}
+  syncUrl();
 }
 function restoreView(){
   let s = null;
@@ -1102,6 +1142,7 @@ document.addEventListener('change', e => {
   }
   if (id === 'city') loadCountry();
   if (id === 'ttype') syncType();
+  if (id === 'after') afterPicked();
   if (id === 'nmin' || id === 'nmax') syncNights(id);
   if (id === 'kids') renderAges();
   if (id === 'sort'){ sortBy = e.target.value; renderResults(); }
@@ -1119,6 +1160,23 @@ document.addEventListener('input', e => {
   if (e.target.id === 'sign'){ signature = e.target.value; store.set('signature', signature); renderBasket(); }
   if (e.target.closest('#form')) e.target.classList.remove('bad');
 });
+// «С» выбрали — «По» не раньше этой даты и сразу открывается на ней (при наборе с клавиатуры не открываем)
+let afterKey = 0, afterT = null;
+document.addEventListener('keydown', e => { if (e.target.id === 'after' && /^[0-9]$/.test(e.key)) afterKey = Date.now(); }, true);
+function afterPicked(){
+  const a = $('#after').value, b = $('#before');
+  if (!a) return;
+  b.min = a;
+  if (b.value && b.value < a) b.value = '';
+  clearTimeout(afterT);
+  afterT = setTimeout(() => {
+    if (Date.now() - afterKey < 900 || +a.slice(0, 4) < new Date().getFullYear()) return;
+    if (!b.value) b.value = a;   // календарь «По» откроется на месяце даты «С»; та же дата = заезд ровно в неё
+    b.focus();
+    try { b.showPicker(); } catch(e){}
+  }, 150);
+}
+
 document.addEventListener('focusin', e => { if (e.target.id === 'hotelq' && e.target.value.trim()) renderSug(); });
 document.addEventListener('keydown', e => {
   if (e.target.id === 'hotelq'){
