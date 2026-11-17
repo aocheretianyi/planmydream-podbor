@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-17T10:29:34+00:00",
+ "generatedAt": "2026-11-17T12:10:59+00:00",
  "source": "planmydream.ru (каталог + страницы туров)",
  "tours": [
   {
@@ -2909,7 +2909,6 @@
   "shanghai-hangzhou-huangshan: новый тур или изменилась программа — нет ключа ANTHROPIC_API_KEY, автодописывание пропущено",
   "pekin-avatar-5-dney: новый тур или изменилась программа — нет ключа ANTHROPIC_API_KEY, автодописывание пропущено",
   "south-china-chendu-chuntsin-yansho-guanchgou: новый тур или изменилась программа — нет ключа ANTHROPIC_API_KEY, автодописывание пропущено",
-  "курс ЦБ не обновился (не удалось скачать https://www.cbr-xml-daily.ru/daily_json.js) — показан прошлый",
   "pekin-avatar-shanghai-8-dney 2027-05-10: оплатили 2, а на сайте занято 0 — уменьшить свободные места",
   "august-shanghai-avatar-8-dney 2027-04-12: оплатили 4, а на сайте занято 2 — уменьшить свободные места",
   "south-china-chendu-chuntsin-yansho-guanchgou 2027-03-21: оплатили 1, а на сайте занято 0 — уменьшить свободные места",
@@ -2921,12 +2920,12 @@
    "date": "2026-11-17"
   },
   "tbank": {
-   "sell": 86.5,
-   "at": "2026-11-17T10:32+00:00"
+   "sell": 86.55,
+   "at": "2026-11-17T12:11+00:00"
   }
  },
  "guests": {
-  "at": "2026-11-17T10:32:46+00:00",
+  "at": "2026-11-17T12:11:11+00:00",
   "groups": {
    "august-shanghai-avatar-8-dney|2027-04-12": [
     {
