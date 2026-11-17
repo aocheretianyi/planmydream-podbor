@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-17T12:10:59+00:00",
+ "generatedAt": "2026-11-17T13:34:43+00:00",
  "source": "planmydream.ru (каталог + страницы туров)",
  "tours": [
   {
@@ -2912,7 +2912,8 @@
   "pekin-avatar-shanghai-8-dney 2027-05-10: оплатили 2, а на сайте занято 0 — уменьшить свободные места",
   "august-shanghai-avatar-8-dney 2027-04-12: оплатили 4, а на сайте занято 2 — уменьшить свободные места",
   "south-china-chendu-chuntsin-yansho-guanchgou 2027-03-21: оплатили 1, а на сайте занято 0 — уменьшить свободные места",
-  "shenchzhen-avatar-furong-shanghai 2027-03-27: оплатили 4, а на сайте занято 0 — уменьшить свободные места"
+  "shenchzhen-avatar-furong-shanghai 2027-03-27: оплатили 4, а на сайте занято 0 — уменьшить свободные места",
+  "shanghai_zhujiajiao_zhangjiajie_furong_shenzhen 2027-06-04: оплатили 1, а на сайте занято 0 — уменьшить свободные места"
  ],
  "rates": {
   "cbr": {
@@ -2920,12 +2921,12 @@
    "date": "2026-11-17"
   },
   "tbank": {
-   "sell": 86.55,
-   "at": "2026-11-17T12:11+00:00"
+   "sell": 86.1,
+   "at": "2026-11-17T13:35+00:00"
   }
  },
  "guests": {
-  "at": "2026-11-17T12:11:11+00:00",
+  "at": "2026-11-17T13:35:17+00:00",
   "groups": {
    "august-shanghai-avatar-8-dney|2027-04-12": [
     {
@@ -3008,6 +3009,32 @@
      "unknown": 0
     }
    ],
+   "novyj-god-v-kitae|2026-12-30": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 33
+      },
+      {
+       "g": "Ж",
+       "age": null
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "south-china-chendu-chuntsin-yansho-guanchgou|2027-03-21": [
+    {
+     "people": [
+      {
+       "g": "М",
+       "age": 45
+      }
+     ],
+     "unknown": 0
+    }
+   ],
    "shenchzhen-avatar-furong-shanghai|2027-03-27": [
     {
      "people": [
@@ -3038,27 +3065,12 @@
      "unknown": 0
     }
    ],
-   "novyj-god-v-kitae|2026-12-30": [
+   "shanghai_zhujiajiao_zhangjiajie_furong_shenzhen|2027-06-04": [
     {
      "people": [
       {
        "g": "Ж",
-       "age": 33
-      },
-      {
-       "g": "Ж",
-       "age": null
-      }
-     ],
-     "unknown": 0
-    }
-   ],
-   "south-china-chendu-chuntsin-yansho-guanchgou|2027-03-21": [
-    {
-     "people": [
-      {
-       "g": "М",
-       "age": 45
+       "age": 38
       }
      ],
      "unknown": 0
