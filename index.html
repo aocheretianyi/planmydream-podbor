@@ -776,12 +776,12 @@ function renderDetail(keepScroll){
       <div><h2 class="d-title">${esc(t.title)}</h2>
         <div class="d-route"><span>Маршрут:</span>${esc(t.route.replace(/\s+—\s+/g,' → '))}</div>
         <div class="d-meta"><span class="org">Организатор: <b>${esc(t.org)}</b></span><a href="${esc(t.url)}" target="_blank" rel="noopener">страница тура</a>${t.booklet?`<a href="${esc(t.booklet)}" target="_blank" rel="noopener">буклет</a>`:''}</div></div>
-      <div class="price"><b>${r?priceTxt(r.price):priceTxt(t.price)}</b>${r&&r.priceOld?`<s>$${r.priceOld}</s>`:''}<div>${t.single?'одноместный +'+esc(t.single):t.roommate?'подселим в пару':'сингл — уточнить'}</div></div>
+      <div class="price"><b>${r?priceTxt(r.price):priceTxt(t.price)}</b>${r&&r.priceOld?`<s>$${r.priceOld}</s>`:''}<div class="pp">за 1 чел. в 2-местном</div><div>${t.single?'подселим · сингл +'+esc(t.single):'подселим, если один'}</div></div>
     </div>
     ${t.extra.note?`<div class="note">⚠︎ ${esc(t.extra.note)}</div>`:''}
     <div class="dates">${visibleDates(t, r).map(x=>`<button class="date ${x===r?'on':''} ${!x.open?'full':''} ${state.months.size&&[...x.months].some(m=>state.months.has(m))?'match':''}" data-i="${t.rows.indexOf(x)}" ${!x.open?'disabled':''} title="${x.days} дн. · $${x.price}">${fmtD(x.start)}–${fmtD(x.end)}<small>${new Set(t.rows.map(y=>y.days)).size>1?x.days+' дн. · ':''}${seatsTxt(x)}</small></button>`).join('') || '<span class="hint">Ближайших заездов на сайте нет</span>'}${hiddenDates(t, r)?`<button class="more" id="moredates">${showAllDates?'Свернуть даты':'ещё '+hiddenDates(t, r)+' дат'}</button>`:''}</div>
     <div class="cheat">
-      <div class="cell"><i>Цена</i><b>${r?priceTxt(r.price):'—'}</b> на чел.${t.single?`<br>сингл +${esc(t.single)}`:''}</div>
+      <div class="cell"><i>Цена</i><b>${r?priceTxt(r.price):'—'}</b> за 1 чел. при 2-местном (подселим)${t.single?`<br>сингл +${esc(t.single)}`:''}</div>
       <div class="cell"><i>Даты</i>${r?`${fmtD(r.start)}–${fmtD(r.end)}, ${dayWord(r.days)}<br>${seatsTxt(r, true)}${whoHTML(t, r)}`:'—'}</div>
       <div class="cell"><i>Включено</i>${esc(exclShort(t)||'см. вкладку «Включено»')}</div>
       <div class="cell"><i>Оплата</i>${(pl => pl.length ? `Бронь ${pl[0].pct}% — <b>${payAmt(pl[0])}</b><br>${pl.map(p=>p.pct+'%').join(' → ')}` : (pc.length?esc(pc.join(' → ')):'см. вкладку'))(payPlan(t, r))}${r&&rateFor(t)?`<br>весь тур ≈ ${rubTxt(r.price*rateFor(t).v)}<br><small class="muted">${esc(rateFor(t).label)}</small>`:''}${t.flight?`<br>перелёт ≈ ${esc(t.flight)}`:''}</div>

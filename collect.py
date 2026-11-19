@@ -149,7 +149,9 @@ def message(t, dep):
              f'📅 Даты: {ru_range(a, b)}',
              f'🗺 Маршрут: {t["route"]}',
              f'⏱️ Длительность: {n} дней ({n - 1} ночей)',
-             f'💰 Стоимость: ${dep["price"]}' + (f' (без скидки ${dep["priceOld"]})' if dep.get('priceOld') else '')]
+             f'💰 Стоимость: ${dep["price"]} за 1 человека при двухместном размещении' + (f' (без скидки ${dep["priceOld"]})' if dep.get('priceOld') else ''),
+             '👥 Едете один? Пару искать не нужно — подселим к попутчику из группы, цена та же'
+             + (f'; одноместный номер — доплата {facts(t)["single"]}' if facts(t)['single'] else '') + '.']
     if incl:
         lines.append('✅ ' + incl.group(1).strip().rstrip('.'))
     lines.append(f'🔗 Ссылка: {t["url"]}')
