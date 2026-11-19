@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-18T17:20:29+00:00",
+ "generatedAt": "2026-11-19T01:54:51+00:00",
  "source": "planmydream.ru (каталог + страницы туров)",
  "tours": [
   {
@@ -2921,12 +2921,12 @@
    "date": "2026-11-19"
   },
   "tbank": {
-   "sell": 88.1,
-   "at": "2026-11-18T17:20+00:00"
+   "sell": 88.15,
+   "at": "2026-11-19T01:54+00:00"
   }
  },
  "guests": {
-  "at": "2026-11-18T17:20:39+00:00",
+  "at": "2026-11-19T01:54:59+00:00",
   "groups": {
    "august-shanghai-avatar-8-dney|2027-04-12": [
     {
@@ -2946,21 +2946,6 @@
       }
      ],
      "unknown": 1
-    }
-   ],
-   "pekin-avatar-5-dney|2027-04-26": [
-    {
-     "people": [
-      {
-       "g": "Ж",
-       "age": 70
-      },
-      {
-       "g": "Ж",
-       "age": 73
-      }
-     ],
-     "unknown": 0
     }
    ],
    "pekin-avatar-shanghai-8-dney|2027-05-10": [
@@ -3009,17 +2994,6 @@
      "unknown": 0
     }
    ],
-   "pekin-avatar-shanghai-8-dney|2027-03-06": [
-    {
-     "people": [
-      {
-       "g": "Ж",
-       "age": 49
-      }
-     ],
-     "unknown": 0
-    }
-   ],
    "novyj-god-v-kitae|2026-12-30": [
     {
      "people": [
@@ -3030,17 +3004,6 @@
       {
        "g": "Ж",
        "age": null
-      }
-     ],
-     "unknown": 0
-    }
-   ],
-   "shanghai_zhujiajiao_zhangjiajie_furong_shenzhen|2027-06-04": [
-    {
-     "people": [
-      {
-       "g": "Ж",
-       "age": 38
       }
      ],
      "unknown": 0
@@ -3085,6 +3048,43 @@
       }
      ],
      "unknown": 3
+    }
+   ],
+   "shanghai_zhujiajiao_zhangjiajie_furong_shenzhen|2027-06-04": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 38
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "pekin-avatar-shanghai-8-dney|2027-03-06": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 49
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "pekin-avatar-5-dney|2027-04-26": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 70
+      },
+      {
+       "g": "Ж",
+       "age": 73
+      }
+     ],
+     "unknown": 0
     }
    ],
    "111|2027-03-15": [
