@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-19T01:54:51+00:00",
+ "generatedAt": "2026-11-19T11:58:00+00:00",
  "source": "planmydream.ru (каталог + страницы туров)",
  "tours": [
   {
@@ -168,7 +168,7 @@
      "start": "2027-05-10",
      "end": "2027-05-17",
      "priceFull": 2300,
-     "seats": 8,
+     "seats": 6,
      "price": 2300,
      "priceOld": 2530,
      "message": "\"КИТАЙ: КОНТРАСТЫ ПЕКИНА, МИСТИКА ГОР АВАТАРА И ФУТУРИСТИЧНЫЙ ШАНХАЙ\"\n📅 Даты: 10–17 мая 2027\n🗺 Маршрут: Пекин — Чжанцзяцзе — Шанхай\n⏱️ Длительность: 8 дней (7 ночей)\n💰 Стоимость: $2300 (без скидки $2530)\n✅ Все включено кроме международных авиаперелетов, обедов и ужинов\n🔗 Ссылка: https://planmydream.ru/pekin-avatar-shanghai-8-dney\n📖 Буклет: https://read.bookflip.ru/v/019f2979-07b2-7269-9042-2373416a688a",
@@ -287,6 +287,21 @@
     {
      "start": "2026-11-09",
      "end": "2026-11-16",
+     "text": "Пекин: https://www.trip.com/w/QMxY0Ub1tU2\nЧжанцзяцзе: https://www.trip.com/w/PZFfUuZtRV2\nШанхай: https://www.trip.com/w/DMfq4GcgSV2"
+    },
+    {
+     "start": "2026-12-21",
+     "end": "2026-12-28",
+     "text": "Пекин: https://www.trip.com/w/QMxY0Ub1tU2\nЧжанцзяцзе: https://www.trip.com/w/PZFfUuZtRV2\nШанхай: https://www.trip.com/w/DMfq4GcgSV2"
+    },
+    {
+     "start": "2027-01-03",
+     "end": "2027-01-10",
+     "text": "Пекин: https://www.trip.com/w/QMxY0Ub1tU2\nЧжанцзяцзе: https://www.trip.com/w/PZFfUuZtRV2\nШанхай: https://www.trip.com/w/DMfq4GcgSV2"
+    },
+    {
+     "start": "2027-01-21",
+     "end": "2027-01-28",
      "text": "Пекин: https://www.trip.com/w/QMxY0Ub1tU2\nЧжанцзяцзе: https://www.trip.com/w/PZFfUuZtRV2\nШанхай: https://www.trip.com/w/DMfq4GcgSV2"
     },
     {
@@ -448,8 +463,28 @@
    "contract": [],
    "hotelsSheet": [
     {
+     "start": "2026-12-21",
+     "end": "2026-12-28",
+     "text": "Нет ссылок: Пекин, Сиань, Шанхай — отели 4+ (Mercure или аналогичные)"
+    },
+    {
+     "start": "2027-01-03",
+     "end": "2027-01-10",
+     "text": "Нет ссылок: Пекин, Сиань, Шанхай — отели 4+ (Mercure или аналогичные)"
+    },
+    {
+     "start": "2027-01-21",
+     "end": "2027-01-28",
+     "text": "Нет ссылок: Пекин, Сиань, Шанхай — отели 4+ (Mercure или аналогичные)"
+    },
+    {
      "start": "2027-03-15",
      "end": "2027-03-22",
+     "text": "Нет ссылок: Пекин, Сиань, Шанхай — отели 4+ (Mercure или аналогичные)"
+    },
+    {
+     "start": "2027-04-26",
+     "end": "2027-05-03",
      "text": "Нет ссылок: Пекин, Сиань, Шанхай — отели 4+ (Mercure или аналогичные)"
     }
    ],
@@ -1035,7 +1070,7 @@
      "start": "2027-04-12",
      "end": "2027-04-20",
      "priceFull": 2410,
-     "seats": 8,
+     "seats": 6,
      "price": 2410,
      "priceOld": 2650,
      "message": "\"КИТАЙ: ПУТЬ ОТ НЕОНОВОГО ШАНХАЯ ДО ПАРЯЩИХ ГОР АВАТАРА\"\n📅 Даты: 12–20 апреля 2027\n🗺 Маршрут: Шанхай — Чжанцзяцзе — Горы Аватара — Фуронг — Чунцин\n⏱️ Длительность: 9 дней (8 ночей)\n💰 Стоимость: $2410 (без скидки $2650)\n🔗 Ссылка: https://planmydream.ru/august-shanghai-avatar-8-dney\n📖 Буклет: https://read.bookflip.ru/v/019f7f3e-78fb-79cd-9121-e0b0aebfd10a",
@@ -1809,7 +1844,7 @@
      "start": "2027-03-21",
      "end": "2027-04-01",
      "priceFull": 3100,
-     "seats": 10,
+     "seats": 9,
      "price": 3100,
      "priceOld": 3410,
      "message": "\"ЮЖНЫЙ КИТАЙ: ПАНДЫ, ХОЛМЫ ЯНШО И ФУТУРИСТИЧНЫЕ МЕГАПОЛИСЫ\"\n📅 Даты: 21 марта – 1 апреля 2027\n🗺 Маршрут: Чэнду — Цзючжайгоу — Чунцин — Гуйлинь — Яншо — Гуанчжоу\n⏱️ Длительность: 12 дней (11 ночей)\n💰 Стоимость: $3100 (без скидки $3410)\n🔗 Ссылка: https://planmydream.ru/south-china-chendu-chuntsin-yansho-guanchgou\n📖 Буклет: https://read.bookflip.ru/v/01a1968b-4419-72ee-a244-50e0cd5f15b4",
@@ -1975,7 +2010,7 @@
      "start": "2027-03-27",
      "end": "2027-04-06",
      "priceFull": 2350,
-     "seats": 10,
+     "seats": 6,
      "price": 2350,
      "priceOld": 2585,
      "message": "\"КАК В КИНО: 11 ДНЕЙ ПО ЮЖНОМУ КИТАЮ\"\n📅 Даты: 27 марта – 6 апреля 2027\n🗺 Маршрут: Шэньчжэнь — Чжанцзяцзе — Фуронг — Шанхай — Чжуцзяцзяо\n⏱️ Длительность: 11 дней (10 ночей)\n💰 Стоимость: $2350 (без скидки $2585)\n✅ Всё включено! Кроме международного перелета, обедов и ужинов\n🔗 Ссылка: https://planmydream.ru/shenchzhen-avatar-furong-shanghai\n📖 Буклет: https://read.bookflip.ru/v/01a1968a-dd78-7443-8d2a-2ddf5ecd2bf4",
@@ -2153,7 +2188,7 @@
      "start": "2027-06-04",
      "end": "2027-06-14",
      "priceFull": 2350,
-     "seats": 10,
+     "seats": 9,
      "price": 2350,
      "priceOld": 2585,
      "message": "\"МНОГОГРАННЫЙ КИТАЙ: ТАМ, ГДЕ БУДУЩЕЕ ОБНИМАЕТ ПРИРОДУ\"\n📅 Даты: 4–14 июня 2027\n🗺 Маршрут: Шанхай — Чжуцзяцзяо — Чжанцзяцзе — Фуронг — Шэньчжэнь\n⏱️ Длительность: 11 дней (10 ночей)\n💰 Стоимость: $2350 (без скидки $2585)\n✅ Всё включено! Кроме международного перелета, обедов и ужинов\n🔗 Ссылка: https://planmydream.ru/shanghai_zhujiajiao_zhangjiajie_furong_shenzhen\n📖 Буклет: https://read.bookflip.ru/v/01a1968a-e47c-775f-9acd-f3aecb27ef3b",
@@ -2908,12 +2943,7 @@
   "august-shanghai-avatar-8-dney: новый тур или изменилась программа — нет ключа ANTHROPIC_API_KEY, автодописывание пропущено",
   "shanghai-hangzhou-huangshan: новый тур или изменилась программа — нет ключа ANTHROPIC_API_KEY, автодописывание пропущено",
   "pekin-avatar-5-dney: новый тур или изменилась программа — нет ключа ANTHROPIC_API_KEY, автодописывание пропущено",
-  "south-china-chendu-chuntsin-yansho-guanchgou: новый тур или изменилась программа — нет ключа ANTHROPIC_API_KEY, автодописывание пропущено",
-  "pekin-avatar-shanghai-8-dney 2027-05-10: оплатили 2, а на сайте занято 0 — уменьшить свободные места",
-  "august-shanghai-avatar-8-dney 2027-04-12: оплатили 4, а на сайте занято 2 — уменьшить свободные места",
-  "south-china-chendu-chuntsin-yansho-guanchgou 2027-03-21: оплатили 1, а на сайте занято 0 — уменьшить свободные места",
-  "shenchzhen-avatar-furong-shanghai 2027-03-27: оплатили 4, а на сайте занято 0 — уменьшить свободные места",
-  "shanghai_zhujiajiao_zhangjiajie_furong_shenzhen 2027-06-04: оплатили 1, а на сайте занято 0 — уменьшить свободные места"
+  "south-china-chendu-chuntsin-yansho-guanchgou: новый тур или изменилась программа — нет ключа ANTHROPIC_API_KEY, автодописывание пропущено"
  ],
  "rates": {
   "cbr": {
@@ -2921,12 +2951,12 @@
    "date": "2026-11-19"
   },
   "tbank": {
-   "sell": 88.15,
-   "at": "2026-11-19T01:54+00:00"
+   "sell": 85.8,
+   "at": "2026-11-19T11:58+00:00"
   }
  },
  "guests": {
-  "at": "2026-11-19T01:54:59+00:00",
+  "at": "2026-11-19T11:58:10+00:00",
   "groups": {
    "august-shanghai-avatar-8-dney|2027-04-12": [
     {
@@ -2943,17 +2973,6 @@
       {
        "g": "Ж",
        "age": 35
-      }
-     ],
-     "unknown": 1
-    }
-   ],
-   "pekin-avatar-shanghai-8-dney|2027-05-10": [
-    {
-     "people": [
-      {
-       "g": "Ж",
-       "age": 49
       }
      ],
      "unknown": 1
@@ -3039,17 +3058,6 @@
      "unknown": 0
     }
    ],
-   "01a1e87c-84b6-7a1f-948c-f3a1cf74f526|2027-01-11": [
-    {
-     "people": [
-      {
-       "g": "Ж",
-       "age": 36
-      }
-     ],
-     "unknown": 3
-    }
-   ],
    "shanghai_zhujiajiao_zhangjiajie_furong_shenzhen|2027-06-04": [
     {
      "people": [
@@ -3072,6 +3080,17 @@
      "unknown": 0
     }
    ],
+   "01a1e87c-84b6-7a1f-948c-f3a1cf74f526|2027-01-11": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 36
+      }
+     ],
+     "unknown": 3
+    }
+   ],
    "pekin-avatar-5-dney|2027-04-26": [
     {
      "people": [
@@ -3085,6 +3104,17 @@
       }
      ],
      "unknown": 0
+    }
+   ],
+   "pekin-avatar-shanghai-8-dney|2027-05-10": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 49
+      }
+     ],
+     "unknown": 1
     }
    ],
    "111|2027-03-15": [
