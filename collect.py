@@ -12,7 +12,8 @@
 Страницы качаются через curl (на Mac у python.org-Python нет сертификатов, а curl есть везде).
 """
 import csv, html, io, json, re, subprocess, sys, time
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
+MSK = timezone(timedelta(hours=3))
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -152,6 +153,9 @@ def message(t, dep):
              f'💰 Стоимость: ${dep["price"]} за 1 человека при двухместном размещении' + (f' (без скидки ${dep["priceOld"]})' if dep.get('priceOld') else ''),
              (f'👤 Одноместное размещение: +{facts(t)["single"]} (или подселим бесплатно)' if facts(t)['single']
              else '👤 Едете один — подселим к попутчику бесплатно')]
+    # Чёрная пятница (задача №10): строка до 30.11.2026 включительно по Москве
+    if datetime.now(timezone.utc).astimezone(MSK).date() <= date(2026, 11, 30):
+        lines.append('🐼 Чёрная пятница: −$100 на человека по промокоду ПАНДА100 — до 30 ноября')
     if incl:
         lines.append('✅ ' + incl.group(1).strip().rstrip('.'))
     lines.append(f'🔗 Ссылка: {t["url"]}')
