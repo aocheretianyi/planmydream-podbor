@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-21T12:46:35+00:00",
+ "generatedAt": "2026-11-21T21:42:08+00:00",
  "source": "planmydream.ru (каталог + страницы туров)",
  "tours": [
   {
@@ -3012,11 +3012,11 @@
   },
   "tbank": {
    "sell": 86.95,
-   "at": "2026-11-21T12:46+00:00"
+   "at": "2026-11-21T21:42+00:00"
   }
  },
  "guests": {
-  "at": "2026-11-21T12:46:42+00:00",
+  "at": "2026-11-21T21:42:16+00:00",
   "groups": {
    "august-shanghai-avatar-8-dney|2027-04-12": [
     {
@@ -3103,17 +3103,6 @@
      "unknown": 0
     }
    ],
-   "pekin-avatar-shanghai-8-dney|2027-03-06": [
-    {
-     "people": [
-      {
-       "g": "Ж",
-       "age": 49
-      }
-     ],
-     "unknown": 0
-    }
-   ],
    "shanghai_zhujiajiao_zhangjiajie_furong_shenzhen|2027-06-04": [
     {
      "people": [
@@ -3147,17 +3136,6 @@
      "unknown": 3
     }
    ],
-   "pekin_xian_avatar_shanghay|2027-04-03": [
-    {
-     "people": [
-      {
-       "g": "Ж",
-       "age": 60
-      }
-     ],
-     "unknown": 0
-    }
-   ],
    "pekin-avatar-5-dney|2027-04-26": [
     {
      "people": [
@@ -3168,6 +3146,28 @@
       {
        "g": "Ж",
        "age": 73
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "pekin-avatar-shanghai-8-dney|2027-03-06": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 49
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "pekin_xian_avatar_shanghay|2027-04-03": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 60
       }
      ],
      "unknown": 0
