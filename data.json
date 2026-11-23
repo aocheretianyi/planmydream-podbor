@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-23T16:01:24+00:00",
+ "generatedAt": "2026-11-23T18:54:46+00:00",
  "source": "planmydream.ru (каталог + страницы туров)",
  "tours": [
   {
@@ -3013,12 +3013,12 @@
    "date": "2026-11-24"
   },
   "tbank": {
-   "sell": 87.6,
-   "at": "2026-11-23T16:01+00:00"
+   "sell": 87.7,
+   "at": "2026-11-23T18:54+00:00"
   }
  },
  "guests": {
-  "at": "2026-11-23T16:01:33+00:00",
+  "at": "2026-11-23T18:54:52+00:00",
   "groups": {
    "august-shanghai-avatar-8-dney|2027-04-12": [
     {
@@ -3169,6 +3169,21 @@
      "unknown": 0
     }
    ],
+   "pekin-avatar-shanghai-8-dney|2027-05-15": [
+    {
+     "people": [
+      {
+       "g": "М",
+       "age": 57
+      },
+      {
+       "g": "Ж",
+       "age": 49
+      }
+     ],
+     "unknown": 0
+    }
+   ],
    "south-china-chendu-chuntsin-yansho-guanchgou|2027-03-21": [
     {
      "people": [
@@ -3190,21 +3205,6 @@
       {
        "g": "Ж",
        "age": 73
-      }
-     ],
-     "unknown": 0
-    }
-   ],
-   "pekin-avatar-shanghai-8-dney|2027-05-15": [
-    {
-     "people": [
-      {
-       "g": "М",
-       "age": 57
-      },
-      {
-       "g": "Ж",
-       "age": 49
       }
      ],
      "unknown": 0
