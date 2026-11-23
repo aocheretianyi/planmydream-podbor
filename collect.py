@@ -141,6 +141,14 @@ def ru_range(a, b):
     return f'{a.day} {MONTHS[a.month - 1]} {a.year} – {b.day} {MONTHS[b.month - 1]} {b.year}'
 
 
+MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря']
+def month_end_ru(today=None):
+    """Последний день текущего месяца по Москве: «30 ноября»."""
+    d = today or datetime.now(timezone.utc).astimezone(MSK).date()
+    nxt = date(d.year + (d.month == 12), d.month % 12 + 1, 1)
+    last = nxt - timedelta(days=1)
+    return f'{last.day} {MONTHS_GEN[last.month-1]}'
+
 def message(t, dep):
     """Сообщение клиенту — в том же формате, что раньше лежал в таблице, но из данных сайта."""
     a, b = date.fromisoformat(dep['start']), date.fromisoformat(dep['end'])
@@ -153,6 +161,9 @@ def message(t, dep):
              f'💰 Стоимость: ${dep["price"]} за 1 человека при двухместном размещении' + (f' (без скидки ${dep["priceOld"]})' if dep.get('priceOld') else ''),
              (f'👤 Одноместное размещение: +{facts(t)["single"]} (или подселим бесплатно)' if facts(t)['single']
              else '👤 Едете один — подселим к попутчику бесплатно')]
+    # №12: у туров со скидкой — срок скидки до последнего дня текущего месяца (МСК)
+    if dep.get('priceOld'):
+        lines.append(f'⏳ Цена со скидкой действует до {month_end_ru()}')
     # Чёрная пятница (задача №10): строка до 30.11.2026 включительно по Москве
     if datetime.now(timezone.utc).astimezone(MSK).date() <= date(2026, 11, 30):
         lines.append('🐼 Чёрная пятница: −$100 на человека по промокоду ПАНДА100 — до 30 ноября')
