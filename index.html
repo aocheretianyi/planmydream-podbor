@@ -237,6 +237,108 @@ mark{background:#fff0b3;border-radius:3px}
 .zoom.open{display:flex}
 .zoom img{max-width:96vw;max-height:94vh;border-radius:8px}
 @media (max-width:1200px){.grid2{grid-template-columns:1fr}.cheat{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ===== №16: «Группы по месяцам» ===== */
+#groups{display:none;overflow:auto;min-height:0}
+body.groups main{display:none}
+body.groups #groups{display:block}
+body.groups #tgl-filters, body.groups #tgl-results{display:none}
+.gwrap{max-width:1180px;margin:0 auto;padding:0 18px 40px}
+.gtop{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0 8px;border-bottom:1px solid var(--line)}
+.gsum{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;margin-bottom:8px;font-size:13px;color:var(--muted)}
+.gsum b{color:var(--ink);font-size:15px}
+.gsum .w{color:var(--warn)}
+.gf{display:flex;flex-wrap:wrap;align-items:center;gap:4px 4px;margin-bottom:5px}
+.gf>span{flex:none;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:4px;min-width:84px}
+.gchip{border:0;background:var(--chip);border-radius:999px;padding:3px 10px;font-size:12.5px}
+.gchip:hover{background:#e7e0d4}
+.gchip.on{background:var(--chip-on);color:#fff}
+.gchip small{opacity:.7;margin-left:3px}
+.glegend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11.5px;color:var(--muted);margin-top:6px}
+.glegend i{display:inline-block;width:14px;height:8px;border-radius:2px;vertical-align:middle;margin-right:4px}
+.gmonth{margin-top:16px}
+.gmonth h2{font-size:15px;margin:0 0 6px;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
+.gmonth h2 small{font-weight:400;font-size:12.5px;color:var(--muted)}
+.gmonth h2 small b{color:var(--ok)}
+.grow{display:grid;grid-template-columns:118px minmax(0,1fr) 250px 132px;gap:6px 14px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin-bottom:6px;cursor:pointer;box-shadow:var(--shadow);width:100%;text-align:left}
+.grow:hover{border-color:#cfc6b8;background:#fffdfa}
+.grow:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.grow.hot{border-left:4px solid var(--ok);padding-left:9px}
+.grow.full{opacity:.6}
+.gd b{display:block;font-size:13px}
+.gd small{color:var(--muted);font-size:12px}
+.gt b{display:block;font-size:13px;line-height:1.3;font-weight:600}
+.gt small{display:block;color:var(--muted);font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gbar{height:10px;border-radius:5px;background:repeating-linear-gradient(90deg,#efe9df 0 calc(var(--cell) - 2px),#fff calc(var(--cell) - 2px) var(--cell));border:1px solid var(--line);display:flex;overflow:hidden}
+.gbar i{display:block;height:100%}
+.gbar .paid{background:var(--ok)}
+.gbar .held{background:repeating-linear-gradient(135deg,#9bc7ab 0 3px,#cfe6d7 3px 6px)}
+.gcap{font-size:12px;color:var(--muted);margin-top:4px;white-space:nowrap}
+.gcap b{color:var(--ink)}
+.gcap b.ok{color:var(--ok)}
+.gst{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.gtag{font-size:11.5px;border-radius:6px;padding:1px 7px;background:var(--chip);color:var(--muted);white-space:nowrap}
+.gtag.go{background:var(--ok-soft);color:var(--ok);font-weight:600}
+.gtag.few{background:var(--accent-soft);color:var(--accent)}
+.gtag.full{background:var(--chip);color:var(--muted);text-decoration:line-through}
+.gwarn{font-size:11.5px;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:1px 7px;white-space:nowrap}
+.gwho{display:flex;flex-wrap:wrap;gap:3px 5px;margin-top:5px}
+.gsx{font-size:11.5px;font-weight:600;color:var(--ok);padding:1px 0;margin-right:3px}
+.gco{flex:none;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11.5px;background:var(--ok-soft);border-radius:6px;padding:1px 7px;color:var(--ink)}
+.gt .gco b{display:inline;font-size:11.5px;line-height:inherit;font-weight:600;color:var(--ok)}
+.gco.solo{background:#fff4d6}
+.gt .gco.solo b{color:var(--warn)}
+.cwho{position:relative;display:inline-block;margin-top:5px;font-size:11.5px;font-weight:600;color:var(--ok);background:var(--ok-soft);border-radius:6px;padding:1px 7px;cursor:help}
+.cwho:hover,.cwho.open{background:#d5ecdd}
+.cpop{display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:30;width:max-content;max-width:min(270px,80vw);flex-direction:column;gap:3px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;box-shadow:0 6px 20px rgba(0,0,0,.12);font-weight:400;color:var(--ink);cursor:default}
+.cwho:hover .cpop,.cwho:focus-visible .cpop,.cwho.open .cpop{display:flex}
+.cpop i{font-style:normal;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+.cpop span{font-size:12.5px}
+.cpop small{font-size:11px;color:var(--muted);margin-top:3px}
+.twho{background:var(--ok-soft);border:1px solid #cfe6d7;border-radius:12px;padding:9px 12px;margin:8px 0 10px}
+.twho.empty{background:var(--panel);border-color:var(--line);font-size:12.5px;color:var(--muted)}
+.twho.empty b{color:var(--ink)}
+.twh{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;font-size:13px}
+.twh span{color:var(--muted);font-size:12px}
+.twl{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.tco{background:var(--panel);border-radius:8px;padding:5px 9px;font-size:12.5px;display:flex;flex-direction:column;min-width:120px}
+.tco b{color:var(--ok);font-size:12px}
+.tco.solo{background:#fff4d6}
+.tco.solo b{color:var(--warn)}
+.tco small{color:var(--muted);font-size:11px}
+.tsum{margin-top:6px}
+.djump{border:0;background:none;padding:0;font:inherit;color:var(--ok);font-weight:600;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.djump:hover{color:#1fd184}
+.twho.one{padding:6px 10px;font-size:13px;line-height:1.4}
+.twho.one span{color:var(--muted);font-size:12px}
+.gwho1{margin-top:4px;font-size:12px;color:var(--ok);font-weight:600;line-height:1.35}
+.gorph{margin-top:22px;background:var(--warn-soft);border-radius:12px;padding:10px 14px;font-size:12.5px}
+.gorph h3{margin:0 0 4px;font-size:13px;color:var(--warn)}
+.gorph li{margin:2px 0}
+.gempty{color:var(--muted);text-align:center;padding:40px 10px}
+@media (max-width:1100px){header{flex-wrap:wrap}}
+@media (max-width:900px){
+  .grow{grid-template-columns:128px minmax(0,1fr)}
+  .grow .gb{grid-column:1 / -1}
+  .grow .gst{grid-column:1 / -1;flex-direction:row;flex-wrap:wrap}
+}
+@media (max-width:640px){
+  header{flex-wrap:wrap}
+  header h1{font-size:14px}
+  #search{order:9;max-width:none;flex-basis:100%}
+  #status{display:none}
+  .gwrap{padding:0 12px 30px}
+  .gtop{position:static}   /* на телефоне закреплённая панель занимала бы полэкрана */
+  .glegend{font-size:11px;gap:2px 10px}
+  .gf{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .gf::-webkit-scrollbar{display:none}
+  .gf>span{min-width:0;position:sticky;left:0;background:var(--bg);padding-right:8px;z-index:1;box-shadow:6px 0 6px -2px var(--bg)}
+  .gchip{white-space:nowrap}
+  .grow{grid-template-columns:minmax(0,1fr);gap:4px}
+  .gd{display:flex;gap:8px;align-items:baseline}
+  .gco{white-space:normal;flex:0 1 auto}
+  .grow .gb .gcap{white-space:normal}
+}
 </style>
 </head>
 <body>
@@ -245,6 +347,7 @@ mark{background:#fff0b3;border-radius:3px}
     <h1>План Мечты · <span>подбор тура</span></h1>
     <a class="tgl" href="hotels.html" title="Цены отелей TEZ TOUR и предложение клиенту" style="text-decoration:none">🏨 Отели TEZ →</a>
     <button class="tgl" id="tgl-filters" aria-pressed="true" title="Показать / скрыть фильтры">☰ Фильтры</button>
+    <button class="tgl" id="tgl-groups" aria-pressed="false" title="Все заезды по месяцам: где уже набираются группы">👥 Группы по месяцам</button>
     <button class="tgl" id="tgl-results" aria-pressed="true" title="Показать / скрыть список туров">▤ Подборка</button>
     <input id="search" placeholder="Поиск тура: название, город, организатор">
     <span id="status">Загружаю…</span>
@@ -255,6 +358,7 @@ mark{background:#fff0b3;border-radius:3px}
     <section class="col" id="results"></section>
     <section class="col" id="detail"><div class="welcome">Отметьте слева, что важно туристу: кто едет, когда, сколько дней, что хочет увидеть.<br>В подборке появятся 1–2 лучших тура — их и предлагайте.</div></section>
   </main>
+  <section id="groups" aria-label="Группы по месяцам"></section>
 </div>
 <div class="zoom" id="zoom"><img alt="Карта маршрута"></div>
 <script src="extra.js"></script>
@@ -440,20 +544,48 @@ function renderFilters(){
 const seatsTxt = (x, long) => x.total ? `${long ? 'свободно' : 'мест'}: ${x.seats ?? '?'} из ${x.total}` : `мест: ${x.seats ?? '?'}`;
 // «Кто уже едет» — оплаченные группы из amoCRM, обезличенно: пол и возраст на дату тура (guests.py)
 document.addEventListener('click', e => { document.querySelectorAll('details.who[open]').forEach(d => { if(!d.contains(e.target)) d.open = false; }); });
+// Компания по сделке: семья / пара / вдвоём / компания N / один-одна (🤝 — можно подселить попутчика того же пола)
+function company(g){
+  const ppl = g.people, kids = ppl.filter(p=>p.age!=null && p.age<18), adults = ppl.filter(p=>!(p.age!=null && p.age<18));
+  const n = ppl.length + g.unknown;
+  const one = p => p.age!=null && p.age<18 ? 'ребёнок '+p.age : [p.g==='?'?'':p.g, p.age!=null?p.age:''].join(' ').trim() || 'без данных';
+  let label;
+  if(kids.length && adults.length) label = 'Семья';
+  else if(n===1) label = ppl[0] && ppl[0].g==='М' ? 'Один' : ppl[0] && ppl[0].g==='Ж' ? 'Одна' : 'Один турист';
+  else if(n===2 && ppl.length===2 && new Set(ppl.map(p=>p.g)).size===2 && !ppl.some(p=>p.g==='?')) label = 'Пара';
+  else if(n===2) label = 'Вдвоём';
+  else label = 'Компания '+n;
+  const body = [...ppl.map(one), g.unknown ? (ppl.length?'+':'')+g.unknown+' без данных' : ''].filter(Boolean).join(', ');
+  return {label, body, n, solo: n===1, g: ppl[0] && ppl[0].g};
+}
+const companyTxt = c => `${c.label}${c.solo?' 🤝':''}: ${c.body}`;
+const SOLO_HINT = '🤝 — едет один: можно подселить попутчика того же пола';
+// Одна строка: «Ж50 + 1» = пол и возраст первого взрослого по сделке + сколько с ним; «?» — в amoCRM нет данных
+function coTok(g){
+  const ppl = g.people, n = ppl.length + g.unknown;
+  const lead = ppl.find(p=>!(p.age!=null && p.age<18)) || ppl[0];
+  const s = lead ? ((lead.g && lead.g!=='?' ? lead.g : '?') + (lead.age!=null ? lead.age : '')) : '?';
+  return n===1 ? s+' 🤝' : s+' + '+(n-1);
+}
+const coLine = gs => gs.map(coTok).join(', ');
+const coTitle = gs => 'Ж50 + 1 — женщина 50 лет и с ней ещё 1 человек; ? — в amoCRM нет пола/возраста'+(gs.some(g=>g.people.length+g.unknown===1)?'; '+SOLO_HINT:'');
 function whoHTML(t, r){
   if(!r) return '';
   const groups = GUESTS[t.slug+'|'+iso(r.start)] || [];
   if(!groups.length) return '';
-  const one = p => p.age!=null && p.age<18 ? 'ребёнок '+p.age : [p.g==='?'?'':p.g, p.age!=null?p.age:''].join(' ').trim() || 'турист';
-  const parts = groups.map(g => {
-    const ppl = g.people.map(one), n = ppl.length + g.unknown;
-    const tail = g.unknown ? `${ppl.length?'+':''}${g.unknown} без данных` : '';
-    const body = [...ppl, tail].filter(Boolean).join(', ');
-    return n > 1 ? `${n===2?'вдвоём':'вместе '+n}: ${body}` : body;
-  });
   const total = groups.reduce((a,g)=>a+g.people.length+g.unknown,0);
   const taken = r.total && r.seats != null ? r.total - r.seats : null, stale = taken != null && total > taken;
-  return `<details class="who"><summary>${stale?'⚠︎ ':''}уже едут: ${total} ${plural(total,'человек','человека','человек')}</summary><div class="who-pop"><i>Оплатили этот заезд</i>${parts.map(x=>`<span>${esc(x)}</span>`).join('')}${stale?`<b class="who-warn">На сайте занято ${taken} из ${r.total} — после оплат не уменьшили свободные места</b>`:''}</div></details>`;
+  return `<details class="who"><summary>${stale?'⚠︎ ':''}уже едут: ${total} ${plural(total,'человек','человека','человек')}</summary><div class="who-pop"><i>Оплатили этот заезд — по сделкам</i><span title="${esc(coTitle(groups))}">${esc(coLine(groups))}</span>${stale?`<b class="who-warn">На сайте занято ${taken} из ${r.total} — после оплат не уменьшили свободные места</b>`:''}</div></details>`;
+}
+// метка на карточке тура: заезды (подходящие под фильтр «Когда», иначе все открытые), где уже есть оплаты
+function cardWho(x){
+  const pool = (state.months.size ? x.dates : x.t.open).filter(r=>r.start>=today);
+  const seen = new Set(), deps = pool.filter(r=>{ const k = iso(r.start); if(seen.has(k)) return false; seen.add(k); return true; })
+    .map(r=>({r, gs: GUESTS[x.t.slug+'|'+iso(r.start)] || []})).filter(d=>d.gs.length);
+  if(!deps.length) return '';
+  const n = d => d.gs.reduce((a,g)=>a+g.people.length+g.unknown,0), top = deps[0];
+  const more = deps.length>1 ? ` +${deps.length-1} ${plural(deps.length-1,'заезд','заезда','заездов')}` : '';
+  return `<span class="cwho" tabindex="0" role="button" aria-label="Кто уже едет">👥 едут ${n(top)} · ${fmtD(top.r.start)}${more}<span class="cpop">${deps.map(d=>`<span><b>${fmtD(d.r.start)}–${fmtD(d.r.end)} · ${n(d)}:</b> ${esc(coLine(d.gs))}</span>`).join('')}</span></span>`;
 }
 const priceTxt = p => p && isFinite(p) ? '$'+p : 'цена не указана';
 function renderResults(){
@@ -461,7 +593,7 @@ function renderResults(){
   const card = (x, top) => `<div class="card ${top?'top':''} ${current===x.t?'sel':''}" data-key="${esc(x.t.key)}">
       <div class="t">${esc(x.t.title)}</div>
       <div class="m">${esc(x.t.org)} · ${x.t.lenTxt} · ${x.t.rows.length>1&&new Set(x.t.rows.map(r=>r.price)).size>1?'от ':''}${priceTxt(x.t.minPrice)} · ближ. ${x.dates[0]?fmtD(x.dates[0].start):'—'}</div>
-      ${x.reasons.length?`<div class="why">${x.reasons.map(([k,l])=>`<span class="tag ${k==='ok'?'':k}">${esc(l)}</span>`).join('')}</div>`:''}
+      ${cardWho(x)}${x.reasons.length?`<div class="why">${x.reasons.map(([k,l])=>`<span class="tag ${k==='ok'?'':k}">${esc(l)}</span>`).join('')}</div>`:''}
     </div>`;
   if(!list.length){ $('#results').innerHTML = '<div class="empty">Ничего не нашлось. Снимите часть фильтров.</div>'; return; }
   if(!activeFilters()){ $('#results').innerHTML = `<div class="rhead">${state.q?'Найдено':'Все туры с открытыми датами'} · ${list.length}</div><div class="compact">${list.map(x=>card(x,false)).join('')}</div>`; return; }
@@ -771,7 +903,7 @@ function renderDetail(keepScroll){
   const scroll = $('#detail').scrollTop;
   const pc = percents(t);
   $('#detail').innerHTML = `
-    <button class="tomap" id="tomap" title="Закрыть тур и вернуться к карте мест">← Карта мест</button>
+    ${gv.from?`<button class="tomap" id="togroups" title="Вернуться к обзору заездов">← Группы по месяцам</button> `:''}<button class="tomap" id="tomap" title="Закрыть тур и вернуться к карте мест">← Карта мест</button>
     <div class="d-top">
       <div><h2 class="d-title">${esc(t.title)}</h2>
         <div class="d-route"><span>Маршрут:</span>${esc(t.route.replace(/\s+—\s+/g,' → '))}</div>
@@ -779,10 +911,11 @@ function renderDetail(keepScroll){
       <div class="price"><b>${r?priceTxt(r.price):priceTxt(t.price)}</b>${r&&r.priceOld?`<s>$${r.priceOld}</s>`:''}<div class="pp">за 1 чел. в 2-местном</div><div>${t.single?'подселим · сингл +'+esc(t.single):'подселим, если один'}</div></div>
     </div>
     ${t.extra.note?`<div class="note">⚠︎ ${esc(t.extra.note)}</div>`:''}
-    <div class="dates">${visibleDates(t, r).map(x=>`<button class="date ${x===r?'on':''} ${!x.open?'full':''} ${state.months.size&&[...x.months].some(m=>state.months.has(m))?'match':''}" data-i="${t.rows.indexOf(x)}" ${!x.open?'disabled':''} title="${x.days} дн. · $${x.price}">${fmtD(x.start)}–${fmtD(x.end)}<small>${new Set(t.rows.map(y=>y.days)).size>1?x.days+' дн. · ':''}${seatsTxt(x)}</small></button>`).join('') || '<span class="hint">Ближайших заездов на сайте нет</span>'}${hiddenDates(t, r)?`<button class="more" id="moredates">${showAllDates?'Свернуть даты':'ещё '+hiddenDates(t, r)+' дат'}</button>`:''}</div>
+    <div class="dates">${visibleDates(t, r).map(x=>`<button class="date ${x===r?'on':''} ${!x.open?'full':''} ${state.months.size&&[...x.months].some(m=>state.months.has(m))?'match':''}" data-i="${t.rows.indexOf(x)}" ${!x.open?'disabled':''} title="${x.days} дн. · $${x.price}">${fmtD(x.start)}–${fmtD(x.end)}<small>${new Set(t.rows.map(y=>y.days)).size>1?x.days+' дн. · ':''}${seatsTxt(x)}${(n=>n?' · 👥'+n:'')(paidIn(GUESTS[t.slug+'|'+iso(x.start)]))}</small></button>`).join('') || '<span class="hint">Ближайших заездов на сайте нет</span>'}${hiddenDates(t, r)?`<button class="more" id="moredates">${showAllDates?'Свернуть даты':'ещё '+hiddenDates(t, r)+' дат'}</button>`:''}</div>
+    ${r?tourWhoHTML(t, r):''}
     <div class="cheat">
       <div class="cell"><i>Цена</i><b>${r?priceTxt(r.price):'—'}</b> за 1 чел. при 2-местном (подселим)${t.single?`<br>сингл +${esc(t.single)}`:''}</div>
-      <div class="cell"><i>Даты</i>${r?`${fmtD(r.start)}–${fmtD(r.end)}, ${dayWord(r.days)}<br>${seatsTxt(r, true)}${whoHTML(t, r)}`:'—'}</div>
+      <div class="cell"><i>Даты</i>${r?`${fmtD(r.start)}–${fmtD(r.end)}, ${dayWord(r.days)}<br>${seatsTxt(r, true)}`:'—'}</div>
       <div class="cell"><i>Включено</i>${esc(exclShort(t)||'см. вкладку «Включено»')}</div>
       <div class="cell"><i>Оплата</i>${(pl => pl.length ? `Бронь ${pl[0].pct}% — <b>${payAmt(pl[0])}</b><br>${pl.map(p=>p.pct+'%').join(' → ')}` : (pc.length?esc(pc.join(' → ')):'см. вкладку'))(payPlan(t, r))}${r&&rateFor(t)?`<br>весь тур ≈ ${rubTxt(r.price*rateFor(t).v)}<br><small class="muted">${esc(rateFor(t).label)}</small>`:''}${t.flight?`<br>перелёт ≈ ${esc(t.flight)}`:''}</div>
     </div>
@@ -809,6 +942,7 @@ function saveHash(){
   const p = new URLSearchParams();
   SETS.forEach(k => state[k].size && p.set(k, [...state[k]].join('|')));
   if(state.q) p.set('q', state.q);
+  if(gv.on){ p.set('view','groups'); gv.months.size && p.set('gm',[...gv.months].join('|')); gv.orgs.size && p.set('go',[...gv.orgs].join('|')); gv.onlyPaid && p.set('gp','1'); }
   if(current) p.set('t', current.key);
   if(current && currentRow) p.set('d', iso(currentRow.start)+'_'+iso(currentRow.end));
   history.replaceState(null, '', '#'+p.toString());
@@ -938,8 +1072,13 @@ document.addEventListener('click', e => {
   if(e.target.id==='moredates'){ showAllDates=!showAllDates; renderDetail(true); return; }
   if(e.target.id==='moresights'){ showAllSights=!showAllSights; renderFilters(); return; }
   if(e.target.id==='reset'){ SETS.forEach(k=>state[k].clear()); state.q=''; $('#search').value=''; render(); return; }
+  const cw = e.target.closest('.cwho');
+  if(cw){ const was = cw.classList.contains('open'); document.querySelectorAll('.cwho.open').forEach(c=>c.classList.remove('open')); if(!was) cw.classList.add('open'); return; }
+  document.querySelectorAll('.cwho.open').forEach(c=>c.classList.remove('open'));
   const card = e.target.closest('.card');
   if(card){ openTour(TOURS.find(t=>t.key===card.dataset.key)); return; }
+  const dj = e.target.closest('.djump');
+  if(dj){ currentRow = current.rows[+dj.dataset.i]; renderDetail(true); saveHash(); return; }
   const d = e.target.closest('.date');
   if(d && !d.disabled){ currentRow = current.rows[+d.dataset.i]; renderDetail(true); saveHash(); return; }
   const tb = e.target.closest('.tab');
@@ -979,6 +1118,122 @@ document.addEventListener('input', e => {
   if(e.target.id==='search'){ state.q = e.target.value.trim(); renderFilters(); renderResults(); saveHash(); }
   if(e.target.id==='ask'){ ask = e.target.value.trim(); renderPane(); }
 });
+
+// ===== №16: «Группы по месяцам» — все заезды всех туров, где уже набираются группы =====
+// Оплатили — из amoCRM (guests.groups, ключ slug|дата начала); занято — с сайта (всего − свободно).
+const gv = {on:false, months:new Set(), orgs:new Set(), onlyPaid:false, scroll:0, from:false};
+const paidIn = g => (g||[]).reduce((a,x)=>a+x.people.length+x.unknown,0);
+function gRows(){
+  const out = [], seen = new Map();
+  TOURS.forEach(t => t.rows.forEach(r => {
+    if(r.start < today) return;
+    const k = t.slug+'|'+iso(r.start);
+    if(seen.has(k)){ seen.get(k).days.add(r.days); return; }   // Новый год 4/6/7 дней с одной датой — одна группа
+    const total = r.total || null, seats = r.seats ?? null;
+    const x = {t, r, k, days:new Set([r.days]), paid: paidIn(GUESTS[k]), groups:(GUESTS[k]||[]).length, total, seats,
+      taken: total!=null && seats!=null ? total - seats : null, month: monthKey(r.start)};
+    seen.set(k, x); out.push(x);
+  }));
+  return out.sort((a,b)=>a.r.start-b.r.start || a.t.title.localeCompare(b.t.title,'ru'));
+}
+function orphReason(o){
+  if(!o.t) return 'в сделке ссылка не на тур из каталога (индивидуальный тур или ошибка в поле «Ссылка на тур»)';
+  if(!o.t.rows.length) return `«${esc(o.t.title)}»: у этого тура на сайте нет дат — в сделке, видимо, ссылка не на тот тур`;
+  const near = o.t.rows.map(r=>({r, d:Math.round(Math.abs(r.start-o.date)/864e5)})).sort((a,b)=>a.d-b.d)[0];
+  return `«${esc(o.t.title)}»: такого заезда нет, ближайший на сайте — ${fmtD(near.r.start)}–${fmtD(near.r.end)} (разница ${dayWord(near.d)}) — проверьте дату в сделке`;
+}
+function gOrphans(){
+  const known = new Set(TOURS.flatMap(t=>t.rows.map(r=>t.slug+'|'+iso(r.start))));
+  return Object.keys(GUESTS).filter(k=>!known.has(k)).map(k=>{ const [slug,d] = k.split('|'); return {k, t:TOURS.find(x=>x.slug===slug), date:pdate(d), n:paidIn(GUESTS[k])}; })
+    .filter(o=>o.date && o.date>=today).sort((a,b)=>a.date-b.date);
+}
+const gMatch = x => (!gv.months.size || gv.months.has(x.month)) && (!gv.orgs.size || gv.orgs.has(x.t.org)) && (!gv.onlyPaid || x.paid>0)
+  && (!state.q || (x.t.title+' '+x.t.route+' '+x.t.org).toLowerCase().includes(state.q.toLowerCase()));
+function gStatus(x){
+  if(x.seats===0) return ['full','мест нет'];
+  if(x.paid>0) return ['go', x.paid>=4 ? 'группа собирается' : 'уже едут'];
+  if(x.seats!=null && x.seats<=2) return ['few','мест мало'];
+  if(x.taken>0) return ['','занято на сайте'];
+  return ['','пока никого'];
+}
+function gRowHTML(x){
+  const tot = x.total, paid = tot ? Math.min(x.paid, tot) : x.paid, held = Math.max(0, (x.taken||0) - paid);
+  const stale = x.taken!=null && x.paid > x.taken, [sk, sl] = gStatus(x);
+  const days = [...x.days].sort((a,b)=>a-b), dTxt = days.length>1 ? days.join('/')+' дн.' : dayWord(days[0]);
+  const bar = tot ? `<div class="gbar" style="--cell:${(100/tot).toFixed(3)}%" role="img" aria-label="Оплатили ${x.paid}, занято ${x.taken ?? '?'} из ${tot}"><i class="paid" style="width:${paid/tot*100}%"></i><i class="held" style="width:${held/tot*100}%"></i></div>` : '<div class="gbar" style="--cell:10%"></div>';
+  const cap = tot ? `${x.paid?`<b class="ok">едут ${x.paid}</b> · `:''}занято <b>${x.taken}</b> из ${tot} · свободно <b>${x.seats}</b>` : `мест: ${x.seats ?? '?'}${x.paid?` · <b class="ok">едут ${x.paid}</b>`:''}`;
+  return `<button class="grow ${x.paid?'hot':''} ${x.seats===0?'full':''}" data-gk="${esc(x.k)}" title="Открыть тур с этой датой">
+    <div class="gd"><b>${fmtD(x.r.start)} – ${fmtD(x.r.end)}</b><small>${dTxt} · ${priceTxt(x.r.price)}</small></div>
+    <div class="gt"><b>${esc(x.t.title)}</b><small>${esc(x.t.org)} · ${esc(x.t.route.replace(/\s+—\s+/g,' → '))}</small>${gWhoHTML(x)}</div>
+    <div class="gb">${bar}<div class="gcap">${cap}</div></div>
+    <div class="gst"><span class="gtag ${sk}">${sl}</span>${stale?`<span class="gwarn" title="Оплатили ${x.paid}, а на сайте занято ${x.taken} — после оплаты не уменьшили свободные места">⚠︎ на сайте не уменьшили места</span>`:''}</div>
+  </button>`;
+}
+function gWhoHTML(x){
+  const gs = GUESTS[x.k] || []; if(!gs.length) return '';
+  return `<div class="gwho1" title="${esc(coTitle(gs))}">👥 ${esc(coLine(gs))}</div>`;
+}
+// Карточка тура: «Кто едет» на выбранной дате — сразу видно, без раскрытия
+function tourWhoHTML(t, r){
+  const k = t.slug+'|'+iso(r.start), gs = GUESTS[k] || [];
+  const total = paidIn(gs), taken = r.total && r.seats!=null ? r.total - r.seats : null;
+  if(!gs.length) return `<div class="twho empty"><b>Кто едет ${fmtD(r.start)}–${fmtD(r.end)}:</b> оплат пока нет — группа откроется с вашего туриста${(()=>{ const o = t.rows.filter(x=>x!==r && x.start>=today && (GUESTS[t.slug+'|'+iso(x.start)]||[]).length); return o.length ? ` · уже едут на ${o.map(x=>`<button class="djump" data-i="${t.rows.indexOf(x)}" title="Показать этот заезд">${fmtD(x.start)} (👥${paidIn(GUESTS[t.slug+'|'+iso(x.start)])})</button>`).join(', ')}` : ''; })()}</div>`;
+  const stale = taken!=null && total>taken;
+  return `<div class="twho one" title="${esc(coTitle(gs))}"><b>👥 Едут ${total}:</b> ${esc(coLine(gs))}${r.total?`<span> · свободно ${r.seats} из ${r.total}</span>`:''}${stale?`<span class="gwarn"> ⚠︎ на сайте занято ${taken} — места не уменьшили</span>`:''}</div>`;
+}
+function renderGroups(){
+  const box = $('#groups'), keep = box.scrollTop;
+  const all = gRows(), rows = all.filter(gMatch);
+  const months = [...new Set(all.map(x=>x.month))].sort(), orgs = [...new Set(all.map(x=>x.t.org))].sort((a,b)=>a.localeCompare(b,'ru'));
+  const mCnt = m => all.filter(x=>x.month===m && x.paid>0).length;
+  const paidRows = rows.filter(x=>x.paid>0), people = paidRows.reduce((a,x)=>a+x.paid,0), stale = rows.filter(x=>x.taken!=null && x.paid>x.taken).length;
+  const chip = (kind, k, label, on, extra='') => `<button class="gchip ${on?'on':''}" data-gf="${kind}" data-k="${esc(k)}">${esc(label)}${extra}</button>`;
+  const byMonth = {}; rows.forEach(x => (byMonth[x.month] = byMonth[x.month] || []).push(x));
+  const orph = gOrphans();
+  box.innerHTML = `<div class="gwrap">
+    <div class="gtop">
+      <div class="gsum"><span>Уже едут: <b>${people} ${plural(people,'человек','человека','человек')}</b> в ${paidRows.length} ${plural(paidRows.length,'заезде','заездах','заездах')}</span><span>Заездов в обзоре: <b>${rows.length}</b></span>${stale?`<span class="w">⚠︎ ${stale} ${plural(stale,'заезд','заезда','заездов')}: оплатили больше, чем занято на сайте</span>`:''}</div>
+      <div class="gf"><span>Месяц</span>${chip('m','', 'Все', !gv.months.size)}${months.map(m=>chip('m', m, monthName(m), gv.months.has(m), mCnt(m)?`<small>· ${mCnt(m)}👥</small>`:'')).join('')}</div>
+      <div class="gf"><span>Организатор</span>${chip('o','', 'Все', !gv.orgs.size)}${orgs.map(o=>chip('o', o, o, gv.orgs.has(o))).join('')}</div>
+      <div class="gf"><span>Показать</span>${chip('p','0','Все заезды', !gv.onlyPaid)}${chip('p','1','Только где уже едут', gv.onlyPaid)}</div>
+      <div class="glegend"><span><i style="background:var(--ok)"></i>оплатили (amoCRM)</span><span><i style="background:repeating-linear-gradient(135deg,#9bc7ab 0 3px,#cfe6d7 3px 6px)"></i>занято на сайте, оплаты в amoCRM нет</span><span><i style="background:#efe9df;border:1px solid var(--line)"></i>свободно (1 деление = 1 место)</span><span>👥 Ж50 + 1 — женщина 50 лет и с ней ещё 1 · 🤝 едет один, можно подселить · ? — в amoCRM нет пола/возраста</span></div>
+    </div>
+    ${rows.length ? Object.keys(byMonth).sort().map(m => { const xs = byMonth[m], p = xs.reduce((a,x)=>a+x.paid,0), g = xs.filter(x=>x.paid).length;
+      return `<section class="gmonth"><h2>${monthName(m)} <small>${xs.length} ${plural(xs.length,'заезд','заезда','заездов')}${g?` · <b>едут ${p} чел.</b> в ${g} ${plural(g,'группе','группах','группах')}`:' · оплат пока нет'}</small></h2>${xs.map(gRowHTML).join('')}</section>`; }).join('')
+      : '<div class="gempty">Под эти фильтры заездов нет. <button class="link" data-gf="reset">Сбросить фильтры</button></div>'}
+    ${orph.length ? `<div class="gorph"><h3>⚠︎ Оплаты в amoCRM без такого заезда на сайте</h3>Эти туристы оплатили, но в обзор не попали: дата или ссылка на тур в сделке не совпадает с заездом на сайте.<ul>${orph.map(o=>`<li><b>${fmtLong(o.date)}</b> · ${o.n} чел. — ${orphReason(o)}</li>`).join('')}</ul></div>` : ''}
+  </div>`;
+  box.scrollTop = keep;   // фильтры не сбрасывают прокрутку
+  box.querySelectorAll('.gf').forEach(f => { const on = [...f.querySelectorAll('.gchip.on')].pop(); if(on && f.scrollWidth > f.clientWidth) f.scrollLeft = Math.max(0, on.offsetLeft - f.offsetLeft - 90); });   // телефон: выбранный месяц/организатор виден в ленте
+}
+function setGroups(on){
+  if(!on && gv.on) gv.scroll = $('#groups').scrollTop;   // запомнить до скрытия: у скрытого блока прокрутка 0
+  gv.on = on; document.body.classList.toggle('groups', on); $('#tgl-groups').setAttribute('aria-pressed', on);
+  if(on){ renderGroups(); $('#groups').scrollTop = gv.scroll; }
+  saveHash();
+}
+$('#tgl-groups').addEventListener('click', () => { gv.from = false; setGroups(!gv.on); if(!gv.on && current) renderDetail(true); });
+document.addEventListener('click', e => {
+  const f = e.target.closest('[data-gf]');
+  if(f){
+    const k = f.dataset.k, kind = f.dataset.gf;
+    if(kind==='reset'){ gv.months.clear(); gv.orgs.clear(); gv.onlyPaid = false; state.q = ''; $('#search').value = ''; }
+    if(kind==='m'){ if(!k) gv.months.clear(); else gv.months.has(k) ? gv.months.delete(k) : gv.months.add(k); }
+    if(kind==='o'){ if(!k) gv.orgs.clear(); else gv.orgs.has(k) ? gv.orgs.delete(k) : gv.orgs.add(k); }
+    if(kind==='p') gv.onlyPaid = k==='1';
+    renderGroups(); saveHash(); return;
+  }
+  const g = e.target.closest('.grow');
+  if(g){
+    const x = gRows().find(y=>y.k===g.dataset.gk); if(!x) return;
+    gv.scroll = $('#groups').scrollTop; gv.from = true;
+    gv.on = false; document.body.classList.remove('groups'); $('#tgl-groups').setAttribute('aria-pressed', false);
+    current = x.t; currentRow = x.r; showAllDates = !visibleDates(x.t, x.r).includes(x.r);
+    renderResults(); renderDetail(); saveHash(); return;
+  }
+  if(e.target.id==='togroups'){ setGroups(true); return; }
+});
+document.addEventListener('input', e => { if(e.target.id==='search' && gv.on) renderGroups(); });
 $('#reload').addEventListener('click', () => load());
 
 async function load(){
@@ -994,6 +1249,8 @@ async function load(){
   readHash();
   renderFilters(); renderResults();
   if(current) renderDetail(); else renderMapView();
+  const hp = new URLSearchParams(location.hash.slice(1));
+  if(hp.get('view')==='groups'){ gv.months = new Set((hp.get('gm')||'').split('|').filter(Boolean)); gv.orgs = new Set((hp.get('go')||'').split('|').filter(Boolean)); gv.onlyPaid = hp.get('gp')==='1'; setGroups(true); }
 }
 load();
 </script>
