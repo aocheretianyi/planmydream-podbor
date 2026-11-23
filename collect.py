@@ -164,9 +164,6 @@ def message(t, dep):
     # №12: у туров со скидкой — срок скидки до последнего дня текущего месяца (МСК)
     if dep.get('priceOld'):
         lines.append(f'⏳ Цена со скидкой действует до {month_end_ru()}')
-    # Чёрная пятница (задача №10): строка до 30.11.2026 включительно по Москве
-    if datetime.now(timezone.utc).astimezone(MSK).date() <= date(2026, 11, 30):
-        lines.append('🐼 Чёрная пятница: −$100 на человека по промокоду ПАНДА100 — до 30 ноября')
     if incl:
         lines.append('✅ ' + incl.group(1).strip().rstrip('.'))
     lines.append(f'🔗 Ссылка: {t["url"]}')
