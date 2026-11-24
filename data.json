@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-24T09:07:56+00:00",
+ "generatedAt": "2026-11-24T14:02:02+00:00",
  "source": "planmydream.ru (каталог + страницы туров)",
  "tours": [
   {
@@ -2887,6 +2887,7 @@
   "south-china-chendu-chuntsin-yansho-guanchgou: новый тур или изменилась программа — нет ключа ANTHROPIC_API_KEY, автодописывание пропущено",
   "sacura_mart_2027: новый тур или изменилась программа — нет ключа ANTHROPIC_API_KEY, автодописывание пропущено",
   "china-october2026 2027-10-14: оплатили 7, а на сайте занято 6 — уменьшить свободные места",
+  "august-shanghai-avatar-8-dney 2027-04-12: оплатили 7, а на сайте занято 4 — уменьшить свободные места",
   "shanghai_zhujiajiao_zhangjiajie_furong_shenzhen 2027-03-15: оплатили 2, а на сайте занято 0 — уменьшить свободные места"
  ],
  "rates": {
@@ -2895,12 +2896,12 @@
    "date": "2026-11-24"
   },
   "tbank": {
-   "sell": 86.05,
-   "at": "2026-11-24T09:07+00:00"
+   "sell": 86.1,
+   "at": "2026-11-24T14:02+00:00"
   }
  },
  "guests": {
-  "at": "2026-11-24T09:08:03+00:00",
+  "at": "2026-11-24T14:02:10+00:00",
   "groups": {
    "august-shanghai-avatar-8-dney|2027-04-12": [
     {
@@ -2920,6 +2921,24 @@
       }
      ],
      "unknown": 1
+    },
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 32
+      }
+     ],
+     "unknown": 1
+    },
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 28
+      }
+     ],
+     "unknown": 0
     }
    ],
    "shenchzhen-avatar-furong-shanghai|2027-05-01": [
@@ -2959,17 +2978,6 @@
       }
      ],
      "unknown": 2
-    }
-   ],
-   "shanghai_zhujiajiao_zhangjiajie_furong_shenzhen|2027-06-04": [
-    {
-     "people": [
-      {
-       "g": "Ж",
-       "age": 38
-      }
-     ],
-     "unknown": 0
     }
    ],
    "pekin-avatar-shanghai-8-dney|2027-03-06": [
@@ -3087,6 +3095,17 @@
       {
        "g": "Ж",
        "age": 60
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "shanghai_zhujiajiao_zhangjiajie_furong_shenzhen|2027-06-04": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 38
       }
      ],
      "unknown": 0
