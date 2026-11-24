@@ -244,17 +244,18 @@ body.groups main{display:none}
 body.groups #groups{display:block}
 body.groups #tgl-filters, body.groups #tgl-results{display:none}
 .gwrap{max-width:1180px;margin:0 auto;padding:0 18px 40px}
-.gtop{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0 8px;border-bottom:1px solid var(--line)}
-.gsum{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;margin-bottom:8px;font-size:13px;color:var(--muted)}
+.gtop{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0 6px;border-bottom:1px solid var(--line)}
+.gsum{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:center;margin-bottom:6px;font-size:13px;color:var(--muted)}
+.gsum .gshow{margin-left:auto;display:flex;gap:4px}
 .gsum b{color:var(--ink);font-size:15px}
 .gsum .w{color:var(--warn)}
-.gf{display:flex;flex-wrap:wrap;align-items:center;gap:4px 4px;margin-bottom:5px}
-.gf>span{flex:none;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:4px;min-width:84px}
-.gchip{border:0;background:var(--chip);border-radius:999px;padding:3px 10px;font-size:12.5px}
+.gf{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;align-items:center;gap:3px;margin-bottom:4px;padding-bottom:1px}
+.gf>span{flex:none;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-right:2px;min-width:78px}
+.gchip{border:0;background:var(--chip);border-radius:999px;padding:3px 8px;font-size:12px;white-space:nowrap;flex:none}
 .gchip:hover{background:#e7e0d4}
 .gchip.on{background:var(--chip-on);color:#fff}
 .gchip small{opacity:.7;margin-left:3px}
-.glegend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11.5px;color:var(--muted);margin-top:6px}
+.glegend{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:11px;color:var(--muted);margin-top:4px}
 .glegend i{display:inline-block;width:14px;height:8px;border-radius:2px;vertical-align:middle;margin-right:4px}
 .gmonth{margin-top:16px}
 .gmonth h2{font-size:15px;margin:0 0 6px;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
@@ -1189,11 +1190,10 @@ function renderGroups(){
   const orph = gOrphans();
   box.innerHTML = `<div class="gwrap">
     <div class="gtop">
-      <div class="gsum"><span>Уже едут: <b>${people} ${plural(people,'человек','человека','человек')}</b> в ${paidRows.length} ${plural(paidRows.length,'заезде','заездах','заездах')}</span><span>Заездов в обзоре: <b>${rows.length}</b></span>${stale?`<span class="w">⚠︎ ${stale} ${plural(stale,'заезд','заезда','заездов')}: оплатили больше, чем занято на сайте</span>`:''}</div>
+      <div class="gsum"><span>Уже едут: <b>${people} ${plural(people,'человек','человека','человек')}</b> в ${paidRows.length} ${plural(paidRows.length,'заезде','заездах','заездах')}</span><span>Заездов в обзоре: <b>${rows.length}</b></span>${stale?`<span class="w">⚠︎ ${stale} ${plural(stale,'заезд','заезда','заездов')}: оплатили больше, чем занято на сайте</span>`:''}<span class="gshow">${chip('p','0','Все заезды', !gv.onlyPaid)}${chip('p','1','Только где уже едут', gv.onlyPaid)}</span></div>
       <div class="gf"><span>Месяц</span>${chip('m','', 'Все', !gv.months.size)}${months.map(m=>chip('m', m, monthName(m), gv.months.has(m), mCnt(m)?`<small>· ${mCnt(m)}👥</small>`:'')).join('')}</div>
       <div class="gf"><span>Организатор</span>${chip('o','', 'Все', !gv.orgs.size)}${orgs.map(o=>chip('o', o, o, gv.orgs.has(o))).join('')}</div>
-      <div class="gf"><span>Показать</span>${chip('p','0','Все заезды', !gv.onlyPaid)}${chip('p','1','Только где уже едут', gv.onlyPaid)}</div>
-      <div class="glegend"><span><i style="background:var(--ok)"></i>оплатили (amoCRM)</span><span><i style="background:repeating-linear-gradient(135deg,#9bc7ab 0 3px,#cfe6d7 3px 6px)"></i>занято на сайте, оплаты в amoCRM нет</span><span><i style="background:#efe9df;border:1px solid var(--line)"></i>свободно (1 деление = 1 место)</span><span>👥 Ж50 + 1 — женщина 50 лет и с ней ещё 1 · 🤝 едет один, можно подселить · ? — в amoCRM нет пола/возраста</span></div>
+      <div class="glegend"><span><i style="background:var(--ok)"></i>оплатили</span><span><i style="background:repeating-linear-gradient(135deg,#9bc7ab 0 3px,#cfe6d7 3px 6px)"></i>занято без оплаты в amoCRM</span><span><i style="background:#efe9df;border:1px solid var(--line)"></i>свободно</span><span>Ж50 + 1 — женщина 50 лет и ещё 1 · 🤝 едет один · ? — нет данных</span></div>
     </div>
     ${rows.length ? Object.keys(byMonth).sort().map(m => { const xs = byMonth[m], p = xs.reduce((a,x)=>a+x.paid,0), g = xs.filter(x=>x.paid).length;
       return `<section class="gmonth"><h2>${monthName(m)} <small>${xs.length} ${plural(xs.length,'заезд','заезда','заездов')}${g?` · <b>едут ${p} чел.</b> в ${g} ${plural(g,'группе','группах','группах')}`:' · оплат пока нет'}</small></h2>${xs.map(gRowHTML).join('')}</section>`; }).join('')
