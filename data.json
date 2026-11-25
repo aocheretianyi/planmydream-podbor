@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-25T00:50:57+00:00",
+ "generatedAt": "2026-11-25T10:23:54+00:00",
  "source": "planmydream.ru (каталог + страницы туров)",
  "tours": [
   {
@@ -2885,12 +2885,12 @@
    "date": "2026-11-25"
   },
   "tbank": {
-   "sell": 87.65,
-   "at": "2026-11-25T00:50+00:00"
+   "sell": 86.45,
+   "at": "2026-11-25T10:23+00:00"
   }
  },
  "guests": {
-  "at": "2026-11-25T00:51:03+00:00",
+  "at": "2026-11-25T10:24:02+00:00",
   "groups": {
    "august-shanghai-avatar-8-dney|2027-04-12": [
     {
@@ -3002,6 +3002,69 @@
      "unknown": 3
     }
    ],
+   "south-china-chendu-chuntsin-yansho-guanchgou|2027-03-21": [
+    {
+     "people": [
+      {
+       "g": "М",
+       "age": 45
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "pekin-avatar-shanghai-8-dney|2027-05-15": [
+    {
+     "people": [
+      {
+       "g": "М",
+       "age": 57
+      },
+      {
+       "g": "Ж",
+       "age": 49
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "pekin_xian_avatar_shanghay|2027-04-03": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 60
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "shanghai_zhujiajiao_zhangjiajie_furong_shenzhen|2027-06-04": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 38
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "pekin-sian-shanhaj-8-dney|2027-04-26": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 70
+      },
+      {
+       "g": "Ж",
+       "age": 73
+      }
+     ],
+     "unknown": 0
+    }
+   ],
    "china-october2026|2027-10-14": [
     {
      "people": [
@@ -3032,69 +3095,6 @@
       {
        "g": "М",
        "age": 57
-      }
-     ],
-     "unknown": 0
-    }
-   ],
-   "south-china-chendu-chuntsin-yansho-guanchgou|2027-03-21": [
-    {
-     "people": [
-      {
-       "g": "М",
-       "age": 45
-      }
-     ],
-     "unknown": 0
-    }
-   ],
-   "pekin-avatar-shanghai-8-dney|2027-05-15": [
-    {
-     "people": [
-      {
-       "g": "М",
-       "age": 57
-      },
-      {
-       "g": "Ж",
-       "age": 49
-      }
-     ],
-     "unknown": 0
-    }
-   ],
-   "shanghai_zhujiajiao_zhangjiajie_furong_shenzhen|2027-06-04": [
-    {
-     "people": [
-      {
-       "g": "Ж",
-       "age": 38
-      }
-     ],
-     "unknown": 0
-    }
-   ],
-   "pekin_xian_avatar_shanghay|2027-04-03": [
-    {
-     "people": [
-      {
-       "g": "Ж",
-       "age": 60
-      }
-     ],
-     "unknown": 0
-    }
-   ],
-   "pekin-sian-shanhaj-8-dney|2027-04-26": [
-    {
-     "people": [
-      {
-       "g": "Ж",
-       "age": 70
-      },
-      {
-       "g": "Ж",
-       "age": 73
       }
      ],
      "unknown": 0
