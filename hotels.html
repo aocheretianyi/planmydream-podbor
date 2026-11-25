@@ -242,7 +242,6 @@ details.pv pre{white-space:pre-wrap;font:12.5px/1.45 inherit;font-family:inherit
       <ol><li>Слева — страна, отель (или пусто для обзора всех), даты, туристы → «Найти цены».</li>
       <li>В таблице «+ в подборку» у нужных вариантов — можно несколько для сравнения.</li>
       <li>Справа — для кого цена: «только отель» или «вместе с нашим туром» (со скидкой), затем «Скопировать текст» или «Открыть предложение» (PDF).</li></ol>
-      <div class="hint" style="margin-top:12px">Цены TEZ — для туриста, комиссия агентства уже внутри.</div>
       <button class="btn ghost" id="hainanbtn2" style="margin-top:14px">🏝 Хайнань: бухты, карта и наша подборка отелей</button></div></section>
     <div id="pop" role="dialog" aria-label="Об отеле"></div>
     <aside class="col" id="basket">
@@ -280,7 +279,7 @@ let fromOverview = false, busy = false, sugIdx = -1;
 let basket = store.get('basket', []);
 let mode = store.get('mode', 'solo');   // solo — только отель, tour — вместе с нашим туром (со скидкой)
 // Наш сбор с человека (решение 25.11.2026, калькулятор «Хайнань — калькулятор цены (TEZ)» в Google Таблицах).
-// В долларах: сбор ₽ / наш курс = курс ЦБ × 1,035 (как у YouTravel.me и Клуба Гидов; курс ЦБ — из data.json). Комиссия TEZ 7% — дополнительно, внутри цены TEZ.
+// В долларах: сбор ₽ / наш курс = курс ЦБ × 1,035 (как у YouTravel.me и Клуба Гидов; курс ЦБ — из data.json).
 const FEE_RUB = {solo: 27000, tour: 12000}, RATE_MARKUP = 1.035, RUB_FALLBACK = 85;
 let RUB = null, rubDate = '';
 let signature = store.get('signature', '');
@@ -329,8 +328,8 @@ async function loadRate(){
   renderMode(); renderBasket(); if (view === 'results' && offers.length) renderResults();
 }
 function renderMode(){
-  $('#modechips').innerHTML = [['solo', 'только отель'], ['tour', 'вместе с нашим туром']].map(([k, t]) => `<button class="chip ${mode === k ? 'on' : ''}" data-mode="${k}">${t}</button>`).join('');
-  $('#ratehint').innerHTML = `Наш сбор: ${mode === 'solo' ? '<b>27 000 ₽</b> с человека' : '<b>12 000 ₽</b> с человека (скидка клиенту за тур)'} + комиссия TEZ 7%.<br>Цены в $. Оплата в рублях — по курсу ЦБ + 3,5% на день оплаты${RUB ? ` (сегодня ${RUB.toFixed(2).replace('.', ',')} ₽ за $)` : ''}.`;
+  $('#modechips').innerHTML = [['solo', 'только отель'], ['tour', 'вместе с нашим туром']].map(([k, t]) => `<button class="chip ${mode === k ? 'on' : ''}" data-mode="${k}" title="Наш сбор — ${rubTxt(FEE_RUB[k])} ₽ с человека${k === 'tour' ? ' (скидка клиенту за тур)' : ''}">${t}</button>`).join('');
+  $('#ratehint').textContent = `Цены в $. Оплата в рублях — по курсу ЦБ + 3,5% на день оплаты${RUB ? ` (сегодня ${RUB.toFixed(2).replace('.', ',')} ₽ за $)` : ''}.`;
 }
 const commTxt = s => String(s || '').replace(/\.0\s*%/, '%').replace(/\s+%/, '%');
 
@@ -640,7 +639,7 @@ function renderResults(capped){
   for (const g of list){
     const o = g[0], open = showAll.has(o.hotelId), rows = open ? g : g.slice(0, 8);
     html += `<div class="hotel"><div class="hhead">${o.thumb ? `<img src="${esc(o.thumb)}" alt="">` : ''}
-      <div><div class="t">${esc(o.hotel)} ${infoBtn(o.hotelId)}</div><div class="m">${esc(o.region)}${o.commission ? ' · комиссия TEZ ' + esc(o.commission) : ''}${o.link ? ` · <a href="${esc(o.link)}" target="_blank" rel="noopener" title="Описание отеля на сайте TEZ — для вас, клиенту не отправляйте">описание ↗</a>` : ''}</div></div>
+      <div><div class="t">${esc(o.hotel)} ${infoBtn(o.hotelId)}</div><div class="m">${esc(o.region)}${o.link ? ` · <a href="${esc(o.link)}" target="_blank" rel="noopener" title="Описание отеля на сайте TEZ — для вас, клиенту не отправляйте">описание ↗</a>` : ''}</div></div>
       <div class="from">от<b>${priceOf(o, mode)} $</b>${mode === 'tour' ? 'без тура ' + priceOf(o, 'solo') : 'с туром ' + priceOf(o, 'tour')} $</div></div>
       <table><thead><tr><th>Даты</th><th>Ночей</th><th>Номер</th><th>Питание</th><th class="num">TEZ</th><th class="num ${mode === 'solo' ? '' : 'alt'}">Обычная</th><th class="num ${mode === 'tour' ? '' : 'alt'}">С туром</th><th></th></tr></thead><tbody>
       ${rows.map(x => { const on = inBasket.has(x.key); return `<tr class="${on?'inb':''}"><td class="dt">${x.from.slice(0,5)} <small>${x.wd}</small> – ${x.to.slice(0,5)}</td><td>${x.nights}</td><td>${esc(x.room)}${x.seats !== 'Есть' ? ` <small class="no">мест: ${esc(x.seats || 'нет')}</small>` : ''}</td><td>${esc(x.meal)}</td>
@@ -702,9 +701,8 @@ function renderBasket(){
   });
   if (basket.length){
     const earn = basket.map(b => ourPrice(b) - b.total);
-    const comms = [...new Set(basket.map(b => b.commission).filter(Boolean))];
-    const incRub = basket.map((b, i) => Math.round((earn[i] + b.total * ((parseFloat(String(b.commission).replace(',', '.')) || 7) / 100)) * (RUB || RUB_FALLBACK) / 100) * 100);
-    html += `<div class="sum">Наш доход${basket.length > 1 ? ' по вариантам' : ''}: <b>${incRub.map(r => '≈ ' + rubTxt(r) + ' ₽').join(' / ')}</b> — сбор ${earn.map(e => e + ' $').join(' / ')} + комиссия TEZ ${comms.length ? comms.join(', ') : '7%'}. До вычета Ю-Кассы и налога. Видно только вам — клиенту не уходит.</div>
+    const incRub = earn.map(e => Math.round(e * (RUB || RUB_FALLBACK) / 100) * 100);
+    html += `<div class="sum">Наш доход${basket.length > 1 ? ' по вариантам' : ''}: <b>${incRub.map(r => '≈ ' + rubTxt(r) + ' ₽').join(' / ')}</b></div>
       <details class="pv" ${pvOpen ? 'open' : ''}><summary>Посмотреть текст для клиента</summary><pre>${esc(clientText())}</pre></details>`;
   }
   $('#bitems').innerHTML = html;
