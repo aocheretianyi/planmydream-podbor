@@ -247,7 +247,7 @@ details.pv pre{white-space:pre-wrap;font:12.5px/1.45 inherit;font-family:inherit
     <div id="pop" role="dialog" aria-label="Об отеле"></div>
     <aside class="col" id="basket">
       <div id="bscroll">
-        <div class="fgroup"><h3>Цена для клиента</h3><div class="chips" id="modechips"></div></div>
+        <div class="fgroup"><h3>Цена для клиента</h3><div class="chips" id="modechips"></div><div class="hint" id="ratehint"></div></div>
         <div class="fgroup"><h3>Подборка для клиента</h3><div id="bitems"></div></div>
         <div class="fgroup"><h3>Подпись менеджера</h3><textarea id="sign" placeholder="Имя и телефон — добавятся в конец текста и PDF"></textarea></div>
       </div>
@@ -330,6 +330,7 @@ async function loadRate(){
 }
 function renderMode(){
   $('#modechips').innerHTML = [['solo', 'только отель'], ['tour', 'вместе с нашим туром']].map(([k, t]) => `<button class="chip ${mode === k ? 'on' : ''}" data-mode="${k}">${t}</button>`).join('');
+  $('#ratehint').textContent = 'Цены в $. Оплата в рублях — по курсу ЦБ + 3,5% на день оплаты' + (RUB ? ` (сегодня ${RUB.toFixed(2).replace('.', ',')} ₽ за $).` : '.');
 }
 const commTxt = s => String(s || '').replace(/\.0\s*%/, '%').replace(/\s+%/, '%');
 
