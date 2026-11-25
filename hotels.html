@@ -194,6 +194,7 @@ details.pv pre{white-space:pre-wrap;font:12.5px/1.45 inherit;font-family:inherit
   .hotel td,.hotel th{padding:6px 5px}
   .add{padding:4px 10px}
   .add span{display:none}
+  .hotel th.alt,.hotel td.alt{display:none}   /* на телефоне — только цена выбранного режима */
   #status{margin-left:0;width:100%}
 }
 </style>
@@ -240,13 +241,13 @@ details.pv pre{white-space:pre-wrap;font:12.5px/1.45 inherit;font-family:inherit
     <section class="col" id="results"><div class="welcome"><b>Как собрать предложение</b>
       <ol><li>Слева — страна, отель (или пусто для обзора всех), даты, туристы → «Найти цены».</li>
       <li>В таблице «+ в подборку» у нужных вариантов — можно несколько для сравнения.</li>
-      <li>Справа — наценка, затем «Скопировать текст» или «Открыть предложение» (PDF).</li></ol>
+      <li>Справа — для кого цена: «только отель» или «вместе с нашим туром» (со скидкой), затем «Скопировать текст» или «Открыть предложение» (PDF).</li></ol>
       <div class="hint" style="margin-top:12px">Цены TEZ — для туриста, комиссия агентства уже внутри.</div>
       <button class="btn ghost" id="hainanbtn2" style="margin-top:14px">🏝 Хайнань: бухты, карта и наша подборка отелей</button></div></section>
     <div id="pop" role="dialog" aria-label="Об отеле"></div>
     <aside class="col" id="basket">
       <div id="bscroll">
-        <div class="fgroup"><h3>Наценка, %</h3><input type="number" id="markup" min="0" max="100" step="1"></div>
+        <div class="fgroup"><h3>Цена для клиента</h3><div class="chips" id="modechips"></div><div class="hint" id="modehint"></div></div>
         <div class="fgroup"><h3>Подборка для клиента</h3><div id="bitems"></div></div>
         <div class="fgroup"><h3>Подпись менеджера</h3><textarea id="sign" placeholder="Имя и телефон — добавятся в конец текста и PDF"></textarea></div>
       </div>
@@ -277,7 +278,11 @@ let offers = [], lastQuery = null, sortBy = 'price', showAll = new Set();
 let fMeal = new Set(), fNights = new Set();   // фильтры по найденному
 let fromOverview = false, busy = false, sugIdx = -1;
 let basket = store.get('basket', []);
-let markup = store.get('markup', 10);
+let mode = store.get('mode', 'solo');   // solo — только отель, tour — вместе с нашим туром (со скидкой)
+// Наш сбор с человека (решение 25.11.2026, калькулятор «Хайнань — калькулятор цены (TEZ)» в Google Таблицах).
+// В долларах: сбор ₽ / курс ТБанка (переводы, продажа) из data.json. Комиссия TEZ 7% — дополнительно, внутри цены TEZ.
+const FEE_RUB = {solo: 27000, tour: 12000}, RUB_FALLBACK = 87;
+let RUB = null, rubDate = '';
 let signature = store.get('signature', '');
 
 async function api(path, params){
@@ -313,7 +318,23 @@ const peopleTxt = q => {
   if (q.ages.length) s += ', ' + q.ages.map(a => a ? `ребёнок ${a} ${plural(a, 'год', 'года', 'лет')}` : 'ребёнок до 1 года').join(', ');
   return s;
 };
-const ourPrice = total => Math.ceil(total * (1 + markup / 100) / 5) * 5;   // до 5 $ вверх
+const paxOf = o => o.pax || (+(String(o.people).match(/^(\d+)/) || [0, 2])[1] + (String(o.people).match(/ребён/g) || []).length);
+const feeUsd = (o, m) => FEE_RUB[m] * paxOf(o) / (RUB || RUB_FALLBACK);
+const priceOf = (o, m) => Math.ceil((o.total + feeUsd(o, m)) / 5) * 5;   // до 5 $ вверх
+const ourPrice = o => priceOf(o, mode);
+const rubTxt = n => n.toLocaleString('ru-RU');
+async function loadRate(){
+  try { const d = await (await fetch('data.json?_=' + Date.now())).json(); RUB = +d.rates.tbank.sell; rubDate = String(d.rates.tbank.at || '').slice(0, 10).split('-').reverse().join('.'); }
+  catch(e){ RUB = null; }
+  renderMode(); renderBasket(); if (view === 'results' && offers.length) renderResults();
+}
+function renderMode(){
+  $('#modechips').innerHTML = [['solo', 'только отель'], ['tour', 'вместе с нашим туром']].map(([k, t]) => `<button class="chip ${mode === k ? 'on' : ''}" data-mode="${k}">${t}</button>`).join('');
+  const r = RUB ? `курс ТБанка ${String(RUB).replace('.', ',')} ₽${rubDate ? ' на ' + rubDate : ''}` : `курс не загрузился — взят ${RUB_FALLBACK} ₽`;
+  $('#modehint').innerHTML = mode === 'solo'
+    ? `Обычная цена: TEZ + ${rubTxt(FEE_RUB.solo)} ₽ с человека (${r}).`
+    : `TEZ + ${rubTxt(FEE_RUB.tour)} ₽ с человека (${r}). Клиент увидит обычную цену и скидку за бронирование вместе с туром.`;
+}
 const commTxt = s => String(s || '').replace(/\.0\s*%/, '%').replace(/\s+%/, '%');
 
 function status(t, bad){ const s = $('#status'); s.textContent = t; s.classList.toggle('bad', !!bad); }
@@ -338,7 +359,7 @@ async function init(){
   $('#nmin').value = Math.min(30, Math.max(1, +f.nmin || 5)); $('#nmax').value = Math.min(30, Math.max(1, +f.nmax || 7));
   syncNights('nmin');
   $('#stop').checked = !!f.stop;
-  $('#markup').value = markup;
+  renderMode(); loadRate();
   $('#sign').value = signature;
   renderBasket();
   basket.filter(b => b.photos === undefined).forEach(b => attachPhotos(b.key));   // подборка из прошлых версий страницы
@@ -572,7 +593,7 @@ function parse(rows, q){
       hotelId:h[3], hotel:niceName(h[1]), img:String(h[2] || '').replace('_small', ''), thumb:h[2], link:h[0],
       region:reg && (reg[0] || reg[8]) || '', meal:meal[1], mealCode:meal[0], room:room[1],
       total:+price.total, cur:price.currency, services:SERVICES.filter((s, i) => price.priceTypes && price.priceTypes[i]),
-      seats, commission:commTxt(comm), people:peopleTxt(q), ttype:q.ttype, city:q.city, added:todayRu()
+      seats, commission:commTxt(comm), people:peopleTxt(q), pax:q.adults + q.ages.length, ttype:q.ttype, city:q.city, added:todayRu()
     });
   }
   return out;
@@ -597,7 +618,7 @@ function renderResults(capped){
     ${fromHainan && isChina() ? '<button class="tgl" id="hnopen" title="Вернуться к бухтам и отелям Хайнаня">← Бухты Хайнаня</button>' : ''}
     ${fromOverview ? `<button class="tgl" id="back" title="Вернуться к обзору">← Все отели ${backBay ? 'бухты' : 'страны'}</button>` : ''}
     ${lastQuery.bay ? `<span class="hint" style="margin:0">Бухта: <b>${esc(BAYS.find(b => b.id === lastQuery.bay).name)}</b></span>` : ''}
-    <span class="hint" style="margin:0">Цена за всех туристов: TEZ → наша с наценкой ${markup}%</span>
+    <span class="hint" style="margin:0">Цена за всех туристов: «Обычная» — только отель, «С туром» — со скидкой вместе с нашим туром</span>
     <button class="tgl" id="copylink" title="Ссылка на этот поиск: коллега откроет те же даты, туристов и цены">🔗 Ссылка на поиск</button></div>`;
   if (!lastQuery.grouped && (meals.length > 1 || nightsL.length > 1)){
     html += `<div class="filters">${meals.length > 1 ? `Питание: <span class="chips">${meals.map(m => `<button class="chip ${fMeal.has(m)?'on':''}" data-fmeal="${esc(m)}">${esc(m)}</button>`).join('')}</span>` : ''}
@@ -623,10 +644,10 @@ function renderResults(capped){
     const o = g[0], open = showAll.has(o.hotelId), rows = open ? g : g.slice(0, 8);
     html += `<div class="hotel"><div class="hhead">${o.thumb ? `<img src="${esc(o.thumb)}" alt="">` : ''}
       <div><div class="t">${esc(o.hotel)} ${infoBtn(o.hotelId)}</div><div class="m">${esc(o.region)}${o.commission ? ' · комиссия TEZ ' + esc(o.commission) : ''}${o.link ? ` · <a href="${esc(o.link)}" target="_blank" rel="noopener" title="Описание отеля на сайте TEZ — для вас, клиенту не отправляйте">описание ↗</a>` : ''}</div></div>
-      <div class="from">от<b>${ourPrice(o.total)} $</b>TEZ ${o.total} $</div></div>
-      <table><thead><tr><th>Даты</th><th>Ночей</th><th>Номер</th><th>Питание</th><th class="num">TEZ</th><th class="num">Наша</th><th></th></tr></thead><tbody>
+      <div class="from">от<b>${priceOf(o, mode)} $</b>${mode === 'tour' ? 'без тура ' + priceOf(o, 'solo') : 'с туром ' + priceOf(o, 'tour')} $</div></div>
+      <table><thead><tr><th>Даты</th><th>Ночей</th><th>Номер</th><th>Питание</th><th class="num">TEZ</th><th class="num ${mode === 'solo' ? '' : 'alt'}">Обычная</th><th class="num ${mode === 'tour' ? '' : 'alt'}">С туром</th><th></th></tr></thead><tbody>
       ${rows.map(x => { const on = inBasket.has(x.key); return `<tr class="${on?'inb':''}"><td class="dt">${x.from.slice(0,5)} <small>${x.wd}</small> – ${x.to.slice(0,5)}</td><td>${x.nights}</td><td>${esc(x.room)}${x.seats !== 'Есть' ? ` <small class="no">мест: ${esc(x.seats || 'нет')}</small>` : ''}</td><td>${esc(x.meal)}</td>
-        <td class="num">${x.total} $</td><td class="num our">${ourPrice(x.total)} $</td>
+        <td class="num">${x.total} $</td><td class="num ${mode === 'solo' ? 'our' : 'alt'}">${priceOf(x, 'solo')} $</td><td class="num ${mode === 'tour' ? 'our' : 'alt'}">${priceOf(x, 'tour')} $</td>
         <td class="num"><button class="add ${on?'on':''}" data-add="${esc(x.key)}" title="${on?'Убрать из подборки':'Добавить в подборку'}">${on?'✓<span> в подборке</span>':'+<span> в подборку</span>'}</button></td></tr>`; }).join('')}
       </tbody></table>${(g.length > 8 && !open) || lastQuery.grouped ? `<div class="hfoot">${g.length > 8 && !open ? `<button class="morebtn" data-more="${o.hotelId}">Показать все ${g.length}</button>` : ''}${lastQuery.grouped ? `<button class="morebtn" data-only="${o.hotelId}">Все варианты отеля →</button>` : ''}</div>` : ''}</div>`;
   }
@@ -677,15 +698,15 @@ function renderBasket(){
       <div class="t">${basket.length > 1 ? (i + 1) + '. ' : ''}${esc(b.hotel)}</div>
       <div class="m">${b.from} — ${b.to}, ${nightsTxt(b.nights)} · ${esc(b.people)}</div>
       <div class="m">${esc(b.room)} · ${esc(b.meal)}</div>
-      <div class="p">TEZ ${b.total} $ → <b>${ourPrice(b.total)} $</b></div>
+      <div class="p">TEZ ${b.total} $ → ${mode === 'tour' ? `<s>${priceOf(b, 'solo')} $</s> <b>${priceOf(b, 'tour')} $</b> с туром` : `<b>${priceOf(b, 'solo')} $</b>`}</div>
       ${b.photos === undefined ? '<div class="m">Подбираю фото номера…</div>' : b.photos.length
         ? `<div class="thumbs" title="${PHOTO_KIND[b.kind] || ''} — попадут в предложение">${b.photos.map(u => `<img src="${esc(u.replace(/\.jpg$/i, '_small.jpg'))}" alt="" onerror="this.remove()">`).join('')}</div><div class="m">${PHOTO_KIND[b.kind] || ''}</div>` : ''}
       ${b.added && b.added !== todayRu() ? `<div class="old">Цена от ${b.added.slice(0,5)} — перед отправкой найдите заново</div>` : ''}</div>`;
   });
   if (basket.length){
-    const earn = basket.map(b => ourPrice(b.total) - b.total);
+    const earn = basket.map(b => ourPrice(b) - b.total);
     const comms = [...new Set(basket.map(b => b.commission).filter(Boolean))];
-    html += `<div class="sum">Наш доход: наценка ${earn.map(e => e + ' $').join(' / ')}${comms.length ? ' + комиссия TEZ ' + comms.join(', ') : ''}. Видно только вам — клиенту не уходит.</div>
+    html += `<div class="sum">Наш доход: сбор ${earn.map(e => e + ' $').join(' / ')} + комиссия TEZ ${comms.length ? comms.join(', ') : '7%'}. Видно только вам — клиенту не уходит.</div>
       <details class="pv" ${pvOpen ? 'open' : ''}><summary>Посмотреть текст для клиента</summary><pre>${esc(clientText())}</pre></details>`;
   }
   $('#bitems').innerHTML = html;
@@ -707,7 +728,7 @@ function clientText(){
     `🛏 ${b.room}`,
     `🍽 ${b.meal}`,
     `✅ Входит: ${whatIncluded(b)}`,
-    `💰 ${ourPrice(b.total)} $ за всех`
+    mode === 'tour' ? `💰 ${priceOf(b, 'tour')} $ за всех — при бронировании вместе с нашим туром (без тура ${priceOf(b, 'solo')} $, ваша выгода ${priceOf(b, 'solo') - priceOf(b, 'tour')} $)` : `💰 ${priceOf(b, 'solo')} $ за всех`
   ].filter(Boolean).join('\n'));
   let t = (many ? 'Подобрали для вас варианты:\n\n' : '') + parts.join('\n\n');
   t += `\n\nЦены на ${todayRu()}, наличие мест подтверждаем при бронировании.`;
@@ -727,7 +748,7 @@ function offerHtml(){
         <dt>Номер</dt><dd>${esc(b.room)}</dd>
         <dt>Питание</dt><dd>${esc(b.meal)}</dd>
         <dt>Входит</dt><dd>${esc(whatIncluded(b))}</dd></dl>
-        <div class="price">${ourPrice(b.total)} $ <span>за всех</span></div>
+        <div class="price">${priceOf(b, mode)} $ <span>за всех</span></div>${mode === 'tour' ? `<div class="disc">при бронировании вместе с нашим туром · без тура <s>${priceOf(b, 'solo')} $</s> · выгода ${priceOf(b, 'solo') - priceOf(b, 'tour')} $</div>` : ''}
         ${b.photos && b.photos.length ? `<div class="rp"><div class="rpl">${PHOTO_KIND[b.kind] || ''}</div><div class="rpg">${b.photos.map(u => `<img src="${esc(u)}" alt="" onerror="this.remove()">`).join('')}</div></div>` : ''}</div></div>`).join('');
   return `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Предложение · План Мечты</title><style>
@@ -744,6 +765,7 @@ h1{font-size:22px;color:var(--green);margin:0 0 14px}
 h2{font-size:18px;margin:2px 0 0;color:var(--green)}.reg{color:var(--muted);font-size:13px}
 dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:10px 0;font-size:14px}dt{color:var(--muted)}dd{margin:0}
 .price{font-size:24px;font-weight:800;color:var(--green)}.price span{font-size:13px;font-weight:400;color:var(--muted)}
+.disc{font-size:13px;color:var(--orange);font-weight:600;margin-top:2px}.disc s{color:var(--muted);font-weight:400}
 .foot{margin-top:18px;color:var(--muted);font-size:13px;white-space:pre-line}
 .rp{margin-top:10px}.rpl{font-size:12px;color:var(--muted);margin-bottom:4px}
 .rpg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}.rpg img{width:100%;height:110px;object-fit:cover;border-radius:8px;display:block;background:#eee}
@@ -1092,6 +1114,7 @@ document.addEventListener('click', async e => {
   const t = e.target.closest('button'); if (!t) return;
   if (t.dataset.info){ (popFor === t && popPinned) ? closePop() : openPop(t, true); return; }
   if (t.hasAttribute('data-popclose')){ closePop(); return; }
+  if (t.dataset.mode){ mode = t.dataset.mode; store.set('mode', mode); renderMode(); renderBasket(); if (view === 'results' && offers.length) renderResults(); return; }
   if (t.id === 'go'){ fromHainan = false; return search(); }
   if (t.id === 'hnopen'){ showHainan.byUser = true; return showHainan(); }
   if (t.dataset.pick) return pickHotel(+t.dataset.pick);
@@ -1161,17 +1184,10 @@ document.addEventListener('change', e => {
   if (id === 'nmin' || id === 'nmax') syncNights(id);
   if (id === 'kids') renderAges();
   if (id === 'sort'){ sortBy = e.target.value; renderResults(); }
-  if (id === 'markup'){ $('#markup').value = markup; }
   if (e.target.closest('#form')) e.target.classList.remove('bad');
 });
 document.addEventListener('input', e => {
   if (e.target.id === 'hotelq'){ sugIdx = 0; renderSug(); }
-  if (e.target.id === 'markup'){
-    const v = e.target.value.trim();
-    markup = v === '' ? 0 : Math.max(0, Math.min(100, Math.round(+v) || 0)); store.set('markup', markup);
-    renderBasket();
-    if (offers.length) renderResults();
-  }
   if (e.target.id === 'sign'){ signature = e.target.value; store.set('signature', signature); renderBasket(); }
   if (e.target.closest('#form')) e.target.classList.remove('bad');
 });
