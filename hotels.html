@@ -330,7 +330,7 @@ async function loadRate(){
 }
 function renderMode(){
   $('#modechips').innerHTML = [['solo', 'только отель'], ['tour', 'вместе с нашим туром']].map(([k, t]) => `<button class="chip ${mode === k ? 'on' : ''}" data-mode="${k}">${t}</button>`).join('');
-  $('#ratehint').textContent = 'Цены в $. Оплата в рублях — по курсу ЦБ + 3,5% на день оплаты' + (RUB ? ` (сегодня ${RUB.toFixed(2).replace('.', ',')} ₽ за $).` : '.');
+  $('#ratehint').innerHTML = `Наш сбор: ${mode === 'solo' ? '<b>27 000 ₽</b> с человека' : '<b>12 000 ₽</b> с человека (скидка клиенту за тур)'} + комиссия TEZ 7%.<br>Цены в $. Оплата в рублях — по курсу ЦБ + 3,5% на день оплаты${RUB ? ` (сегодня ${RUB.toFixed(2).replace('.', ',')} ₽ за $)` : ''}.`;
 }
 const commTxt = s => String(s || '').replace(/\.0\s*%/, '%').replace(/\s+%/, '%');
 
@@ -703,7 +703,8 @@ function renderBasket(){
   if (basket.length){
     const earn = basket.map(b => ourPrice(b) - b.total);
     const comms = [...new Set(basket.map(b => b.commission).filter(Boolean))];
-    html += `<div class="sum">Наш доход: сбор ${earn.map(e => e + ' $').join(' / ')} + комиссия TEZ ${comms.length ? comms.join(', ') : '7%'}. Видно только вам — клиенту не уходит.</div>
+    const incRub = basket.map((b, i) => Math.round((earn[i] + b.total * ((parseFloat(String(b.commission).replace(',', '.')) || 7) / 100)) * (RUB || RUB_FALLBACK) / 100) * 100);
+    html += `<div class="sum">Наш доход${basket.length > 1 ? ' по вариантам' : ''}: <b>${incRub.map(r => '≈ ' + rubTxt(r) + ' ₽').join(' / ')}</b> — сбор ${earn.map(e => e + ' $').join(' / ')} + комиссия TEZ ${comms.length ? comms.join(', ') : '7%'}. До вычета Ю-Кассы и налога. Видно только вам — клиенту не уходит.</div>
       <details class="pv" ${pvOpen ? 'open' : ''}><summary>Посмотреть текст для клиента</summary><pre>${esc(clientText())}</pre></details>`;
   }
   $('#bitems').innerHTML = html;
