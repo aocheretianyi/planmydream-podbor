@@ -247,7 +247,7 @@ details.pv pre{white-space:pre-wrap;font:12.5px/1.45 inherit;font-family:inherit
     <div id="pop" role="dialog" aria-label="Об отеле"></div>
     <aside class="col" id="basket">
       <div id="bscroll">
-        <div class="fgroup"><h3>Цена для клиента</h3><div class="chips" id="modechips"></div><div class="hint" id="modehint"></div></div>
+        <div class="fgroup"><h3>Цена для клиента</h3><div class="chips" id="modechips"></div></div>
         <div class="fgroup"><h3>Подборка для клиента</h3><div id="bitems"></div></div>
         <div class="fgroup"><h3>Подпись менеджера</h3><textarea id="sign" placeholder="Имя и телефон — добавятся в конец текста и PDF"></textarea></div>
       </div>
@@ -280,8 +280,8 @@ let fromOverview = false, busy = false, sugIdx = -1;
 let basket = store.get('basket', []);
 let mode = store.get('mode', 'solo');   // solo — только отель, tour — вместе с нашим туром (со скидкой)
 // Наш сбор с человека (решение 25.11.2026, калькулятор «Хайнань — калькулятор цены (TEZ)» в Google Таблицах).
-// В долларах: сбор ₽ / курс ТБанка (переводы, продажа) из data.json. Комиссия TEZ 7% — дополнительно, внутри цены TEZ.
-const FEE_RUB = {solo: 27000, tour: 12000}, RUB_FALLBACK = 87;
+// В долларах: сбор ₽ / наш курс = курс ЦБ × 1,035 (как у YouTravel.me и Клуба Гидов; курс ЦБ — из data.json). Комиссия TEZ 7% — дополнительно, внутри цены TEZ.
+const FEE_RUB = {solo: 27000, tour: 12000}, RATE_MARKUP = 1.035, RUB_FALLBACK = 85;
 let RUB = null, rubDate = '';
 let signature = store.get('signature', '');
 
@@ -324,16 +324,12 @@ const priceOf = (o, m) => Math.ceil((o.total + feeUsd(o, m)) / 5) * 5;   // до
 const ourPrice = o => priceOf(o, mode);
 const rubTxt = n => n.toLocaleString('ru-RU');
 async function loadRate(){
-  try { const d = await (await fetch('data.json?_=' + Date.now())).json(); RUB = +d.rates.tbank.sell; rubDate = String(d.rates.tbank.at || '').slice(0, 10).split('-').reverse().join('.'); }
+  try { const d = await (await fetch('data.json?_=' + Date.now())).json(); RUB = +d.rates.cbr.value * RATE_MARKUP; rubDate = String(d.rates.cbr.date || '').split('-').reverse().join('.'); }
   catch(e){ RUB = null; }
   renderMode(); renderBasket(); if (view === 'results' && offers.length) renderResults();
 }
 function renderMode(){
   $('#modechips').innerHTML = [['solo', 'только отель'], ['tour', 'вместе с нашим туром']].map(([k, t]) => `<button class="chip ${mode === k ? 'on' : ''}" data-mode="${k}">${t}</button>`).join('');
-  const r = RUB ? `курс ТБанка ${String(RUB).replace('.', ',')} ₽${rubDate ? ' на ' + rubDate : ''}` : `курс не загрузился — взят ${RUB_FALLBACK} ₽`;
-  $('#modehint').innerHTML = mode === 'solo'
-    ? `Обычная цена: TEZ + ${rubTxt(FEE_RUB.solo)} ₽ с человека (${r}).`
-    : `TEZ + ${rubTxt(FEE_RUB.tour)} ₽ с человека (${r}). Клиент увидит обычную цену и скидку за бронирование вместе с туром.`;
 }
 const commTxt = s => String(s || '').replace(/\.0\s*%/, '%').replace(/\s+%/, '%');
 
