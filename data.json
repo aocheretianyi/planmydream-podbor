@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-25T14:31:27+00:00",
+ "generatedAt": "2026-11-26T00:30:12+00:00",
  "source": "planmydream.ru (каталог + страницы туров)",
  "tours": [
   {
@@ -2881,16 +2881,16 @@
  ],
  "rates": {
   "cbr": {
-   "value": 82.1664,
-   "date": "2026-11-25"
+   "value": 82.313,
+   "date": "2026-11-26"
   },
   "tbank": {
-   "sell": 86.65,
-   "at": "2026-11-25T14:31+00:00"
+   "sell": 88.3,
+   "at": "2026-11-26T00:30+00:00"
   }
  },
  "guests": {
-  "at": "2026-11-25T14:31:34+00:00",
+  "at": "2026-11-26T00:30:21+00:00",
   "groups": {
    "august-shanghai-avatar-8-dney|2027-04-12": [
     {
@@ -3039,17 +3039,6 @@
      "unknown": 0
     }
    ],
-   "pekin_xian_avatar_shanghay|2027-04-03": [
-    {
-     "people": [
-      {
-       "g": "Ж",
-       "age": 60
-      }
-     ],
-     "unknown": 0
-    }
-   ],
    "china-october2026|2027-10-14": [
     {
      "people": [
@@ -3095,6 +3084,17 @@
       {
        "g": "Ж",
        "age": 49
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "pekin_xian_avatar_shanghay|2027-04-03": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 60
       }
      ],
      "unknown": 0
