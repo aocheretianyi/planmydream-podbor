@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-28T07:58:50+00:00",
+ "generatedAt": "2026-11-28T12:04:24+00:00",
  "source": "planmydream.ru (каталог + страницы туров)",
  "tours": [
   {
@@ -2886,11 +2886,11 @@
   },
   "tbank": {
    "sell": 88,
-   "at": "2026-11-28T07:58+00:00"
+   "at": "2026-11-28T12:04+00:00"
   }
  },
  "guests": {
-  "at": "2026-11-28T07:59:00+00:00",
+  "at": "2026-11-28T12:04:31+00:00",
   "groups": {
    "august-shanghai-avatar-8-dney|2027-04-12": [
     {
@@ -3095,6 +3095,17 @@
       {
        "g": "Ж",
        "age": 60
+      }
+     ],
+     "unknown": 0
+    }
+   ],
+   "ponyat-zhejiang-shanghai-hangzhou-expedition|2027-03-11": [
+    {
+     "people": [
+      {
+       "g": "Ж",
+       "age": 55
       }
      ],
      "unknown": 0
